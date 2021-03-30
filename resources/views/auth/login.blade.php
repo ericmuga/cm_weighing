@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <link rel="shortcut icon" style="height: 50%; width: 100%;"
-        href="{{ asset('assets/img/fcl1.png') }}">
+        href="{{ asset('assets/img/choice1.png') }}">
     <title>WMS | Login</title>
 
     <!-- Google Font: Source Sans Pro -->
@@ -44,7 +44,7 @@
         <!-- /.login-logo -->
         <div class="card">
             <div class="card-body login-card-body">
-                <img src="{{ asset('assets/img/choice1.png') }}" alt="FCL Calibra Logo"
+                <img src="{{ asset('assets/img/choice1.png') }}" alt="Choicemeats Logo"
                     class="brand-image" style="display: block; margin-left: auto; margin-right: auto; width: 50%; ">
                 <p class="login-box-msg">Sign in to start your session</p>
 
