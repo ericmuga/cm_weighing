@@ -1,7 +1,7 @@
 <nav class="main-header navbar navbar-expand-md navbar-light navbar-white">
     <div class="container">
         <a href="{{ route('slaughter_dashboard') }}" class="navbar-brand">
-            <img src="{{ asset('assets/img/choice1.png') }}" alt="FCL Calibra Logo"
+            <img src="{{ asset('assets/img/choice1.png') }}" alt="CML Calibra Logo"
                 class="brand-image" style="">
             <span class="brand-text font-weight-light"><strong> CML Weight Management System</strong></span>
         </a>
@@ -18,7 +18,7 @@
                     <a href="{{ route('slaughter_dashboard') }}" class="nav-link">Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a href="" class="nav-link">Weigh</a>
+                    <a href="{{ route('slaughter_weigh') }}" class="nav-link">Weigh</a>
                 </li>
                 <li class="nav-item dropdown">
                     <a id="dropdownSubMenu1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
@@ -37,10 +37,6 @@
                                 <li>
                                     <a tabindex="-1" href="#"
                                         class="dropdown-item">Slaughter Report</a>
-                                </li>
-                                <li>
-                                    <a tabindex="-1" href="{{ route('missing_slap_data') }}"
-                                        class="dropdown-item">Missing Slapmarks Report</a>
                                 </li>
                             </ul>
                         </li>

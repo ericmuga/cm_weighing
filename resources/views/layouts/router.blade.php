@@ -81,7 +81,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                             <div class="card-deck">
                                 <div class="card p-2 bg-info" style="height: 250px">
                                     <a class="card-body text-center card-block stretched-link text-decoration-none"
-                                        href="#">
+                                        href="{{ route('slaughter_dashboard') }}">
                                         <h4 class="card-title">Slaughter</h4>
                                         <p class="card-text">Select this option to switch to slaughter.
                                         </p>
