@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateUsersTable extends Migration
+class CreateCarcassTypesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,14 +13,10 @@ class CreateUsersTable extends Migration
      */
     public function up()
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('carcass_types', function (Blueprint $table) {
             $table->id();
-            $table->string('username', 50)->unique();
-            $table->string('email', 50)->unique();
-            $table->string('password')->nullable();
-            $table->boolean('change_password')->default(true);
-            $table->string('session')->nullable();
-            $table->rememberToken();
+            $table->string('code', 20)->unique()->index();
+            $table->string('description', 50);
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent();
         });
@@ -33,6 +29,6 @@ class CreateUsersTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('carcass_types');
     }
 }

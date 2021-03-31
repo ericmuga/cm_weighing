@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateUsersTable extends Migration
+class CreateScaleConfigsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,14 +13,14 @@ class CreateUsersTable extends Migration
      */
     public function up()
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('scale_configs', function (Blueprint $table) {
             $table->id();
-            $table->string('username', 50)->unique();
-            $table->string('email', 50)->unique();
-            $table->string('password')->nullable();
-            $table->boolean('change_password')->default(true);
-            $table->string('session')->nullable();
-            $table->rememberToken();
+            $table->string('scale', 20);
+            $table->string('comport', 20);
+            $table->string('baudrate', 20);
+            $table->float('tareweight', 8, 2);
+            $table->string('section', 50);
+            $table->foreignId('user_id')->constrained('users');
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent();
         });
@@ -33,6 +33,6 @@ class CreateUsersTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('scale_configs');
     }
 }

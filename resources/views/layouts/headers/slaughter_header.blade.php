@@ -24,7 +24,7 @@
                     <a id="dropdownSubMenu1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
                         class="nav-link dropdown-toggle">Data Management</a>
                     <ul aria-labelledby="dropdownSubMenu1" class="dropdown-menu border-0 shadow">
-                        <li><a href="#" class="dropdown-item">Imported
+                        <li><a href="{{ route('receipts') }}" class="dropdown-item">Imported
                                 Receipts</a></li>
 
                         <li class="dropdown-divider"></li>
@@ -35,7 +35,7 @@
                                 aria-expanded="false" class="dropdown-item dropdown-toggle">Reports</a>
                             <ul aria-labelledby="dropdownSubMenu2" class="dropdown-menu border-0 shadow">
                                 <li>
-                                    <a tabindex="-1" href="#"
+                                    <a tabindex="-1" href="{{ route('slaughter_report') }}"
                                         class="dropdown-item">Slaughter Report</a>
                                 </li>
                             </ul>
@@ -49,7 +49,7 @@
                     <ul aria-labelledby="dropdownSubMenu1" class="dropdown-menu border-0 shadow">
                         <li>
                         <li class="dropdown-divider"></li>
-                        <li><a href="#"
+                        <li><a href="{{ route('scale_configs') }}"
                                 class="dropdown-item">Scale
                                 settings </a></li>
                         <li class="dropdown-divider"></li>
@@ -80,7 +80,7 @@
                 </a>
                 <ul aria-labelledby="dropdownSubMenu1" class="dropdown-menu border-0 shadow">
                     <li>
-                        <a href="#" class="dropdown-item"><i class="fas fa-exchange-alt"></i> Switch
+                        <a href="{{ route('redirector') }}" class="dropdown-item"><i class="fas fa-exchange-alt"></i> Switch
                             Interphase
                         </a>
                     </li>

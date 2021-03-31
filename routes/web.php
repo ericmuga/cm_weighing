@@ -26,5 +26,10 @@ Route::get('/logout', [LoginController::class, 'getLogout'])->name('logout');
 Route::prefix('slaughter')->group(function () {
     Route::get('/dashboard', [SlaughterController::class, 'index'])->name('slaughter_dashboard');
     Route::get('/weigh', [SlaughterController::class, 'weigh'])->name('slaughter_weigh');
+    Route::get('/receipts', [SlaughterController::class, 'receipts'])->name('receipts');
+    Route::get('/receipts/import', [SlaughterController::class, 'importReceipts'])->name('receipts_import');
+    Route::get('/report', [SlaughterController::class, 'slaughterReport'])->name('slaughter_report');
+    Route::get('/configs', [SlaughterController::class, 'scaleConfigs'])->name('scale_configs');
+    Route::get('/scale/update', [SlaughterController::class, 'updateScaleConfigs'])->name('update_scale_configs');
 });
 /* -------------------------------- End Slaughter ------------------------------------------------ */

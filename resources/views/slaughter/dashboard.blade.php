@@ -18,7 +18,7 @@
 <div class="row">
     <div class="col-lg-3 col-6">
         <!-- small box -->
-        <div class="small-box bg-info">
+        <div class="small-box bg-info box-default">
             <div class="inner">
                 <h3>23</h3>
                 <p>No. of Animals brought in</p>
