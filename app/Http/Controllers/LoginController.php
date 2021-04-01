@@ -2,19 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Helpers;
 use Illuminate\Http\Request;
 use Brian2694\Toastr\Facades\Toastr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
 
 class LoginController extends Controller
 {
     public function __construct()
     {
-        // $this->middleware('session_check', ['except' => ['login', 'processLogin']]);
+        $this->middleware('session_check', ['except' => ['login', 'processLogin']]);
     }
 
     public function login()
     {
-        Toastr::success('Post added successfully :)', 'Success');
         return view('auth.login');
     }
 
@@ -98,14 +101,13 @@ class LoginController extends Controller
 
         # Redirecting
         Toastr::success('Successful login', 'Success');
-        return redirect()->route('home');
+        return redirect()->route('redirector');
     }
 
     public function logout()
     {
         Session::flush();
-
-        Toastr::success('Post added successfully', 'Success');
+        Toastr::success('Logout successful', 'Success');
         return redirect()->route('login');
     }
 }

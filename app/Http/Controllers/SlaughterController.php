@@ -3,30 +3,65 @@
 namespace App\Http\Controllers;
 
 use App\Models\Helpers;
+use Brian2694\Toastr\Facades\Toastr;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class SlaughterController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('session_check');
+    }
+
     public function index(Helpers $helpers)
     {
         $title = "dashboard";
         $date = today();
 
-        return view('slaughter.dashboard', compact('title', 'helpers', 'date'));
+        $lined_up = Cache::remember('lined_up', now()->addMinutes(120), function () {
+            return DB::table('receipts')
+                ->whereDate('slaughter_date', today())
+                ->sum('receipts.received_qty');
+        });
+
+        $slaughtered = DB::table('slaughter_data')
+            ->whereDate('created_at', today())
+            ->count();
+
+        $total_weight = DB::table('slaughter_data')
+            ->whereDate('created_at', Carbon::today())
+            ->sum('slaughter_data.total_net');
+
+        return view('slaughter.dashboard', compact('title', 'helpers', 'date', 'lined_up', 'slaughtered', 'total_weight'));
     }
 
     public function weigh()
     {
         $title = "weigh";
-        $configs = '';
+
+        $configs = Cache::remember('weigh_configs', now()->addMinutes(120), function () {
+            return DB::table('scale_configs')
+                ->where('scale', 'Scale 1')
+                ->where('section', 'slaughter')
+                ->select('tareweight', 'comport')
+                ->get()->toArray();
+        });
+
+        $receipts = Cache::remember('weigh_receipts', now()->addMinutes(120), function () {
+            return DB::table('receipts')
+                ->whereDate('slaughter_date', Carbon::today())
+                ->select('receipt_no')
+                ->get();
+        });
 
         return view('slaughter.weigh', compact('title', 'configs'));
     }
 
-    public function receipts()
+    public function receipts(Helpers $helpers)
     {
         $title = "receipts";
 
@@ -38,7 +73,7 @@ class SlaughterController extends Controller
                 ->get();
         });
 
-        return view('slaughter.receipts', compact('title', 'receipts'));
+        return view('slaughter.receipts', compact('title', 'receipts', 'helpers'));
     }
 
     public function importReceipts(Request $request, Helpers $helpers)
@@ -85,14 +120,12 @@ class SlaughterController extends Controller
                     DB::table('receipts')->insert(
                         [
                             'receipt_no' => $row[0],
-                            // 'receipt_no' => $row[1],
                             'vendor_no' => $row[2],
                             'vendor_name' => $row[3],
                             'receipt_date' => $row[4],
-                            'vendor_tag' => $row[5],
+                            'item_code' => $row[5],
                             'description' => $row[6],
                             'received_qty' => $row[7],
-                            // 'item_code' => $row[6],
                             'user_id' => $helpers->authenticatedUserId(),
                             'slaughter_date' => $database_date,
                         ]

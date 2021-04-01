@@ -71,9 +71,8 @@
                         <tr>
                             <th>#</th>
                             <th>Receipt No</th>
-                            <th>Vendor tag</th>
                             <th>Vendor Name</th>
-                            <th> Code </th>
+                            <th>Item Code </th>
                             <th>Description </th>
                             <th>Qty Received</th>
                             <th>Slaughter Date</th>
@@ -84,9 +83,8 @@
                         <tr>
                             <th>#</th>
                             <th>Receipt No</th>
-                            <th>Vendor tag</th>
                             <th>Vendor Name</th>
-                            <th> Code </th>
+                            <th>Item Code </th>
                             <th>Description </th>
                             <th>Qty Received</th>
                             <th>Slaughter Date</th>
@@ -98,7 +96,6 @@
                             <tr>
                                 <td>{{ $i++ }}</td>
                                 <td>{{ $data->receipt_no }}</td>
-                                <td>{{ $data->vendor_tag }}</td>
                                 <td>{{ $data->vendor_name }}</td>
                                 <td>{{ $data->item_code }}</td>
                                 <td>{{ $data->description }}</td>

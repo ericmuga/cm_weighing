@@ -18,15 +18,15 @@
 <div class="row">
     <div class="col-lg-3 col-6">
         <!-- small box -->
-        <div class="small-box bg-info box-default">
+        <div class="small-box bg-info">
             <div class="inner">
-                <h3>23</h3>
+                <h3>{{ $lined_up }}</h3>
                 <p>No. of Animals brought in</p>
             </div>
             <div class="icon">
                 <i class="ion ion-bag"></i>
             </div>
-            <a href="#" class="small-box-footer">More info <i
+            <a href="{{ route('receipts') }}" class="small-box-footer">More info <i
                     class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
@@ -35,13 +35,13 @@
         <!-- small box -->
         <div class="small-box bg-success">
             <div class="inner">
-                <h3>3<sup style="font-size: 20px"></sup></h3>
-                <p>Slaughtered</p>
+                <h3>{{ $slaughtered }}<sup style="font-size: 20px"></sup></h3>
+                <p>No. of already Slaughtered</p>
             </div>
             <div class="icon">
                 <i class="ion ion-stats-bars"></i>
             </div>
-            <a href="#" class="small-box-footer">More info <i
+            <a href="{{ route('slaughter_report') }}" class="small-box-footer">More info <i
                     class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
@@ -49,7 +49,7 @@
         <!-- small box -->
         <div class="small-box bg-warning">
             <div class="inner">
-                <h3>20 </h3>
+                <h3>{{ $lined_up - $slaughtered }} </h3>
                 <p>Remaining count</p>
             </div>
             <div class="icon">
@@ -63,7 +63,7 @@
         <!-- small box -->
         <div class="small-box bg-secondary">
             <div class="inner">
-                <h3>1,273,753 <sup style="font-size: 20px">kgs</sup></h3>
+                <h3>{{ number_format($total_weight, 2) }} <sup style="font-size: 20px">kgs</sup></h3>
 
                 <p> Total Weight Output</p>
             </div>
