@@ -16,7 +16,7 @@
                         </div>
                         <div class="col-md-6">
                             <small><label>Reading from ComPort:</label><strong><input type="text"
-                                        style="text-align: center; border:none" id="comport_value" value=""
+                                        style="text-align: center; border:none" id="comport_value" value="{{ $configs[0]->comport?? "" }}"
                                         disabled></strong></small>
                         </div>
                     </div>
@@ -32,7 +32,7 @@
                 </div> <br>
                 <div class="form-group">
                     <label for="exampleInputPassword1">Tare-Weight</label>
-                    <input type="number" class="form-control" id="tareweight" name="tareweight" value="" readonly>
+                    <input type="number" class="form-control" id="tareweight" name="tareweight" value="{{ number_format($configs[0]->tareweight, 2)?? "" }}" readonly>
                 </div>
                 <div class="row">
                     <div class="col-md-6">
@@ -222,6 +222,82 @@
 
 @section('scripts')
 <script>
+    $(document).ready(function () {
+        $('#manual_weight').change(function () {
+            var manual_weight = document.getElementById('manual_weight');
+            var reading = document.getElementById('reading');
+            if (manual_weight.checked == true) {
+                reading.readOnly = false;
+                reading.focus();
+                $('#reading').val("");
 
+            } else {
+                reading.readOnly = true;
+
+            }
+
+        });
+    });
+
+    function getScaleReading() {
+        var comport = $('#comport_value').val();
+
+        if (comport != null) {
+            $.ajax({
+                type: "GET",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]')
+                        .attr('content')
+                },
+                url: "{{ url('slaughter/read-scale') }}",
+
+                data: {
+                    'comport': comport,
+
+                },
+                dataType: 'JSON',
+                success: function (data) {
+                    //console.log(data);
+
+                    var obj = JSON.parse(data);
+                    //console.log(obj.success);
+
+                    if (obj.success == true) {
+                        var reading = document.getElementById('reading');
+                        reading.value = obj.response;
+                        getNet();
+
+                    } else if (obj.success == false) {
+                        alert('error occured in response: ' + obj.response);
+
+                    } else {
+                        alert('No response from service');
+
+                    }
+
+                },
+                error: function (data) {
+                    var errors = data.responseJSON;
+                    console.log(errors);
+                    alert('error occured when sending request');
+                }
+            });
+
+        } else {
+            alert("Please set comport value first");
+        }
+    }
+
+    function getNet() {
+        var reading = document.getElementById('reading').value;
+        var tareweight = document.getElementById('tareweight').value;
+        var net = document.getElementById('net');
+
+        var new_net_value = parseFloat(reading) - parseFloat(tareweight);
+
+        net.value = Math.round((new_net_value + Number.EPSILON) * 100) / 100;
+
+        // getSettlementWeight(net.value);
+    }
 </script>
 @endsection

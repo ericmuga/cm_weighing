@@ -70,26 +70,12 @@ class Helpers
 
     public function getReadScaleApiServiceUrl()
     {
-        $ip = \Request::getClientIp(true);
-
-        if ($ip == '::1') {
-            $ip = '127.0.0.1';
-        }
-        return $url = 'http://' . $ip . ':3000/api/get-scale-reading';
-
-        // return $url = config('app.read_scale_api_url');
+        return config('app.read_scale_api_url');
     }
 
     public function getComportListServiceUrl()
     {
-        $ip = \Request::getClientIp(true);
-
-        if ($ip == '::1') {
-            $ip = '127.0.0.1';
-        }
-        return $url = 'http://' . $ip . ':3000/api/get-comport-list';
-
-        // return $url = config('app.list_comport_api_url');
+        return config('app.list_comport_api_url');
     }
 
     public function get_scale_read($comport)

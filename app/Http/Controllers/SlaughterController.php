@@ -192,4 +192,17 @@ class SlaughterController extends Controller
                 ->withInput();
         }
     }
+
+    public function readScaleApiService(Request $request, Helpers $helpers)
+    {
+        $result = $helpers->get_scale_read($request->comport);
+        return response()->json($result);
+    }
+
+    public function comportListApiService(Helpers $helpers)
+    {
+        $result = $helpers->get_comport_list();
+
+        return response()->json($result);
+    }
 }

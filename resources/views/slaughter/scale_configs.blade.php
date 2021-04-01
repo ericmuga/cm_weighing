@@ -163,7 +163,7 @@
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]')
                     .attr('content')
             },
-            url: "{{ url('slaughter/comport-list-api-service') }}",
+            url: "{{ url('slaughter/comport-list') }}",
             dataType: 'JSON',
             success: function (data) {
                 console.log(data);
