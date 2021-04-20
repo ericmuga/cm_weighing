@@ -17,13 +17,69 @@ class CarcassTypeSeeder extends Seeder
         $types =
             [
                 [
-                    'code' => 'BG1013',
-                    'description' => 'Comm Grade - Bull Livestock',
+                    'code' => 'BG1021',
+                    'description' => 'High Grade-Steer, Livestock',
                 ],
                 [
-                    'code' => 'BG1006',
-                    'description' => 'High Grade-Steer, Livestock',
-                ]
+                    'code' => 'BG1022',
+                    'description' => 'Heifer - High Grade Carcass',
+                ],
+                [
+                    'code' => 'BG1023',
+                    'description' => 'Bull - High Grade Carcass',
+                ],
+                [
+                    'code' => 'BG1024',
+                    'description' => 'Cow - High Grade Carcass',
+                ],
+                [
+                    'code' => 'BG1025',
+                    'description' => 'HG Carcass without Kidney',
+                ],
+                [
+                    'code' => 'BG1031',
+                    'description' => 'Steer - Comm. Grade Carcass',
+                ],
+                [
+                    'code' => 'BG1032',
+                    'description' => 'Heifer - Comm. Grade Carcass',
+                ],
+                [
+                    'code' => 'BG1033',
+                    'description' => 'Bull - Comm. Grade Carcass',
+                ],
+                [
+                    'code' => 'BG1034',
+                    'description' => 'Cow - Comm. Grade Carcass',
+                ],
+                [
+                    'code' => 'BG1036',
+                    'description' => 'CMFAQ Grade Carcass',
+                ],
+                [
+                    'code' => 'BG1037',
+                    'description' => 'CMSTD Grade Carcass',
+                ],
+                [
+                    'code' => 'BG1038',
+                    'description' => 'CMFAQ-Com Grade Carcass',
+                ],
+                [
+                    'code' => 'BG1202',
+                    'description' => 'Goat Carcass',
+                ],
+                [
+                    'code' => 'BG1400',
+                    'description' => 'High Grade Beef Carcass',
+                ],
+                [
+                    'code' => 'BG1401',
+                    'description' => 'Commercial Beef Carcass',
+                ],
+                [
+                    'code' => 'BG1900',
+                    'description' => 'Lamb, Carcass',
+                ],
 
             ];
 

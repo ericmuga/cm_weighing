@@ -39,7 +39,7 @@ class SlaughterController extends Controller
         return view('slaughter.dashboard', compact('title', 'helpers', 'date', 'lined_up', 'slaughtered', 'total_weight'));
     }
 
-    public function weigh()
+    public function weigh(Helpers $helpers)
     {
         $title = "weigh";
 
@@ -58,7 +58,37 @@ class SlaughterController extends Controller
                 ->get();
         });
 
-        return view('slaughter.weigh', compact('title', 'configs'));
+        $slaughter_data = DB::table('slaughter_data')
+            ->whereDate('slaughter_data.created_at', Carbon::today())
+            ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
+            ->select('slaughter_data.*', 'carcass_types.description')
+            ->orderBy('slaughter_data.created_at', 'DESC')
+            ->get();
+
+        return view('slaughter.weigh', compact('title', 'configs', 'receipts', 'helpers', 'slaughter_data'));
+    }
+
+    public function loadWeighDataAjax(Request $request)
+    {
+        $total_weighed_per_vendor = DB::table('slaughter_data')
+            ->whereDate('created_at', Carbon::today())
+            ->where('receipt_no', $request->receipt)
+            ->count();
+
+        $agg_count = DB::table('slaughter_data')
+            ->whereDate('created_at', today())
+            ->count();
+
+        $vendor_data = DB::table('receipts')
+            ->whereDate('slaughter_date', Carbon::today())
+            ->where('receipt_no', $request->receipt)
+            ->select('vendor_no', 'vendor_name', 'item_code', 'description', DB::raw('SUM(received_qty) as total_received'))
+            ->groupBy('vendor_no', 'vendor_name', 'item_code', 'description')
+            ->get()->toArray();
+
+        $dataArray = array('agg_count' => $agg_count, 'total_weighed' => $total_weighed_per_vendor, 'vendor' => $vendor_data);
+
+        return response()->json($dataArray);
     }
 
     public function receipts(Helpers $helpers)

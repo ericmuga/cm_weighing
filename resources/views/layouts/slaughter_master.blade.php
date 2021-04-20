@@ -55,7 +55,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
         href="{{ asset('assets/plugins/summernote/summernote-bs4.min.css') }}">
 
     <!-- toastr -->
-    <link rel="stylesheet" href="http://cdn.bootcss.com/toastr.js/latest/css/toastr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
 </head>
 
 <body class="hold-transition layout-top-nav">
@@ -158,7 +158,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
     </script>
 
     <!-- toastr -->
-    <script src="http://cdn.bootcss.com/toastr.js/latest/js/toastr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
     {!! Toastr::message() !!}
 
     <script>

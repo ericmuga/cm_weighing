@@ -16,37 +16,67 @@
                         </div>
                         <div class="col-md-6">
                             <small><label>Reading from ComPort:</label><strong><input type="text"
-                                        style="text-align: center; border:none" id="comport_value" value="{{ $configs[0]->comport?? "" }}"
-                                        disabled></strong></small>
+                                        style="text-align: center; border:none" id="comport_value"
+                                        value="{{ $configs[0]->comport?? "" }}" disabled></strong></small>
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="exampleInputEmail1">Reading</label>
-                    <input type="number" step="0.01" class="form-control" id="reading" name="reading" value="0.00"
-                        oninput="getNet()" placeholder="" readonly required>
+                    <label for="exampleInputEmail1">Scale Reading</label>
+                    <input type="number" style="text-align: center" step="0.01" class="form-control" id="reading"
+                        name="reading" value="0.00" placeholder="" readonly required>
                 </div>
                 <div class="form-check">
                     <input type="checkbox" class="form-check-input" id="manual_weight">
                     <label class="form-check-label" for="manual_weight">Enter Manual weight</label>
                 </div> <br>
-                <div class="form-group">
-                    <label for="exampleInputPassword1">Tare-Weight</label>
-                    <input type="number" class="form-control" id="tareweight" name="tareweight" value="{{ number_format($configs[0]->tareweight, 2)?? "" }}" readonly>
+                <div class="row form-group">
+                    <div class="col-md-8">
+                        <label for="exampleInputPassword1">Tare-Weight</label>
+                        <select class="form-control select2" name="tare_weight" id="tare_weight" required>
+                            @if (old('tare_weight') == null)
+                            <option value="1.5" selected> 1.5</option>
+                            <option value="1.8"> 1.8</option>
+                            <option value="1.9"> 1.9</option>
+                            <option value="2.2"> 2.2</option>
+
+                            @elseif (old('tare_weight') == '1.8')
+                            <option value="1.8" selected> 1.8</option>
+
+                            @elseif(old('tare_weight') == '1.9')
+                            <option value="1.9" selected> 1.9</option>
+
+                            @elseif(old('tare_weight') == '2.2')
+                            <option value="2.2" selected> 2.2</option>
+                            @endif
+                        </select>
+                    </div>
+                    <div class="col-md-4" style="padding-top: 7%">
+                        <button class="btn btn-secondary btn-sm form-control" onclick="getReset()" type="button">
+                            <strong>Reset</strong>
+                        </button>
+                    </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-6">
+                <div class="row text-center">
+                    <div class="col-md-4">
                         <div class="form-group">
-                            <label for="exampleInputPassword1">Net</label>
-                            <input type="number" class="form-control" id="net" name="net" value="0.00" step="0.01"
-                                placeholder="" readonly required>
+                            <label for="exampleInputPassword1">Side A</label>
+                            <input type="number" style="text-align: center" class="form-control" id="side_A"
+                                name="side_A" value="0.00" readonly required>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="form-group">
-                            <label for="exampleInputPassword1">Settlement Weight</label>
-                            <input type="number" class="form-control" id="settlement_weight" name="settlement_weight"
-                                value="0.00" step="0.01" placeholder="" readonly required>
+                            <label for="exampleInputPassword1">Side B</label>
+                            <input type="number" style="text-align: center" class="form-control" id="side_B"
+                                name="side_B" value="0.00" readonly required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">Total</label>
+                            <input type="number" style="text-align: center" class="form-control" id="total_weight"
+                                name="total_weight" value="0.00" readonly required>
                         </div>
                     </div>
                 </div>
@@ -57,83 +87,74 @@
                 <div class="form-group">
                     <div class="row">
                         <div class="col-md-6">
-                            <label for="exampleInputPassword1">Ear Tag </label>
-                            <select class="form-control select2" name="slapmark" id="slapmark" required>
-                                {{-- @foreach($receipts as $receipt)
-                            @if (old('slapmark') == $receipt->vendor_tag)
-                            <option value="{{ $receipt->vendor_tag }}" selected>{{ ucwords($receipt->vendor_tag) }}
-                                </option>
-                                @else
-                                <option value="{{ $receipt->vendor_tag }}">{{ ucwords($receipt->vendor_tag) }}</option>
-                                @endif
-                                @endforeach --}}
-                            </select>
+                            <label for="exampleInputPassword1">Agg No. </label>
+                            <input type="number" style="text-align: center" class="form-control" value="" name="agg_no"
+                                id="agg_no" placeholder="" readonly required>
                         </div>
-                        <div class="col-md-6">
-                            <label for="exampleInputPassword1">Animal Description</label>
-                            <select class="form-control select2" name="carcass_type" id="carcass_type" required>
-                                {{-- @foreach($carcass_types as $type)
-                        <option value="{{ $type->code }}" @if($loop->first) selected="selected" @endif>
-                                {{ ucwords($type->description) }}
+                        <div class="col-md-6" style="text-align: center">
+                            <label for="exampleInputPassword1">Receipt No.</label>
+                            <select class="form-control select2" name="receipt_no" id="receipt_no" required>
+                                @foreach($receipts as $receipt)
+
+                                @if (old('receipt_no') == $receipt->receipt_no)
+                                <option value="{{ $receipt->receipt_no }}" selected>{{ ucwords($receipt->receipt_no) }}
                                 </option>
-                                @endforeach --}}
+
+                                @else
+                                <option value="{{ $receipt->receipt_no }}">{{ ucwords($receipt->receipt_no) }}</option>
+                                @endif
+
+                                @endforeach
                             </select>
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="exampleInputPassword1">Receipt No.</label>
-                    <input type="text" class="form-control" value="" name="receipt_no" id="receipt_no" placeholder=""
-                        readonly required>
+                    <label for="exampleInputPassword1">Item Code</label>
+                    <input type="text" style="text-align: center" class="form-control" value="" name="item_code"
+                        id="item_code" placeholder="" readonly required>
                 </div>
-
+                <div class="form-group">
+                    <label for="exampleInputPassword1">Item Description</label>
+                    <input type="text" style="text-align: center" class="form-control" value="" name="item_desc"
+                        id="item_desc" placeholder="" readonly required>
+                </div>
                 <div class="form-group">
                     <label for="exampleInputPassword1">Vendor Number</label>
-                    <input type="text" class="form-control" value="" name="vendor_no" id="vendor_no" placeholder=""
-                        readonly required>
+                    <input type="text" style="text-align: center" class="form-control" value="" name="vendor_no"
+                        id="vendor_no" placeholder="" readonly required>
                 </div>
                 <div class="form-group">
                     <label for="exampleInputPassword1">Vendor Name</label>
-                    <input type="text" class="form-control" name="vendor_name" id="vendor_name" placeholder="" readonly
-                        required>
+                    <input type="text" style="text-align: center" class="form-control" name="vendor_name"
+                        id="vendor_name" placeholder="" readonly required>
                 </div>
             </div>
         </div>
-        <div class="card ">
-            <div class="card-body text-center">
+        <div class="card text-center" style="padding-top: ">
+            <div class="card-body">
                 <div class="row form-group">
-                    <div class="col-md-6">
+                    <div class="text-center" style="width: 70%; margin: 0 auto;">
                         <label for="exampleInputPassword1">Total Received From Vendor </label>
-                        <input type="text" class="form-control" value="" name="delivered_per_vendor"
-                            id="delivered_per_vendor" placeholder="" readonly required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="exampleInputPassword1">Total Received per slapmark </label>
-                        <input type="text" class="form-control" value="" name="total_by_vendor" id="total_by_vendor"
-                            placeholder="" readonly required>
+                        <input type="text" style="text-align: center" class="form-control" value=""
+                            name="total_received" id="total_received" placeholder="" readonly required>
                     </div>
                 </div>
                 <div class=" row form-group">
                     <div class="col-md-6">
                         <label for="exampleInputPassword1">Total weighed </label>
-                        <input type="text" class="form-control" value="" name="total_per_slap" id="total_per_slap"
-                            placeholder="" readonly required>
+                        <input type="text" style="text-align: center" class="form-control" value="" name="total_weighed"
+                            id="total_weighed" placeholder="" readonly required>
                     </div>
                     <div class="col-md-6">
                         <label for="exampleInputPassword1">Total remaining </label>
-                        <input type="text" class="form-control" value="" name="total_remaining" id="total_remaining"
-                            placeholder="" readonly required>
+                        <input type="text" style="text-align: center" class="form-control" value=""
+                            name="total_remaining" id="total_remaining" placeholder="" readonly required>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="exampleInputPassword1">Classification Code</label>
-                    <input type="text" class="form-control" id="classification_code" name="classification_code"
-                        placeholder="" readonly required>
-                </div>
                 <div class="form-group" style="padding-top: 10%">
-                    <button type="submit" onclick="return validateOnSubmit()"
-                        class="btn btn-success btn-lg btn-block btn-huge"><i class="fa fa-paper-plane"
-                            aria-hidden="true"></i>
+                    <button type="submit" onclick="return validateOnSubmit()" class="btn btn-success btn-lg "><i
+                            class="fa fa-paper-plane" aria-hidden="true"></i>
                         Save</button>
                 </div>
             </div>
@@ -166,46 +187,47 @@
                     <table id="example1" class="table table-striped table-bordered table-hover">
                         <thead>
                             <tr>
-                                <th>#</th>
+                                <th>Agg No </th>
                                 <th>Receipt No.</th>
-                                <th>Ear Tag </th>
+                                <th>Code</th>
+                                <th>Description</th>
                                 <th>Vendor No.</th>
                                 <th>Vendor Name</th>
                                 <th>Side A</th>
                                 <th>Side B</th>
                                 <th>Total Weight</th>
-                                <th>Production Name</th>
                                 <th>Slaughter Date</th>
                             </tr>
                         </thead>
                         <tfoot>
                             <tr>
-                                <th>#</th>
+                                <th>Agg No </th>
                                 <th>Receipt No.</th>
-                                <th>Ear Tag </th>
+                                <th>Code</th>
+                                <th>Description</th>
                                 <th>Vendor No.</th>
                                 <th>Vendor Name</th>
                                 <th>Side A</th>
                                 <th>Side B</th>
                                 <th>Total Weight</th>
-                                <th>Production Name</th>
                                 <th>Slaughter Date</th>
                             </tr>
                         </tfoot>
                         <tbody>
-                            {{-- @foreach($slaughter_data as $data)
+                            @foreach($slaughter_data as $data)
                             <tr>
-                                <td>{{ $i++ }}</td>
-                            <td>{{ $data->receipt_no }}</td>
-                            <td>{{ $data->slapmark }}</td>
-                            <td>{{ $data->item_code }}</td>
-                            <td>{{ $data->description }}</td>
-                            <td>{{ number_format($data->actual_weight, 2) }}</td>
-                            <td>{{ $data->meat_percent }}</td>
-                            <td>{{ $data->classification_code }}</td>
-                            <td>{{ $data->created_at }}</td>
+                                <td>{{ $data->agg_no }}</td>
+                                <td>{{ $data->receipt_no }}</td>
+                                <td>{{ $data->item_code }}</td>
+                                <td>{{ $data->description }}</td>
+                                <td>{{ $data->vendor_no }}</td>
+                                <td>{{ $data->vendor_name }}</td>
+                                <td>{{ number_format($data->sideA_weight, 2) }}</td>
+                                <td>{{ number_format($data->sideB_weight, 2) }}</td>
+                                <td>{{ number_format($data->total_weight, 2) }}</td>
+                                <td>{{ $data->created_at }}</td>
                             </tr>
-                            @endforeach --}}
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
@@ -223,6 +245,13 @@
 @section('scripts')
 <script>
     $(document).ready(function () {
+        loadWeighData();
+
+        $("#reading").change(function (e) {
+            e.preventDefault();
+            getReadingRouter();
+        });
+
         $('#manual_weight').change(function () {
             var manual_weight = document.getElementById('manual_weight');
             var reading = document.getElementById('reading');
@@ -257,15 +286,12 @@
                 },
                 dataType: 'JSON',
                 success: function (data) {
-                    //console.log(data);
 
                     var obj = JSON.parse(data);
-                    //console.log(obj.success);
 
                     if (obj.success == true) {
                         var reading = document.getElementById('reading');
                         reading.value = obj.response;
-                        getNet();
 
                     } else if (obj.success == false) {
                         alert('error occured in response: ' + obj.response);
@@ -288,16 +314,80 @@
         }
     }
 
-    function getNet() {
-        var reading = document.getElementById('reading').value;
-        var tareweight = document.getElementById('tareweight').value;
-        var net = document.getElementById('net');
+    function loadWeighData() {
+        /* Start weigh data ajax */
+        var receipt = $('#receipt_no').val();
 
-        var new_net_value = parseFloat(reading) - parseFloat(tareweight);
+        if (receipt != null) {
+            $.ajax({
+                type: "GET",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: "{{ url('slaughter/weigh-data-ajax') }}",
+                data: {
+                    'receipt': receipt,
 
-        net.value = Math.round((new_net_value + Number.EPSILON) * 100) / 100;
+                },
+                dataType: 'JSON',
+                success: function (res) {
+                    if (res) {
+                        console.log(res);
+                        var str = JSON.stringify(res);
+                        var obj = JSON.parse(str);
 
-        // getSettlementWeight(net.value);
+                        $('#agg_no').val(obj.agg_count + 1);
+                        $('#item_code').val(obj.vendor[0].item_code);
+                        $('#item_desc').val(obj.vendor[0].description);
+                        $('#vendor_no').val(obj.vendor[0].vendor_no);
+                        $('#vendor_name').val(obj.vendor[0].vendor_name);
+                        $('#total_received').val(obj.vendor[0].total_received);
+                        $('#total_weighed').val(obj.total_weighed);
+                        $('#total_remaining').val(obj.vendor[0].total_received - obj.total_weighed);
+                    }
+                }
+            });
+
+        }
+        /* End weigh data ajax */
     }
+
+    function validateOnSubmit() {
+        var side_A = $('#side_A').val();
+        var side_B = $('#side_B').val();
+
+        var total_remaining = $('#total_remaining').val();
+
+        if ((side_A > 10 && side_A < 200) && (side_B > 10 && side_B < 200) ) {
+            alert("Please ensure you have valid netweight in both sides.");
+            return false;
+        }
+
+        if (total_remaining != null && total_remaining <= 0) {
+            alert("You have exhausted vendor received Qty.");
+            return false;
+        }
+    }
+
+    function getReset() {
+        $("#side_A").val('0.00');
+        $('#side_B').val('0.00');
+        $('#total_weight').val('0.00');
+    }
+
+    function getReadingRouter() {
+        var reading = $('#reading').val();
+
+        var side_a = $('#side_A').val();
+        var side_b = $('#side_B').val();
+
+        if (side_a > 0) {
+            $('#side_B').val(reading);
+            
+        } else {
+            $('#side_A').val(reading);
+        }
+    }
+
 </script>
 @endsection
