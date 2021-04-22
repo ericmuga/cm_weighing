@@ -384,7 +384,7 @@
         var total_weighed = $('#total_weighed').val();
         var total_received = $('#total_received').val();
 
-        if (!(side_A > 10 || side_A > 200) && !(side_B > 10 && side_B > 200)) {
+        if (!(side_A >= 10 && side_A <= 200) && !(side_B >= 10 && side_B <= 200)) {
             alert("Please ensure you have valid weight of between 10-200 kgs in both sides.");
             return false;
         }
