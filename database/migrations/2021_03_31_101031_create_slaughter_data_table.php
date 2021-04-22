@@ -19,10 +19,11 @@ class CreateSlaughterDataTable extends Migration
             $table->string('receipt_no', 20);
             $table->string('item_code', 20);
             $table->string('vendor_no', 20);
-            $table->string('vendor_name', 20);
+            $table->string('vendor_name');
             $table->double('sideA_weight', 8, 2);
             $table->double('sideB_weight', 8, 2);
             $table->double('total_weight', 8, 2);
+            $table->double('tare_weight', 8, 2);
             $table->double('total_net', 8, 2);
             $table->double('settlement_weight', 8, 2);
             $table->string('classification_code', 20)->nullable();

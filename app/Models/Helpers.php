@@ -126,4 +126,67 @@ class Helpers
         curl_close($curl);
         return $response;
     }
+
+    public function transformToCarcassCode($item_code)
+    {
+        if ($item_code == 'BG1005' || 'BG1006') {
+            // High Grade-Steer
+            return 'BG1021';
+        }
+
+        if ($item_code == 'BG1007') {
+            // High Grade-Heifer
+            return 'BG1022';
+        }
+
+        if ($item_code == 'BG1023') {
+            // High Grade-Bull
+            return 'BG1021';
+        }
+
+        if ($item_code == 'BG1009') {
+            // High Grade-Cow
+            return 'BG1024';
+        }
+
+        if ($item_code == 'BG1011') {
+            // Comm Grade - Steer
+            return 'BG1031';
+        }
+
+        if ($item_code == 'BG1012') {
+            // Comm Grade - Heifer
+            return 'BG1032';
+        }
+
+        if ($item_code == 'BG1013') {
+            // Comm Grade - Bull
+            return 'BG1033';
+        }
+
+        if ($item_code == 'BG1014') {
+            // Comm Grade - Cow
+            return 'BG1034';
+        }
+
+        if ($item_code == 'BG1016') {
+            // CMFAQ
+            return 'BG1036';
+        }
+
+        if ($item_code == 'BG1018') {
+            // CMSTD
+            return 'BG1037';
+        }
+
+        if ($item_code == 'BG1101') {
+            // Lamb
+            return 'BG1900';
+        }
+
+        if ($item_code == 'BG1201') {
+            // Goat
+            return 'BG1202';
+        }
+    }
 }

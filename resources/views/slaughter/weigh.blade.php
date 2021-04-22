@@ -3,7 +3,7 @@
 @section('content')
 
 <!-- weigh -->
-<form id="form-slaughter-weigh" action="" method="post">
+<form id="form-slaughter-weigh" action="{{ route('save_weigh') }}" method="post">
     @csrf
     <div class="card-group">
         <div class="card ">
@@ -34,19 +34,28 @@
                     <div class="col-md-8">
                         <label for="exampleInputPassword1">Tare-Weight</label>
                         <select class="form-control select2" name="tare_weight" id="tare_weight" required>
-                            @if (old('tare_weight') == null)
+                            @if (old('tare_weight') == '1.5' || old('tare_weight') == null )
                             <option value="1.5" selected> 1.5</option>
                             <option value="1.8"> 1.8</option>
                             <option value="1.9"> 1.9</option>
                             <option value="2.2"> 2.2</option>
 
                             @elseif (old('tare_weight') == '1.8')
+                            <option value="1.5"> 1.5</option>
                             <option value="1.8" selected> 1.8</option>
+                            <option value="1.9"> 1.9</option>
+                            <option value="2.2"> 2.2</option>
 
                             @elseif(old('tare_weight') == '1.9')
+                            <option value="1.5"> 1.5</option>
+                            <option value="1.8"> 1.8</option>
                             <option value="1.9" selected> 1.9</option>
+                            <option value="2.2"> 2.2</option>
 
                             @elseif(old('tare_weight') == '2.2')
+                            <option value="1.5"> 1.5</option>
+                            <option value="1.8"> 1.8</option>
+                            <option value="1.9"> 1.9</option>
                             <option value="2.2" selected> 2.2</option>
                             @endif
                         </select>
@@ -62,22 +71,24 @@
                         <div class="form-group">
                             <label for="exampleInputPassword1">Side A</label>
                             <input type="number" style="text-align: center" class="form-control" id="side_A"
-                                name="side_A" value="0.00" readonly required>
+                                name="side_A" step="0.01" value="0.00" readonly required>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="exampleInputPassword1">Side B</label>
                             <input type="number" style="text-align: center" class="form-control" id="side_B"
-                                name="side_B" value="0.00" readonly required>
+                                name="side_B" step="0.01" value="0.00" readonly required>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="exampleInputPassword1">Total</label>
                             <input type="number" style="text-align: center" class="form-control" id="total_weight"
-                                name="total_weight" value="0.00" readonly required>
+                                name="total_weight" step="0.01" value="0.00" readonly required>
                         </div>
+                        <input type="hidden" class="form-control " id="settlement_weight" name="settlement_weight"
+                            value="">
                     </div>
                 </div>
             </div>
@@ -93,7 +104,7 @@
                         </div>
                         <div class="col-md-6" style="text-align: center">
                             <label for="exampleInputPassword1">Receipt No.</label>
-                            <select class="form-control select2" name="receipt_no" id="receipt_no" required>
+                            <select class="form-control " name="receipt_no" id="receipt_no" required>
                                 @foreach($receipts as $receipt)
 
                                 @if (old('receipt_no') == $receipt->receipt_no)
@@ -136,19 +147,19 @@
                 <div class="row form-group">
                     <div class="text-center" style="width: 70%; margin: 0 auto;">
                         <label for="exampleInputPassword1">Total Received From Vendor </label>
-                        <input type="text" style="text-align: center" class="form-control" value=""
+                        <input type="number" style="text-align: center" class="form-control" value=""
                             name="total_received" id="total_received" placeholder="" readonly required>
                     </div>
                 </div>
                 <div class=" row form-group">
                     <div class="col-md-6">
                         <label for="exampleInputPassword1">Total weighed </label>
-                        <input type="text" style="text-align: center" class="form-control" value="" name="total_weighed"
-                            id="total_weighed" placeholder="" readonly required>
+                        <input type="number" style="text-align: center" class="form-control" value=""
+                            name="total_weighed" id="total_weighed" placeholder="" readonly required>
                     </div>
                     <div class="col-md-6">
                         <label for="exampleInputPassword1">Total remaining </label>
-                        <input type="text" style="text-align: center" class="form-control" value=""
+                        <input type="number" style="text-align: center" class="form-control" value=""
                             name="total_remaining" id="total_remaining" placeholder="" readonly required>
                     </div>
                 </div>
@@ -245,11 +256,22 @@
 @section('scripts')
 <script>
     $(document).ready(function () {
+
         loadWeighData();
 
         $("#reading").change(function (e) {
             e.preventDefault();
             getReadingRouter();
+        });
+
+        $("#tare_weight").change(function (e) {
+            e.preventDefault();
+            getSettlementWeight();
+        });
+
+        $("#receipt_no").change(function (e) {
+            e.preventDefault();
+            loadWeighData();
         });
 
         $('#manual_weight').change(function () {
@@ -344,6 +366,7 @@
                         $('#total_received').val(obj.vendor[0].total_received);
                         $('#total_weighed').val(obj.total_weighed);
                         $('#total_remaining').val(obj.vendor[0].total_received - obj.total_weighed);
+
                     }
                 }
             });
@@ -356,14 +379,15 @@
         var side_A = $('#side_A').val();
         var side_B = $('#side_B').val();
 
-        var total_remaining = $('#total_remaining').val();
+        var total_weighed = $('#total_weighed').val();
+        var total_received = $('#total_received').val();
 
-        if ((side_A > 10 && side_A < 200) && (side_B > 10 && side_B < 200) ) {
-            alert("Please ensure you have valid netweight in both sides.");
+        if (!(side_A > 10 || side_A > 200) && !(side_B > 10 && side_B > 200)) {
+            alert("Please ensure you have valid weight of between 10-200 kgs in both sides.");
             return false;
         }
 
-        if (total_remaining != null && total_remaining <= 0) {
+        if (total_weighed >= total_received) {
             alert("You have exhausted vendor received Qty.");
             return false;
         }
@@ -373,6 +397,7 @@
         $("#side_A").val('0.00');
         $('#side_B').val('0.00');
         $('#total_weight').val('0.00');
+        $('#settlement_weight').val('0.00');
     }
 
     function getReadingRouter() {
@@ -383,10 +408,55 @@
 
         if (side_a > 0) {
             $('#side_B').val(reading);
-            
+
         } else {
             $('#side_A').val(reading);
         }
+
+        computeTotalWeight();
+    }
+
+    function computeTotalWeight() {
+        var sideA = $('#side_A').val();
+        var sideB = $('#side_B').val();
+        $('#total_weight').val(parseFloat(sideA) + parseFloat(sideB));
+
+        getSettlementWeight();
+    }
+
+    function getSettlementWeight() {
+        var settlement_weight = document.getElementById('settlement_weight');
+        var total_gross = $('#total_weight').val();
+        var tareweight = $('#tare_weight').val();
+
+        var net = total_gross - tareweight;
+
+        var cold_weight = 0.975 * net;
+
+        // return settlement_weight in two decimal places without rounding
+        settlement_weight.value = (parseInt(cold_weight * 100) / 100).toFixed(2);
+    }
+
+    function getNextReceipt(receipt) {
+        $.ajax({
+            type: "GET",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            url: "{{ url('slaughter/next-receipt-ajax') }}",
+            data: {
+                'receipt': receipt,
+
+            },
+            dataType: 'JSON',
+            success: function (res) {
+                if (res) {
+                    console.log(res);
+                    $('#receipt_no').val(res);
+                }
+
+            }
+        });
     }
 
 </script>

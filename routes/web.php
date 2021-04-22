@@ -27,6 +27,8 @@ Route::prefix('slaughter')->group(function () {
     Route::get('/dashboard', [SlaughterController::class, 'index'])->name('slaughter_dashboard');
     Route::get('/weigh', [SlaughterController::class, 'weigh'])->name('slaughter_weigh');
     Route::get('/weigh-data-ajax', [SlaughterController::class, 'loadWeighDataAjax']);
+    Route::get('/next-receipt-ajax', [SlaughterController::class, 'nextReceiptAjax']);
+    Route::post('/weigh-save', [SlaughterController::class, 'saveWeighData'])->name('save_weigh');
     Route::get('/receipts', [SlaughterController::class, 'receipts'])->name('receipts');
     Route::post('/receipts/import', [SlaughterController::class, 'importReceipts'])->name('receipts_import');
     Route::get('/report', [SlaughterController::class, 'slaughterReport'])->name('slaughter_report');

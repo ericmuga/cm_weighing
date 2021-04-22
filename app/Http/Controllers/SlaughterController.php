@@ -62,7 +62,7 @@ class SlaughterController extends Controller
             ->whereDate('slaughter_data.created_at', Carbon::today())
             ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
             ->select('slaughter_data.*', 'carcass_types.description')
-            ->orderBy('slaughter_data.created_at', 'DESC')
+            ->orderBy('slaughter_data.created_at', 'desc')
             ->get();
 
         return view('slaughter.weigh', compact('title', 'configs', 'receipts', 'helpers', 'slaughter_data'));
@@ -91,13 +91,58 @@ class SlaughterController extends Controller
         return response()->json($dataArray);
     }
 
+    public function nextReceiptAjax(Request $request)
+    {
+        $receipts_arr = DB::table('receipts')
+            ->whereDate('created_at', '>=', Carbon::today())
+            ->select('receipt_no')
+            ->get()->toArray();
+
+        $request_receipt_index = array_search($request->receipt_no, array_column($receipts_arr, 'receipt_no'));
+
+        $selected_receipt = $receipts_arr[$request_receipt_index + 1]->receipt_no;
+
+        return response()->json($selected_receipt);
+    }
+
+    public function saveWeighData(Request $request, Helpers $helpers)
+    {
+        try {
+            // try save
+            DB::table('slaughter_data')->insert([
+                'agg_no' => $request->agg_no,
+                'receipt_no' => $request->receipt_no,
+                'item_code' => $helpers->transformToCarcassCode($request->item_code),
+                'vendor_no' => $request->vendor_no,
+                'vendor_name' => $request->vendor_name,
+                'sideA_weight' => $request->side_A,
+                'sideB_weight' => $request->side_B,
+                'total_weight' => $request->total_weight,
+                'tare_weight' => $request->tare_weight,
+                'total_net' => ($request->total_weight) - ($request->tare_weight),
+                'settlement_weight' => $request->settlement_weight,
+                'classification_code' => $request->classification_code,
+                'user_id' => $helpers->authenticatedUserId(),
+            ]);
+
+            Toastr::success('record added successfully', 'Success');
+            return redirect()
+                ->back()
+                ->withInput();
+        } catch (\Exception $e) {
+            Toastr::error($e->getMessage(), 'Error!');
+            return back()
+                ->withInput();
+        }
+    }
+
     public function receipts(Helpers $helpers)
     {
         $title = "receipts";
 
         $receipts = Cache::remember('imported_receipts', now()->addMinutes(120), function () {
             return DB::table('receipts')
-                ->whereDate('created_at', '>=', Carbon::yesterday())
+                ->whereDate('created_at', '>=', Carbon::today())
                 ->orderBy('created_at', 'DESC')
                 ->take(100)
                 ->get();

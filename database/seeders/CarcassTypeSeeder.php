@@ -18,7 +18,7 @@ class CarcassTypeSeeder extends Seeder
             [
                 [
                     'code' => 'BG1021',
-                    'description' => 'High Grade-Steer, Livestock',
+                    'description' => 'Steer - High Grade Carcass',
                 ],
                 [
                     'code' => 'BG1022',
@@ -31,10 +31,6 @@ class CarcassTypeSeeder extends Seeder
                 [
                     'code' => 'BG1024',
                     'description' => 'Cow - High Grade Carcass',
-                ],
-                [
-                    'code' => 'BG1025',
-                    'description' => 'HG Carcass without Kidney',
                 ],
                 [
                     'code' => 'BG1031',
@@ -61,20 +57,8 @@ class CarcassTypeSeeder extends Seeder
                     'description' => 'CMSTD Grade Carcass',
                 ],
                 [
-                    'code' => 'BG1038',
-                    'description' => 'CMFAQ-Com Grade Carcass',
-                ],
-                [
                     'code' => 'BG1202',
                     'description' => 'Goat Carcass',
-                ],
-                [
-                    'code' => 'BG1400',
-                    'description' => 'High Grade Beef Carcass',
-                ],
-                [
-                    'code' => 'BG1401',
-                    'description' => 'Commercial Beef Carcass',
                 ],
                 [
                     'code' => 'BG1900',
