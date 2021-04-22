@@ -314,6 +314,8 @@
                     if (obj.success == true) {
                         var reading = document.getElementById('reading');
                         reading.value = obj.response;
+                        
+                        getReadingRouter();
 
                     } else if (obj.success == false) {
                         alert('error occured in response: ' + obj.response);
@@ -419,7 +421,9 @@
     function computeTotalWeight() {
         var sideA = $('#side_A').val();
         var sideB = $('#side_B').val();
-        $('#total_weight').val(parseFloat(sideA) + parseFloat(sideB));
+        var add = parseFloat(sideA) + parseFloat(sideB);
+        var total = (Math.round(add * 100) / 100).toFixed(2);
+        $('#total_weight').val(total);
 
         getSettlementWeight();
     }
