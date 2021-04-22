@@ -97,14 +97,9 @@
             <div class="card-body text-center">
                 <div class="form-group">
                     <div class="row">
-                        <div class="col-md-6">
-                            <label for="exampleInputPassword1">Agg No. </label>
-                            <input type="number" style="text-align: center" class="form-control" value="" name="agg_no"
-                                id="agg_no" placeholder="" readonly required>
-                        </div>
-                        <div class="col-md-6" style="text-align: center">
+                        <div class="col-md-12" style="text-align: center">
                             <label for="exampleInputPassword1">Receipt No.</label>
-                            <select class="form-control " name="receipt_no" id="receipt_no" required>
+                            <select class="form-control select2" name="receipt_no" id="receipt_no" required>
                                 @foreach($receipts as $receipt)
 
                                 @if (old('receipt_no') == $receipt->receipt_no)
@@ -143,7 +138,12 @@
             </div>
         </div>
         <div class="card text-center" style="padding-top: ">
-            <div class="card-body">
+            <div class="card-body">                
+                <div class="form-group">
+                    <label for="exampleInputPassword1">Agg No. </label>
+                    <input type="number" style="text-align: center" class="form-control" value="" name="agg_no"
+                        id="agg_no" placeholder="" readonly required>
+                </div>
                 <div class="row form-group">
                     <div class="text-center" style="width: 70%; margin: 0 auto;">
                         <label for="exampleInputPassword1">Total Received From Vendor </label>
