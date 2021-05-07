@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Helpers;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Support\Facades\DB;
@@ -67,19 +68,16 @@ class LoginController extends Controller
             return back();
         }
 
-        # login successful
-        if (!DB::table('users')->where('username', '=', $request->username)->exists()) {
-            # user not in db, add user
-            $new_user = $helpers->addUser($request->username);
-
-            if ($new_user != 1) {
-                # failed add user to db
-                Toastr::error($new_user, 'Error!');
-                return back();
-            }
-        }
-
-        $user = DB::table('users')->where('username', $request->username)->first();
+        # login successful, check if user exists, else add
+        $user = User::firstOrCreate(
+            [
+                'username' => $request->username
+            ],
+            [
+                'username' => $request->username,
+                'email' => strtolower($request->username) . "@farmerschoice.com",
+            ]
+        );
 
         # Check if session exists and log out the previous session
         $previous_session = $user->session;
