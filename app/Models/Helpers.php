@@ -55,20 +55,6 @@ class Helpers
         return $response;
     }
 
-    public function addUser($username)
-    {
-        try {
-            // try save
-            DB::table('users')->insert([
-                'username' => $username,
-                'email' => strtolower($username) . "@farmerschoice.co.ke",
-            ]);
-            return 1;
-        } catch (\Exception $e) {
-            return $e->getMessage();
-        }
-    }
-
     public function getReadScaleApiServiceUrl()
     {
         return config('app.read_scale_api_url');
