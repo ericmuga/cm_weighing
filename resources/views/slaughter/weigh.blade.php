@@ -60,13 +60,13 @@
                             @endif
                         </select>
                     </div>
-                    <div class="col-md-4" style="padding-top: 7%">
+                    <div class="col-md-4" style="padding-top: 7.5%">
                         <button class="btn btn-secondary btn-sm form-control" onclick="getReset()" type="button">
                             <strong>Reset</strong>
                         </button>
                     </div>
                 </div>
-                <div class="row text-center">
+                <div class="row text-center phase1">
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="exampleInputPassword1">Side A</label>
@@ -83,14 +83,22 @@
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label for="exampleInputPassword1">Total</label>
+                            <label for="exampleInputPassword1">Total </label>
                             <input type="number" style="text-align: center" class="form-control" id="total_weight"
                                 name="total_weight" step="0.01" value="0.00" readonly required>
                         </div>
-                        <input type="hidden" class="form-control " id="settlement_weight" name="settlement_weight"
-                            value="">
                     </div>
                 </div>
+                <div class="row text-center phase2" style="text-align: center; display:inline-block;">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">Total </label>
+                            <input type="number" style="text-align: center" class="form-control" id="total_weight2"
+                                name="total_weight2" step="0.01" value="0.00" readonly required>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" class="form-control " id="settlement_weight" name="settlement_weight" value="">
             </div>
         </div>
         <div class="card ">
@@ -138,7 +146,7 @@
             </div>
         </div>
         <div class="card text-center" style="padding-top: ">
-            <div class="card-body">                
+            <div class="card-body">
                 <div class="form-group">
                     <label for="exampleInputPassword1">Agg No. </label>
                     <input type="number" style="text-align: center" class="form-control" value="" name="agg_no"
@@ -147,20 +155,20 @@
                 <div class="row form-group">
                     <div class="text-center" style="width: 70%; margin: 0 auto;">
                         <label for="exampleInputPassword1">Total Received From Vendor </label>
-                        <input type="number" style="text-align: center" class="form-control" value=""
-                            name="total_received" id="total_received" placeholder="" readonly required>
+                        <input type="number" style="text-align: center" class="form-control" value="" name=""
+                            id="total_received" placeholder="" readonly required>
                     </div>
                 </div>
                 <div class=" row form-group">
                     <div class="col-md-6">
                         <label for="exampleInputPassword1">Total weighed </label>
-                        <input type="number" style="text-align: center" class="form-control" value=""
-                            name="total_weighed" id="total_weighed" placeholder="" readonly required>
+                        <input type="number" style="text-align: center" class="form-control" value="" name=""
+                            id="total_weighed" placeholder="" readonly required>
                     </div>
                     <div class="col-md-6">
                         <label for="exampleInputPassword1">Total remaining </label>
-                        <input type="number" style="text-align: center" class="form-control" value=""
-                            name="total_remaining" id="total_remaining" placeholder="" readonly required>
+                        <input type="number" style="text-align: center" class="form-control" value="" name=""
+                            id="total_remaining" placeholder="" readonly required>
                     </div>
                 </div>
                 <div class="form-group" style="padding-top: 10%">
@@ -256,6 +264,7 @@
 @section('scripts')
 <script>
     $(document).ready(function () {
+        hideShowDivs();
 
         loadWeighData();
 
@@ -288,7 +297,19 @@
             }
 
         });
+
     });
+
+    function hideShowDivs() {
+        if ($('#item_code').val() == 'BG1101' || $('#item_code').val() == 'BG1201') {
+            $('.phase1').hide();
+            $('.phase2').show();
+
+        } else {
+            $('.phase1').show();
+            $('.phase2').hide();
+        }
+    }
 
     function getScaleReading() {
         var comport = $('#comport_value').val();
@@ -314,7 +335,7 @@
                     if (obj.success == true) {
                         var reading = document.getElementById('reading');
                         reading.value = obj.response;
-                        
+
                         getReadingRouter();
 
                     } else if (obj.success == false) {
@@ -341,7 +362,6 @@
     function loadWeighData() {
         /* Start weigh data ajax */
         var receipt = $('#receipt_no').val();
-
         if (receipt != null) {
             $.ajax({
                 type: "GET",
@@ -356,7 +376,6 @@
                 dataType: 'JSON',
                 success: function (res) {
                     if (res) {
-                        console.log(res);
                         var str = JSON.stringify(res);
                         var obj = JSON.parse(str);
 
@@ -368,8 +387,10 @@
                         $('#total_received').val(obj.vendor[0].total_received);
                         $('#total_weighed').val(obj.total_weighed);
                         $('#total_remaining').val(obj.vendor[0].total_received - obj.total_weighed);
-
                     }
+
+                    // show/hide total weights divs
+                    hideShowDivs();
                 }
             });
 
@@ -378,16 +399,24 @@
     }
 
     function validateOnSubmit() {
-        var side_A = $('#side_A').val();
-        var side_B = $('#side_B').val();
+        if ($('#item_code').val() == 'BG1101' || $('#item_code').val() == 'BG1201') {
+            if (!($('#total_weight2').val() > 10) && !($('#total_weight2').val() < 200)) {
+                alert("Please ensure you have valid weight of between 10-200 kgs.");
+                return false;
+            }
+
+        } else {
+            var side_A = $('#side_A').val();
+            var side_B = $('#side_B').val();
+
+            if (!(side_A >= 10 && side_A <= 200) && !(side_B >= 10 && side_B <= 200)) {
+                alert("Please ensure you have valid weight of between 10-200 kgs in both sides.");
+                return false;
+            }
+        }
 
         var total_weighed = $('#total_weighed').val();
         var total_received = $('#total_received').val();
-
-        if (!(side_A >= 10 && side_A <= 200) && !(side_B >= 10 && side_B <= 200)) {
-            alert("Please ensure you have valid weight of between 10-200 kgs in both sides.");
-            return false;
-        }
 
         if (total_weighed >= total_received) {
             alert("You have exhausted vendor received Qty.");
@@ -399,38 +428,57 @@
         $("#side_A").val('0.00');
         $('#side_B').val('0.00');
         $('#total_weight').val('0.00');
+         $('#total_weight2').val('0.00');
         $('#settlement_weight').val('0.00');
     }
 
     function getReadingRouter() {
         var reading = $('#reading').val();
 
-        var side_a = $('#side_A').val();
-        var side_b = $('#side_B').val();
-
-        if (side_a > 0) {
-            $('#side_B').val(reading);
+        if ($('#item_code').val() == 'BG1101' || $('#item_code').val() == 'BG1201') {
+            $('#total_weight2').val(reading);
 
         } else {
-            $('#side_A').val(reading);
+            var side_a = $('#side_A').val();
+            var side_b = $('#side_B').val();
+
+            if (side_a > 0) {
+                $('#side_B').val(reading);
+
+            } else {
+                $('#side_A').val(reading);
+            }
         }
 
         computeTotalWeight();
     }
 
     function computeTotalWeight() {
-        var sideA = $('#side_A').val();
-        var sideB = $('#side_B').val();
-        var add = parseFloat(sideA) + parseFloat(sideB);
-        var total = (Math.round(add * 100) / 100).toFixed(2);
-        $('#total_weight').val(total);
+        if ($('#item_code').val() == 'BG1101' || $('#item_code').val() == 'BG1201') {
+            var reading = $('#reading').val();
+            $('#total_weight2').val((Math.round(reading * 100) / 100).toFixed(2));
+
+        } else {
+            var sideA = $('#side_A').val();
+            var sideB = $('#side_B').val();
+            var add = parseFloat(sideA) + parseFloat(sideB);
+            var total = (Math.round(add * 100) / 100).toFixed(2);
+            $('#total_weight').val(total);
+        }
 
         getSettlementWeight();
     }
 
     function getSettlementWeight() {
         var settlement_weight = document.getElementById('settlement_weight');
-        var total_gross = $('#total_weight').val();
+
+        if ($('#item_code').val() == 'BG1101' || $('#item_code').val() == 'BG1201') {
+            var total_gross = $('#total_weight2').val();
+
+        } else {
+            var total_gross = $('#total_weight').val();
+        }
+
         var tareweight = $('#tare_weight').val();
 
         var net = total_gross - tareweight;
@@ -455,7 +503,6 @@
             dataType: 'JSON',
             success: function (res) {
                 if (res) {
-                    console.log(res);
                     $('#receipt_no').val(res);
                 }
 

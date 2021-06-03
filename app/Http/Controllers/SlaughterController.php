@@ -108,22 +108,39 @@ class SlaughterController extends Controller
     public function saveWeighData(Request $request, Helpers $helpers)
     {
         try {
-            // try save
-            DB::table('slaughter_data')->insert([
-                'agg_no' => $request->agg_no,
-                'receipt_no' => $request->receipt_no,
-                'item_code' => $helpers->transformToCarcassCode($request->item_code),
-                'vendor_no' => $request->vendor_no,
-                'vendor_name' => $request->vendor_name,
-                'sideA_weight' => $request->side_A,
-                'sideB_weight' => $request->side_B,
-                'total_weight' => $request->total_weight,
-                'tare_weight' => $request->tare_weight,
-                'total_net' => ($request->total_weight) - ($request->tare_weight),
-                'settlement_weight' => $request->settlement_weight,
-                'classification_code' => $request->classification_code,
-                'user_id' => $helpers->authenticatedUserId(),
-            ]);
+            if (!($request->item_code == 'BG1101') && !($request->item_code == 'BG1201')) {
+                # insert for beef
+                DB::table('slaughter_data')->insert([
+                    'agg_no' => $request->agg_no,
+                    'receipt_no' => $request->receipt_no,
+                    'item_code' => $helpers->transformToCarcassCode($request->item_code),
+                    'vendor_no' => $request->vendor_no,
+                    'vendor_name' => $request->vendor_name,
+                    'sideA_weight' => $request->side_A,
+                    'sideB_weight' => $request->side_B,
+                    'total_weight' => $request->total_weight,
+                    'tare_weight' => $request->tare_weight,
+                    'total_net' => ($request->total_weight) - ($request->tare_weight),
+                    'settlement_weight' => $request->settlement_weight,
+                    'classification_code' => $request->classification_code,
+                    'user_id' => $helpers->authenticatedUserId(),
+                ]);
+            } else {
+                # insert for lamb/goat
+                DB::table('slaughter_data')->insert([
+                    'agg_no' => $request->agg_no,
+                    'receipt_no' => $request->receipt_no,
+                    'item_code' => $helpers->transformToCarcassCode($request->item_code),
+                    'vendor_no' => $request->vendor_no,
+                    'vendor_name' => $request->vendor_name,
+                    'total_weight' => $request->total_weight2,
+                    'tare_weight' => $request->tare_weight,
+                    'total_net' => ($request->total_weight2) - ($request->tare_weight),
+                    'settlement_weight' => $request->settlement_weight,
+                    'classification_code' => $request->classification_code,
+                    'user_id' => $helpers->authenticatedUserId(),
+                ]);
+            }
 
             Toastr::success('record added successfully', 'Success');
             return redirect()
