@@ -157,9 +157,8 @@ class SlaughterController extends Controller
     {
         $title = "receipts";
 
-        $receipts = Cache::remember('imported_receipts', now()->addMinutes(120), function () {
+        $receipts = Cache::remember('imported_receipts', now()->addMinutes(360), function () {
             return DB::table('receipts')
-                ->whereDate('created_at', '>=', Carbon::today())
                 ->orderBy('created_at', 'DESC')
                 ->take(100)
                 ->get();
@@ -239,8 +238,8 @@ class SlaughterController extends Controller
         $title = "Slaughter Data";
 
         $slaughter_data = DB::table('slaughter_data')
-            ->leftJoin('carcass_types', 'slaughter_data.ear_tag', '=', 'carcass_types.code')
-            ->select('slaughter_data.*', 'carcass_types.description')
+            ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
+            ->select('slaughter_data.*', 'carcass_types.description AS item_name')
             ->orderBy('slaughter_data.created_at', 'DESC')
             ->take(1000)
             ->get();

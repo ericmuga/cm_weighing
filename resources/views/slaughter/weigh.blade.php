@@ -187,75 +187,72 @@
     <button class="btn btn-success " data-toggle="collapse" data-target="#slaughter_entries"><i class="fa fa-plus"></i>
         Entries
     </button>
-</div>
+</div><hr>
 
-<div id="slaughter_entries" class="collapse">
-    <hr>
-    <div class="row">
-        <!-- slaughter data Table-->
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title"></h3>
-                    <h3 class="card-title"> Weighed Entries | <span id="subtext-h1-title"><small> view list ordered
-                                by latest</small> </span></h3>
-                </div>
-                <!-- /.card-header -->
-                <div class="card-body">
-                    <div class="hidden" hidden>{{ $i = 1 }}</div>
-                    <table id="example1" class="table table-striped table-bordered table-hover">
+<div id="slaughter_entries" class="row collapse">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Slaughter Data Report| <span id="subtext-h1-title"><small> showing all
+                            entries</small> </span></h3>
+            </div>
+            <!-- /.card-header -->
+            <div class="card-body">
+                <div class="hidden" hidden>{{ $i = 1 }}</div>
+                <div class="table-responsive">
+                    <table id="example1" class="table table-bordered table-hover">
                         <thead>
                             <tr>
                                 <th>Agg No </th>
-                                <th>Receipt No.</th>
-                                <th>Code</th>
-                                <th>Description</th>
-                                <th>Vendor No.</th>
-                                <th>Vendor Name</th>
-                                <th>Side A</th>
-                                <th>Side B</th>
-                                <th>Total Weight</th>
-                                <th>Slaughter Date</th>
+                                    <th>Receipt No.</th>
+                                    <th>Code</th>
+                                    <th>Description</th>
+                                    <th>Vendor No.</th>
+                                    <th>Vendor Name</th>
+                                    <th>Side A</th>
+                                    <th>Side B</th>
+                                    <th>Total Weight</th>
+                                    <th>Slaughter Date</th>
                             </tr>
                         </thead>
                         <tfoot>
                             <tr>
                                 <th>Agg No </th>
-                                <th>Receipt No.</th>
-                                <th>Code</th>
-                                <th>Description</th>
-                                <th>Vendor No.</th>
-                                <th>Vendor Name</th>
-                                <th>Side A</th>
-                                <th>Side B</th>
-                                <th>Total Weight</th>
-                                <th>Slaughter Date</th>
+                                    <th>Receipt No.</th>
+                                    <th>Code</th>
+                                    <th>Description</th>
+                                    <th>Vendor No.</th>
+                                    <th>Vendor Name</th>
+                                    <th>Side A</th>
+                                    <th>Side B</th>
+                                    <th>Total Weight</th>
+                                    <th>Slaughter Date</th>
                             </tr>
                         </tfoot>
                         <tbody>
                             @foreach($slaughter_data as $data)
-                            <tr>
-                                <td>{{ $data->agg_no }}</td>
-                                <td>{{ $data->receipt_no }}</td>
-                                <td>{{ $data->item_code }}</td>
-                                <td>{{ $data->description }}</td>
-                                <td>{{ $data->vendor_no }}</td>
-                                <td>{{ $data->vendor_name }}</td>
-                                <td>{{ number_format($data->sideA_weight, 2) }}</td>
-                                <td>{{ number_format($data->sideB_weight, 2) }}</td>
-                                <td>{{ number_format($data->total_weight, 2) }}</td>
-                                <td>{{ $data->created_at }}</td>
-                            </tr>
-                            @endforeach
+                                <tr>
+                                    <td>{{ $data->agg_no }}</td>
+                                    <td>{{ $data->receipt_no }}</td>
+                                    <td>{{ $data->item_code }}</td>
+                                    <td>{{ $data->description }}</td>
+                                    <td>{{ $data->vendor_no }}</td>
+                                    <td>{{ $data->vendor_name }}</td>
+                                    <td>{{ number_format($data->sideA_weight, 2) }}</td>
+                                    <td>{{ number_format($data->sideB_weight, 2) }}</td>
+                                    <td>{{ number_format($data->total_weight, 2) }}</td>
+                                    <td>{{ $data->created_at }}</td>
+                                </tr>
+                                @endforeach
                         </tbody>
                     </table>
                 </div>
-                <!-- /.card-body -->
             </div>
-            <!-- /.card -->
+            <!-- /.card-body -->
         </div>
-        <!-- /.col -->
+        <!-- /.card -->
     </div>
+    <!-- /.col -->
 </div>
 <!--End users Table-->
 
@@ -428,7 +425,7 @@
         $("#side_A").val('0.00');
         $('#side_B').val('0.00');
         $('#total_weight').val('0.00');
-         $('#total_weight2').val('0.00');
+        $('#total_weight2').val('0.00');
         $('#settlement_weight').val('0.00');
     }
 
