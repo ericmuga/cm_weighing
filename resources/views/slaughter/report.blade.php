@@ -90,7 +90,7 @@ aria-hidden="true">
             <div class="card-body">
                 <div class="hidden" hidden>{{ $i = 1 }}</div>
                 <div class="table-responsive">
-                    <table id="example1" class="table table-bordered table-hover" width="100%">
+                    <table id="example1" class="table table-bordered table-striped " width="100%">
                         <thead>
                             <tr>
                                 <th>#</th>
