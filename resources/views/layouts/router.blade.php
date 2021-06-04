@@ -87,7 +87,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                                         </p>
                                     </a>
                                 </div>
-                                <div class="card p-2 bg-warning">
+                                <div class="card p-2 bg-warning" style="height: 250px">
                                     <a class="card-body text-center card-block stretched-link text-decoration-none"
                                         href="#">
                                         <h4 class="card-title">Butchery</h4>
@@ -95,7 +95,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                                         </p>
                                     </a>
                                 </div>
-                                <div class="card p-2 bg-success ">
+                                <div class="card p-2 bg-success" style="height: 250px">
                                     <a class="card-body text-center card-block stretched-link text-decoration-none card-link"
                                         href="#">
                                         <h4 class="card-title">Admin</h4>
