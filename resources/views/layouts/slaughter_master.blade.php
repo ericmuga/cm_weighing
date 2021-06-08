@@ -1,8 +1,4 @@
 <!DOCTYPE html>
-<!--
-This is a starter template page. Use this page to start your new project from
-scratch. This page gets rid of all links and provides the needed markup only.
--->
 <html lang="en">
 
 <head>
@@ -165,7 +161,6 @@ scratch. This page gets rid of all links and provides the needed markup only.
         $(function () {
             $("#example1").DataTable({
                 "responsive": false,
-                // "sScrollX": true,
                 "autoWidth": false,
                 "lengthChange": true,
                 "lengthMenu": [[3, 5, 10, 25, 50, -1], [3, 5, 10, 25, 50, "All"]],

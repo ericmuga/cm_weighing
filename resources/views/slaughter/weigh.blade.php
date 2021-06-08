@@ -187,7 +187,8 @@
     <button class="btn btn-success " data-toggle="collapse" data-target="#slaughter_entries"><i class="fa fa-plus"></i>
         Entries
     </button>
-</div><hr>
+</div>
+<hr>
 
 <div id="slaughter_entries" class="row collapse">
     <div class="col-12">
@@ -203,47 +204,50 @@
                     <table id="example1" class="table table-bordered table-striped">
                         <thead>
                             <tr>
+                                <th>#</th>
                                 <th>Agg No </th>
-                                    <th>Receipt No.</th>
-                                    <th>Code</th>
-                                    <th>Description</th>
-                                    <th>Vendor No.</th>
-                                    <th>Vendor Name</th>
-                                    <th>Side A</th>
-                                    <th>Side B</th>
-                                    <th>Total Weight</th>
-                                    <th>Slaughter Date</th>
+                                <th>Receipt No.</th>
+                                <th>Code</th>
+                                <th>Description</th>
+                                <th>Vendor No.</th>
+                                <th>Vendor Name</th>
+                                <th>Side A</th>
+                                <th>Side B</th>
+                                <th>Total Weight</th>
+                                <th>Slaughter Date</th>
                             </tr>
                         </thead>
                         <tfoot>
                             <tr>
+                                <th>#</th>
                                 <th>Agg No </th>
-                                    <th>Receipt No.</th>
-                                    <th>Code</th>
-                                    <th>Description</th>
-                                    <th>Vendor No.</th>
-                                    <th>Vendor Name</th>
-                                    <th>Side A</th>
-                                    <th>Side B</th>
-                                    <th>Total Weight</th>
-                                    <th>Slaughter Date</th>
+                                <th>Receipt No.</th>
+                                <th>Code</th>
+                                <th>Description</th>
+                                <th>Vendor No.</th>
+                                <th>Vendor Name</th>
+                                <th>Side A</th>
+                                <th>Side B</th>
+                                <th>Total Weight</th>
+                                <th>Slaughter Date</th>
                             </tr>
                         </tfoot>
                         <tbody>
                             @foreach($slaughter_data as $data)
-                                <tr>
-                                    <td>{{ $data->agg_no }}</td>
-                                    <td>{{ $data->receipt_no }}</td>
-                                    <td>{{ $data->item_code }}</td>
-                                    <td>{{ $data->description }}</td>
-                                    <td>{{ $data->vendor_no }}</td>
-                                    <td>{{ $data->vendor_name }}</td>
-                                    <td>{{ number_format($data->sideA_weight, 2) }}</td>
-                                    <td>{{ number_format($data->sideB_weight, 2) }}</td>
-                                    <td>{{ number_format($data->total_weight, 2) }}</td>
-                                    <td>{{ $data->created_at }}</td>
-                                </tr>
-                                @endforeach
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $data->agg_no }}</td>
+                                <td>{{ $data->receipt_no }}</td>
+                                <td>{{ $data->item_code }}</td>
+                                <td>{{ $data->description }}</td>
+                                <td>{{ $data->vendor_no }}</td>
+                                <td>{{ $data->vendor_name }}</td>
+                                <td>{{ number_format($data->sideA_weight, 2) }}</td>
+                                <td>{{ number_format($data->sideB_weight, 2) }}</td>
+                                <td>{{ number_format($data->total_weight, 2) }}</td>
+                                <td>{{ $data->created_at }}</td>
+                            </tr>
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
@@ -397,8 +401,11 @@
 
     function validateOnSubmit() {
         if ($('#item_code').val() == 'BG1101' || $('#item_code').val() == 'BG1201') {
-            if (!($('#total_weight2').val() > 10) && !($('#total_weight2').val() < 200)) {
-                alert("Please ensure you have valid weight of between 10-200 kgs.");
+            // lamb or goat
+            var net = $('#total_weight2').val();
+
+            if ( !(net >= 10 && net <= 70)) {
+                alert("Please ensure you have valid weight of between 10-70 kgs.");
                 return false;
             }
 
@@ -406,16 +413,15 @@
             var side_A = $('#side_A').val();
             var side_B = $('#side_B').val();
 
-            if (!(side_A >= 10 && side_A <= 200) && !(side_B >= 10 && side_B <= 200)) {
-                alert("Please ensure you have valid weight of between 10-200 kgs in both sides.");
+            if (!(side_A >= 40 && side_A <= 200) || !(side_B >= 40 && side_B <= 200)) {
+                alert("Please ensure you have valid weight of between 40-200 kgs in both sides.");
                 return false;
             }
         }
 
-        var total_weighed = $('#total_weighed').val();
-        var total_received = $('#total_received').val();
+        var total_remaining = $('#total_remaining').val();
 
-        if (total_weighed >= total_received) {
+        if ( total_remaining <= 0) {
             alert("You have exhausted vendor received Qty.");
             return false;
         }

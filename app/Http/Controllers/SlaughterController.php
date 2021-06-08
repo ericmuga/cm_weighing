@@ -62,7 +62,7 @@ class SlaughterController extends Controller
             ->whereDate('slaughter_data.created_at', Carbon::today())
             ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
             ->select('slaughter_data.*', 'carcass_types.description')
-            ->orderBy('slaughter_data.created_at', 'desc')
+            ->latest()
             ->get();
 
         return view('slaughter.weigh', compact('title', 'configs', 'receipts', 'helpers', 'slaughter_data'));
@@ -240,7 +240,7 @@ class SlaughterController extends Controller
         $slaughter_data = DB::table('slaughter_data')
             ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
             ->select('slaughter_data.*', 'carcass_types.description AS item_name')
-            ->orderBy('slaughter_data.created_at', 'DESC')
+            ->orderBy('slaughter_data.created_at', 'desc')
             ->take(1000)
             ->get();
 

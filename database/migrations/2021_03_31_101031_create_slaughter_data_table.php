@@ -20,8 +20,8 @@ class CreateSlaughterDataTable extends Migration
             $table->string('item_code', 20);
             $table->string('vendor_no', 20);
             $table->string('vendor_name');
-            $table->double('sideA_weight', 8, 2)->nullable();
-            $table->double('sideB_weight', 8, 2)->nullable();
+            $table->double('sideA_weight', 8, 2)->default(0);
+            $table->double('sideB_weight', 8, 2)->default(0);
             $table->double('total_weight', 8, 2);
             $table->double('tare_weight', 8, 2);
             $table->double('total_net', 8, 2);
