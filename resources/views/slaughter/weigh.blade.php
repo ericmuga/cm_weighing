@@ -24,7 +24,7 @@
                 <div class="form-group">
                     <label for="exampleInputEmail1">Scale Reading</label>
                     <input type="number" style="text-align: center" step="0.01" class="form-control" id="reading"
-                        name="reading" value="0.00" placeholder="" readonly required>
+                        name="reading" value="0.00" placeholder="" onclick="select()" readonly required>
                 </div>
                 <div class="form-check">
                     <input type="checkbox" class="form-check-input" id="manual_weight">
@@ -66,7 +66,7 @@
                         </button>
                     </div>
                 </div>
-                <div class="row text-center phase1">
+                <div class="row text-center beef">
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="exampleInputPassword1">Side A</label>
@@ -89,7 +89,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="row text-center phase2" style="text-align: center; display:inline-block;">
+                <div class="row text-center goats" style="text-align: center; display:inline-block;">
                     <div class="col-md-8">
                         <div class="form-group">
                             <label for="exampleInputPassword1">Total </label>
@@ -171,6 +171,12 @@
                             id="total_remaining" placeholder="" readonly required>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label for="exampleInputPassword1">Classification Code </label>
+                    <input type="text" style="text-align: center" class="form-control" name="classification_code"
+                        id="classification_code" placeholder="" readonly required>
+                    {{-- <button type="button" onclick="return getClassificationCode()" class="btn btn-outline-dark"> Get Classification</button></button> --}}
+                </div>
                 <div class="form-group" style="padding-top: 10%">
                     <button type="submit" onclick="return validateOnSubmit()" class="btn btn-success btn-lg "><i
                             class="fa fa-paper-plane" aria-hidden="true"></i>
@@ -214,6 +220,8 @@
                                 <th>Side A</th>
                                 <th>Side B</th>
                                 <th>Total Weight</th>
+                                <th>Total Net</th>
+                                <th>Class Code</th>
                                 <th>Slaughter Date</th>
                             </tr>
                         </thead>
@@ -229,6 +237,8 @@
                                 <th>Side A</th>
                                 <th>Side B</th>
                                 <th>Total Weight</th>
+                                <th>Total Net</th>
+                                <th>Class Code</th>
                                 <th>Slaughter Date</th>
                             </tr>
                         </tfoot>
@@ -245,6 +255,8 @@
                                 <td>{{ number_format($data->sideA_weight, 2) }}</td>
                                 <td>{{ number_format($data->sideB_weight, 2) }}</td>
                                 <td>{{ number_format($data->total_weight, 2) }}</td>
+                                <td>{{ number_format($data->total_net, 2) }}</td>
+                                <td>{{ $data->classification_code }}</td>
                                 <td>{{ $data->created_at }}</td>
                             </tr>
                             @endforeach
@@ -282,6 +294,7 @@
         $("#receipt_no").change(function (e) {
             e.preventDefault();
             loadWeighData();
+            getClassificationCode();
         });
 
         $('#manual_weight').change(function () {
@@ -303,12 +316,12 @@
 
     function hideShowDivs() {
         if ($('#item_code').val() == 'BG1101' || $('#item_code').val() == 'BG1201') {
-            $('.phase1').hide();
-            $('.phase2').show();
+            $('.beef').hide();
+            $('.goats').show();
 
         } else {
-            $('.phase1').show();
-            $('.phase2').hide();
+            $('.beef').show();
+            $('.goats').hide();
         }
     }
 
@@ -404,7 +417,7 @@
             // lamb or goat
             var net = $('#total_weight2').val();
 
-            if ( !(net >= 10 && net <= 70)) {
+            if (!(net >= 10 && net <= 70)) {
                 alert("Please ensure you have valid weight of between 10-70 kgs.");
                 return false;
             }
@@ -421,7 +434,7 @@
 
         var total_remaining = $('#total_remaining').val();
 
-        if ( total_remaining <= 0) {
+        if (total_remaining <= 0) {
             alert("You have exhausted vendor received Qty.");
             return false;
         }
@@ -472,9 +485,7 @@
         getSettlementWeight();
     }
 
-    function getSettlementWeight() {
-        var settlement_weight = document.getElementById('settlement_weight');
-
+    function getNet() {
         if ($('#item_code').val() == 'BG1101' || $('#item_code').val() == 'BG1201') {
             var total_gross = $('#total_weight2').val();
 
@@ -484,12 +495,21 @@
 
         var tareweight = $('#tare_weight').val();
 
-        var net = total_gross - tareweight;
+        return total_gross - tareweight;
+    }
+
+    function getSettlementWeight() {
+        var settlement_weight = document.getElementById('settlement_weight');
+
+        var net = getNet();
 
         var cold_weight = 0.975 * net;
 
         // return settlement_weight in two decimal places without rounding
         settlement_weight.value = (parseInt(cold_weight * 100) / 100).toFixed(2);
+
+        // get classification
+        getClassificationCode();
     }
 
     function getNextReceipt(receipt) {
@@ -511,6 +531,128 @@
 
             }
         });
+    }
+
+    function getClassificationCode() {
+        $('#classification_code').val('--');
+
+        var net = getNet();
+        var item_code = $('#item_code').val();
+
+        if (net > 1 && item_code != '') {
+            if (item_code == 'BG1101' || item_code == 'BG1201') {
+                // lamb/goat classes
+                switch (true) {
+                    case (item_code == 'BG1101'):
+                        // lamb
+                        $('#classification_code').val('LAMB-STD');
+                        break;
+
+                    case (item_code == 'BG1201'):
+                        // goat
+                        $('#classification_code').val('GOATLCL');
+                        break;
+
+                    default:
+                        $('#classification_code').val('**');
+                }
+
+            } else if (item_code == 'BG1005' || item_code == 'BG1006' || item_code == 'BG1007' || item_code ==
+                'BG1008' ||
+                item_code == 'BG1009') {
+                // High Grade 
+                switch (true) {
+                    case (net >= 165 && net < 170):
+                        // code block
+                        $('#classification_code').val('HG+165');
+                        break;
+
+                    case (net >= 170 && net < 175):
+                        // code block
+                        $('#classification_code').val('HG+170');
+                        break;
+
+                    case (net >= 175 && net <= 250):
+                        // code block
+                        $('#classification_code').val('HG+175');
+                        break;
+
+                    case (net > 250):
+                        // code block
+                        $('#classification_code').val('HG+250.1');
+                        break;
+
+                    default:
+                        $('#classification_code').val('**');
+                }
+            } else if (item_code == 'BG1011' || item_code == 'BG1012' || item_code == 'BG1013' || item_code ==
+                'BG1014') {
+                // comm-beef
+                switch (true) {
+                    case (net < 120):
+                        $('#classification_code').val('CG-120');
+                        break;
+
+                    case (net >= 120 && net < 150):
+                        $('#classification_code').val('CG+150');
+                        break;
+
+                    case (net >= 150 && net < 160):
+                        $('#classification_code').val('CG+150');
+                        break;
+
+                    case (net >= 160 && net < 165):
+                        $('#classification_code').val('CG+160');
+                        break;
+
+                    case (net >= 165 && net < 170):
+                        $('#classification_code').val('CG+165');
+                        break;
+
+                    case (net >= 170 && net < 175):
+                        $('#classification_code').val('CG+170');
+                        break;
+
+                    case (net > 175):
+                        $('#classification_code').val('CG+175');
+                        break;
+
+                    default:
+                        $('#classification_code').val('**');
+                }
+
+            } else if (item_code == 'BG1016') {
+                // CMFAQ
+                switch (true) {
+                    case (net >= 150 && net < 160):
+                        $('#classification_code').val('FAQ+150');
+                        break;
+
+                    case (net >= 160):
+                        $('#classification_code').val('FAQ+160');
+                        break;
+
+                    default:
+                        $('#classification_code').val('**');
+                }
+
+            } else if (item_code == 'BG1018') {
+                // CMSTD
+                switch (true) {
+                    case (net >= 120 && net <= 149):
+                        $('#classification_code').val('STDA-149');
+                        break;
+
+                    case (net <= 119):
+                        $('#classification_code').val('STDB-119');
+                        break;
+
+                    default:
+                        $('#classification_code').val('**');
+                }
+            }
+        }
+
     }
 
 </script>
