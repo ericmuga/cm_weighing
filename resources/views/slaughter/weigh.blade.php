@@ -3,7 +3,7 @@
 @section('content')
 
 <!-- weigh -->
-<form id="form-slaughter-weigh" action="{{ route('save_weigh') }}" method="post">
+<form id="form_slaughter_weigh" action="{{ route('save_weigh') }}" method="post">
     @csrf
     <div class="card-group">
         <div class="card ">
@@ -175,11 +175,10 @@
                     <label for="exampleInputPassword1">Classification Code </label>
                     <input type="text" style="text-align: center" class="form-control" name="classification_code"
                         id="classification_code" placeholder="" readonly required>
-                    {{-- <button type="button" onclick="return getClassificationCode()" class="btn btn-outline-dark"> Get Classification</button></button> --}}
                 </div>
-                <div class="form-group" style="padding-top: 10%">
-                    <button type="submit" onclick="return validateOnSubmit()" class="btn btn-success btn-lg "><i
-                            class="fa fa-paper-plane" aria-hidden="true"></i>
+                <div class="form-group" style="padding-top: 5%">
+                    <button id="submit_form" type="submit" onclick="return validateOnSubmit()"
+                        class="btn btn-success btn-lg "><i class="fa fa-paper-plane" aria-hidden="true"></i>
                         Save</button>
                 </div>
             </div>
@@ -277,6 +276,8 @@
 @section('scripts')
 <script>
     $(document).ready(function () {
+        listenForEnterKeyPress();
+
         hideShowDivs();
 
         loadWeighData();
@@ -313,6 +314,15 @@
         });
 
     });
+
+    function listenForEnterKeyPress() {
+        document.onkeypress = function (e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                e.preventDefault();
+                document.getElementById("submit_form").click();
+            }
+        }
+    }
 
     function hideShowDivs() {
         if ($('#item_code').val() == 'BG1101' || $('#item_code').val() == 'BG1201') {
@@ -434,7 +444,7 @@
 
         var total_remaining = $('#total_remaining').val();
 
-        if (total_remaining <= 0) {
+        if (total_remaining < 1) {
             alert("You have exhausted vendor received Qty.");
             return false;
         }
