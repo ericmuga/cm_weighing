@@ -31,6 +31,7 @@ class LoginController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'username' => 'required',
+            'password' => 'required',
         ]);
 
 
