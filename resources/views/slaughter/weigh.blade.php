@@ -98,7 +98,7 @@
                         </div>
                     </div>
                 </div>
-                <input type="hidden" class="form-control " id="settlement_weight" name="settlement_weight" value="">
+                <input type="hidden" class="form-control " id="settlement_weight" name="settlement_weight" value="0.00">
             </div>
         </div>
         <div class="card ">
@@ -295,7 +295,7 @@
         $("#receipt_no").change(function (e) {
             e.preventDefault();
             loadWeighData();
-            getClassificationCode();
+            getClassificationCode($("#settlement_weight").val());
         });
 
         $('#manual_weight').change(function () {
@@ -519,7 +519,7 @@
         settlement_weight.value = (parseInt(cold_weight * 100) / 100).toFixed(2);
 
         // get classification
-        getClassificationCode();
+        getClassificationCode((parseInt(cold_weight * 100) / 100).toFixed(2));
     }
 
     function getNextReceipt(receipt) {
@@ -543,19 +543,26 @@
         });
     }
 
-    function getClassificationCode() {
+    function getClassificationCode(s_weight) {
         $('#classification_code').val('--');
 
-        var net = getNet();
         var item_code = $('#item_code').val();
 
-        if (net > 1 && item_code != '') {
+        if (s_weight > 1 && item_code != '') {
             if (item_code == 'BG1101' || item_code == 'BG1201') {
                 // lamb/goat classes
                 switch (true) {
                     case (item_code == 'BG1101'):
                         // lamb
-                        $('#classification_code').val('LAMB-STD');
+                        if (s_weight > 25) {
+                            $('#classification_code').val('LAMB-STD');
+
+                        } else if (s_weight >=14 && s_weight < 25) {
+                            $('#classification_code').val('LAMB-PRM');
+
+                        } else if (s_weight >=11 && s_weight < 14) {
+                            $('#classification_code').val('LAMB-STD');
+                        } 
                         break;
 
                     case (item_code == 'BG1201'):
@@ -572,22 +579,22 @@
                 item_code == 'BG1009') {
                 // High Grade 
                 switch (true) {
-                    case (net >= 165 && net < 170):
+                    case (s_weight >= 165 && s_weight < 170):
                         // code block
                         $('#classification_code').val('HG+165');
                         break;
 
-                    case (net >= 170 && net < 175):
+                    case (s_weight >= 170 && s_weight < 175):
                         // code block
                         $('#classification_code').val('HG+170');
                         break;
 
-                    case (net >= 175 && net <= 250):
+                    case (s_weight >= 175 && s_weight <= 250):
                         // code block
                         $('#classification_code').val('HG+175');
                         break;
 
-                    case (net > 250):
+                    case (s_weight > 250):
                         // code block
                         $('#classification_code').val('HG+250.1');
                         break;
@@ -599,31 +606,31 @@
                 'BG1014') {
                 // comm-beef
                 switch (true) {
-                    case (net < 120):
+                    case (s_weight < 120):
                         $('#classification_code').val('CG-120');
                         break;
 
-                    case (net >= 120 && net < 150):
+                    case (s_weight >= 120 && s_weight < 150):
                         $('#classification_code').val('CG+150');
                         break;
 
-                    case (net >= 150 && net < 160):
+                    case (s_weight >= 150 && s_weight < 160):
                         $('#classification_code').val('CG+150');
                         break;
 
-                    case (net >= 160 && net < 165):
+                    case (s_weight >= 160 && s_weight < 165):
                         $('#classification_code').val('CG+160');
                         break;
 
-                    case (net >= 165 && net < 170):
+                    case (s_weight >= 165 && s_weight < 170):
                         $('#classification_code').val('CG+165');
                         break;
 
-                    case (net >= 170 && net < 175):
+                    case (s_weight >= 170 && s_weight < 175):
                         $('#classification_code').val('CG+170');
                         break;
 
-                    case (net > 175):
+                    case (s_weight > 175):
                         $('#classification_code').val('CG+175');
                         break;
 
@@ -634,11 +641,11 @@
             } else if (item_code == 'BG1016') {
                 // CMFAQ
                 switch (true) {
-                    case (net >= 150 && net < 160):
+                    case (s_weight >= 150 && s_weight < 160):
                         $('#classification_code').val('FAQ+150');
                         break;
 
-                    case (net >= 160):
+                    case (s_weight >= 160):
                         $('#classification_code').val('FAQ+160');
                         break;
 
@@ -649,11 +656,11 @@
             } else if (item_code == 'BG1018') {
                 // CMSTD
                 switch (true) {
-                    case (net >= 120 && net <= 149):
+                    case (s_weight >= 120 && s_weight <= 149):
                         $('#classification_code').val('STDA-149');
                         break;
 
-                    case (net <= 119):
+                    case (s_weight <= 119):
                         $('#classification_code').val('STDB-119');
                         break;
 
