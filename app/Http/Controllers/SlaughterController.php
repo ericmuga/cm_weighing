@@ -54,7 +54,7 @@ class SlaughterController extends Controller
         $receipts = Cache::remember('weigh_receipts', now()->addMinutes(120), function () {
             return DB::table('receipts')
                 ->whereDate('slaughter_date', Carbon::today())
-                ->select('receipt_no')
+                ->select('receipt_no', 'vendor_name')
                 ->get();
         });
 

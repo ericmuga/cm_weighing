@@ -111,11 +111,11 @@
                                 @foreach($receipts as $receipt)
 
                                 @if (old('receipt_no') == $receipt->receipt_no)
-                                <option value="{{ $receipt->receipt_no }}" selected>{{ ucwords($receipt->receipt_no) }}
+                                <option value="{{ $receipt->receipt_no }}" selected>{{ ucwords($receipt->receipt_no.'-'.$receipt->vendor_name) }}
                                 </option>
 
                                 @else
-                                <option value="{{ $receipt->receipt_no }}">{{ ucwords($receipt->receipt_no) }}</option>
+                                <option value="{{ $receipt->receipt_no }}">{{ ucwords($receipt->receipt_no.'-'.$receipt->vendor_name) }}</option>
                                 @endif
 
                                 @endforeach
