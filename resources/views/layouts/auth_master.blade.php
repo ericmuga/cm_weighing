@@ -8,19 +8,16 @@
     <meta name="author" content="Ephantus Karanja">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <link rel="shortcut icon" style="height: 50%; width: 100%;"
-        href="{{ asset('assets/img/choice1.png') }}">
+    <link rel="shortcut icon" style="height: 50%; width: 100%;" href="{{ asset('assets/img/choice1.png') }}">
     <title>WMS | {{ $title }}</title>
 
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     <!-- Font Awesome -->
-    <link rel="stylesheet"
-        href="{{ asset('assets/plugins/fontawesome-free/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/fontawesome-free/css/all.min.css') }}">
     <!-- icheck bootstrap -->
-    <link rel="stylesheet"
-        href="{{ asset('assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css') }}">
     <!-- Theme style -->
     <link rel="stylesheet" href="{{ asset('assets/dist/css/adminlte.min.css') }}">
     <!-- toastr -->
@@ -30,11 +27,11 @@
 <body class="hold-transition login-page">
 
     @php
-        if(session()->has('session_message')){
-            $message = Session::get('session_message');
-            Brian2694\Toastr\Facades\Toastr::warning($message, 'Warning!');
-            Session::forget('session_message');
-        }                   
+    if(session()->has('session_message')){
+    $message = Session::get('session_message');
+    Brian2694\Toastr\Facades\Toastr::warning($message, 'Warning!');
+    Session::forget('session_message');
+    }
     @endphp
 
     @yield('content')
