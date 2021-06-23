@@ -111,11 +111,13 @@
                                 @foreach($receipts as $receipt)
 
                                 @if (old('receipt_no') == $receipt->receipt_no)
-                                <option value="{{ $receipt->receipt_no }}" selected>{{ ucwords($receipt->receipt_no.'-'.$receipt->vendor_name) }}
+                                <option value="{{ $receipt->receipt_no }}" selected>
+                                    {{ ucwords($receipt->receipt_no.'-'.$receipt->vendor_name) }}
                                 </option>
 
                                 @else
-                                <option value="{{ $receipt->receipt_no }}">{{ ucwords($receipt->receipt_no.'-'.$receipt->vendor_name) }}</option>
+                                <option value="{{ $receipt->receipt_no }}">
+                                    {{ ucwords($receipt->receipt_no.'-'.$receipt->vendor_name) }}</option>
                                 @endif
 
                                 @endforeach
@@ -219,6 +221,7 @@
                                 <th>Side A</th>
                                 <th>Side B</th>
                                 <th>Total Weight</th>
+                                <th>Tareweight</th>
                                 <th>Total Net</th>
                                 <th>Class Code</th>
                                 <th>Slaughter Date</th>
@@ -236,6 +239,7 @@
                                 <th>Side A</th>
                                 <th>Side B</th>
                                 <th>Total Weight</th>
+                                <th>Tareweight</th>
                                 <th>Total Net</th>
                                 <th>Class Code</th>
                                 <th>Slaughter Date</th>
@@ -245,7 +249,11 @@
                             @foreach($slaughter_data as $data)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ $data->agg_no }}</td>
+                                <td id="editModalShow" data-id="{{$data->id}}" data-receipt="{{ $data->receipt_no }}" 
+                                    data-weight1="{{ number_format($data->sideA_weight, 2) }}" data-weight2="{{ number_format($data->sideB_weight, 2) }}"
+                                    data-total="{{number_format($data->total_weight, 2) }}" data-tare_weight="{{ $data->tare_weight }}"
+                                    data-item_name="{{ $data->vendor_name }}"><a href="#">{{ $data->agg_no }}</a>
+                                </td>
                                 <td>{{ $data->receipt_no }}</td>
                                 <td>{{ $data->item_code }}</td>
                                 <td>{{ $data->description }}</td>
@@ -254,6 +262,7 @@
                                 <td>{{ number_format($data->sideA_weight, 2) }}</td>
                                 <td>{{ number_format($data->sideB_weight, 2) }}</td>
                                 <td>{{ number_format($data->total_weight, 2) }}</td>
+                                <td>{{ number_format($data->tare_weight, 2) }}</td>
                                 <td>{{ number_format($data->total_net, 2) }}</td>
                                 <td>{{ $data->classification_code }}</td>
                                 <td>{{ $data->created_at }}</td>
@@ -269,7 +278,82 @@
     </div>
     <!-- /.col -->
 </div>
-<!--End users Table-->
+<!--End weigh Table-->
+
+
+<!-- Edit scale Modal -->
+<div id="editModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!--Start create user modal-->
+        <form id="form-edit-role" action="{{route('slaughter_edit')}}" method="post">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Edit Slaughter Entry: <strong><input
+                                style="border:none" type="text" id="item_name" value="" readonly></strong></h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="email" class="col-form-label"> Receipt No. </label>
+                        <select class="form-control" name="edit_receipt" id="edit_receipt" required>
+                            @foreach($receipts as $receipt)
+                            <option value="{{ $receipt->receipt_no }}">
+                                {{ ucwords($receipt->receipt_no.'-'.$receipt->vendor_name) }}
+                            </option>
+
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <label for="exampleInputPassword1" class="col-form-label">Tare-Weight</label>
+                            <select class="form-control" name="edit_tareweight" id="edit_tareweight">
+                                <option value="1.50">1.5</option>
+                                <option value="1.80">1.8</option>
+                                <option value="1.90">1.9</option>
+                                <option value="2.20">2.2</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="exampleInputPassword1" class="col-form-label">Side A</label>
+                                <input type="number" style="text-align: center" class="form-control" id="edit_A"
+                                    name="edit_A" step="0.01" value="0.00" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="exampleInputPassword1" class="col-form-label">Side B</label>
+                                <input type="number" style="text-align: center" class="form-control" id="edit_B"
+                                    name="edit_B" step="0.01" value="0.00" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="exampleInputPassword1" class="col-form-label">Total </label>
+                                <input type="number" style="text-align: center" class="form-control" id="edit_total"
+                                    name="edit_total" step="0.01" value="0.00" readonly required>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="item_id" id="item_id" value="">
+                </div>
+                <div class="modal-footer">
+                    <div class="form-group">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button class="btn btn-warning">
+                            <i class="fa fa-save"></i> Update
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<!--End Edit scale1 modal-->
 
 @endsection
 
@@ -311,6 +395,29 @@
 
             }
 
+        });
+
+        // edit scale 1
+        $("body").on("click", "#editModalShow", function (a) {
+            a.preventDefault();
+
+            var id = $(this).data('id');
+            var receipt = $(this).data('receipt');
+            var side_A = $(this).data('weight1');
+            var side_B = $(this).data('weight2');
+            var total = $(this).data('total');
+            var tare_weight = $(this).data('tare_weight');
+            var item_name = $(this).data('item_name');
+
+            $('#item_id').val(id);
+            $('#edit_receipt').val(receipt);
+            $('#edit_A').val(side_A);
+            $('#edit_B').val(side_B);
+            $('#edit_total').val(total);
+            $('#edit_tareweight').val(tare_weight);
+            $('#item_name').val(item_name);
+
+            $('#editModal').modal('show');
         });
 
     });
@@ -557,12 +664,12 @@
                         if (s_weight > 25) {
                             $('#classification_code').val('LAMB-STD');
 
-                        } else if (s_weight >=14 && s_weight < 25) {
+                        } else if (s_weight >= 14 && s_weight < 25) {
                             $('#classification_code').val('LAMB-PRM');
 
-                        } else if (s_weight >=11 && s_weight < 14) {
+                        } else if (s_weight >= 11 && s_weight < 14) {
                             $('#classification_code').val('LAMB-STD');
-                        } 
+                        }
                         break;
 
                     case (item_code == 'BG1201'):
