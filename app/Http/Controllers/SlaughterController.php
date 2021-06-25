@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use PhpParser\Node\Stmt\TryCatch;
 
 class SlaughterController extends Controller
 {
@@ -149,6 +150,34 @@ class SlaughterController extends Controller
         } catch (\Exception $e) {
             Toastr::error($e->getMessage(), 'Error!');
             return back()
+                ->withInput();
+        }
+    }
+
+    public function edit(Request $request, Helpers $helpers)
+    {
+        try {
+            // update
+            DB::table('slaughter_data')
+                ->where('id', $request->item_id)
+                ->update([
+                    'tare_weight' => $request->edit_tareweight,
+                    'total_weight' => $request->edit_total,
+                    'total_net' => $request->edit_net,
+                    'sideA_weight' => $request->edit_A,
+                    'sideB_weight' => $request->edit_B,
+                    'settlement_weight' => $request->edit_settlement,
+                    'classification_code' => $request->edit_classification_code,
+                    'updated_at' => Carbon::now(),
+                ]);
+
+
+            Toastr::success("record {$request->edit_item_name} updated successfully", 'Success');
+            return redirect()->back();
+        } catch (\Exception $e) {
+            Toastr::error($e->getMessage(), 'Error!');
+            return back()
+                ->withErrors($e)
                 ->withInput();
         }
     }

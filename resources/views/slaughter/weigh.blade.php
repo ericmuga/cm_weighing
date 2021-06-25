@@ -149,10 +149,16 @@
         </div>
         <div class="card text-center" style="padding-top: ">
             <div class="card-body">
-                <div class="form-group">
-                    <label for="exampleInputPassword1">Agg No. </label>
-                    <input type="number" style="text-align: center" class="form-control" value="" name="agg_no"
-                        id="agg_no" placeholder="" readonly required>
+                <div class="row form-group">
+                    <div class="col-md-6">
+                        <label for="exampleInputPassword1">Agg No. </label>
+                        <input type="number" style="text-align: center" class="form-control" value="" name="agg_no"
+                            id="agg_no" placeholder="" readonly required>
+                    </div>
+                    <div class="col-md-6" style="padding-top: 10%">
+                        <input type="checkbox" class="form-check-input" id="manual_agg">
+                        <label class="form-check-label" for="manual_agg">Enter Manual Agg No</label>
+                    </div>
                 </div>
                 <div class="row form-group">
                     <div class="text-center" style="width: 70%; margin: 0 auto;">
@@ -161,7 +167,7 @@
                             id="total_received" placeholder="" readonly required>
                     </div>
                 </div>
-                <div class=" row form-group">
+                <div class="row form-group">
                     <div class="col-md-6">
                         <label for="exampleInputPassword1">Total weighed </label>
                         <input type="number" style="text-align: center" class="form-control" value="" name=""
@@ -223,6 +229,7 @@
                                 <th>Total Weight</th>
                                 <th>Tareweight</th>
                                 <th>Total Net</th>
+                                <th>Settlement</th>
                                 <th>Class Code</th>
                                 <th>Slaughter Date</th>
                             </tr>
@@ -241,6 +248,7 @@
                                 <th>Total Weight</th>
                                 <th>Tareweight</th>
                                 <th>Total Net</th>
+                                <th>Settlement</th>
                                 <th>Class Code</th>
                                 <th>Slaughter Date</th>
                             </tr>
@@ -249,12 +257,13 @@
                             @foreach($slaughter_data as $data)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td id="editModalShow" data-id="{{$data->id}}" data-receipt="{{ $data->receipt_no }}" 
-                                    data-weight1="{{ number_format($data->sideA_weight, 2) }}" data-weight2="{{ number_format($data->sideB_weight, 2) }}"
-                                    data-total="{{number_format($data->total_weight, 2) }}" data-tare_weight="{{ $data->tare_weight }}"
-                                    data-item_name="{{ $data->vendor_name }}"><a href="#">{{ $data->agg_no }}</a>
-                                </td>
-                                <td>{{ $data->receipt_no }}</td>
+                                <td>{{ $data->agg_no }}</td>
+                                <td id="editModalShow" data-id="{{$data->id}}" data-receipt="{{ $data->receipt_no }}"
+                                    data-weight1="{{ number_format($data->sideA_weight, 2) }}"
+                                    data-weight2="{{ number_format($data->sideB_weight, 2) }}"
+                                    data-total="{{number_format($data->total_weight, 2) }}"
+                                    data-tare_weight="{{ $data->tare_weight }}" data-item_code="{{ $data->item_code }}" data-item_desc="{{ $data->description }}" data-vendor_no="{{ $data->vendor_no }}" data-net="{{ $data->total_net }}"  data-settlement="{{ number_format($data->settlement_weight, 2) }}"  data-class_code="{{ $data->classification_code }}"  data-vendor_name="{{ $data->vendor_name }}"
+                                    data-item_name="{{ $data->vendor_name }}"><a href="#">{{ $data->receipt_no }}</a></td>
                                 <td>{{ $data->item_code }}</td>
                                 <td>{{ $data->description }}</td>
                                 <td>{{ $data->vendor_no }}</td>
@@ -264,6 +273,7 @@
                                 <td>{{ number_format($data->total_weight, 2) }}</td>
                                 <td>{{ number_format($data->tare_weight, 2) }}</td>
                                 <td>{{ number_format($data->total_net, 2) }}</td>
+                                <td>{{ number_format($data->settlement_weight, 2) }}</td>
                                 <td>{{ $data->classification_code }}</td>
                                 <td>{{ $data->created_at }}</td>
                             </tr>
@@ -283,38 +293,55 @@
 
 <!-- Edit scale Modal -->
 <div id="editModal" class="modal fade" role="dialog">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <!--Start create user modal-->
-        <form id="form-edit-role" action="{{route('slaughter_edit')}}" method="post">
+        <form id="form-edit-slaughter" action="{{route('slaughter_edit')}}" method="post">
             @csrf
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">Edit Slaughter Entry: <strong><input
-                                style="border:none" type="text" id="item_name" value="" readonly></strong></h5>
+                                style="border:none" type="text" id="edit_item_name" name="edit_item_name" value=""
+                                readonly></strong></h5>
+                                <strong><input
+                                style="border:none" type="text" id="edit_receipt" value=""
+                                readonly></strong></h5>
                     <button class="close" type="button" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">×</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="form-group">
-                        <label for="email" class="col-form-label"> Receipt No. </label>
-                        <select class="form-control" name="edit_receipt" id="edit_receipt" required>
-                            @foreach($receipts as $receipt)
-                            <option value="{{ $receipt->receipt_no }}">
-                                {{ ucwords($receipt->receipt_no.'-'.$receipt->vendor_name) }}
-                            </option>
-
-                            @endforeach
-                        </select>
+                    <div class="row text-center">
+                        <div class="col-md-6 form-group">
+                            <label for="exampleInputPassword1">Item Code</label>
+                            <input type="text" style="text-align: center" class="form-control" value=""
+                                id="edit_item_code" placeholder="" readonly required>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="exampleInputPassword1">Item Description</label>
+                            <input type="text" style="text-align: center" class="form-control" value=""
+                                id="edit_item_desc" placeholder="" readonly required>
+                        </div>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-md-6 form-group">
+                            <label for="exampleInputPassword1">Vendor Number</label>
+                            <input type="text" style="text-align: center" class="form-control" value=""
+                                id="edit_vendor_no" placeholder="" readonly required>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="exampleInputPassword1">Vendor Name</label>
+                            <input type="text" style="text-align: center" class="form-control"
+                                id="edit_vendor_name" placeholder="" readonly required>
+                        </div>
                     </div>
                     <div class="row text-center">
                         <div class="col-md-3">
                             <label for="exampleInputPassword1" class="col-form-label">Tare-Weight</label>
                             <select class="form-control" name="edit_tareweight" id="edit_tareweight">
-                                <option value="1.50">1.5</option>
-                                <option value="1.80">1.8</option>
-                                <option value="1.90">1.9</option>
-                                <option value="2.20">2.2</option>
+                                <option value="1.5">1.5</option>
+                                <option value="1.8">1.8</option>
+                                <option value="1.9">1.9</option>
+                                <option value="2.2">2.2</option>
                             </select>
                         </div>
                         <div class="col-md-3">
@@ -335,8 +362,25 @@
                             <div class="form-group">
                                 <label for="exampleInputPassword1" class="col-form-label">Total </label>
                                 <input type="number" style="text-align: center" class="form-control" id="edit_total"
-                                    name="edit_total" step="0.01" value="0.00" readonly required>
+                                    name="edit_total" step="0.01" value="" required>
                             </div>
+                        </div>
+                    </div>
+                    <div class="row form-group">
+                        <div class="col-md-3">
+                            <label for="exampleInputPassword1" class="col-form-label">Net</label>
+                            <input type="number" style="text-align: center" class="form-control" id="edit_net"
+                                name="edit_net" step="0.01" value="0.00" readonly required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="exampleInputPassword1" class="col-form-label">Settlement Weight</label>
+                            <input type="number" style="text-align: center" class="form-control" id="edit_settlement"
+                                name="edit_settlement" step="0.01" value="0.00" readonly required>
+                        </div>
+                        <div class="col-md-5">
+                            <label for="exampleInputPassword1" class="col-form-label">Class Code</label>
+                            <input type="text" style="text-align: center" class="form-control" id="edit_classification_code"
+                                name="edit_classification_code" value="" readonly required>
                         </div>
                     </div>
                     <input type="hidden" name="item_id" id="item_id" value="">
@@ -344,7 +388,7 @@
                 <div class="modal-footer">
                     <div class="form-group">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button class="btn btn-warning">
+                        <button class="btn btn-warning" onclick="return validateOnSubmitEdit()">
                             <i class="fa fa-save"></i> Update
                         </button>
                     </div>
@@ -382,6 +426,23 @@
             getClassificationCode($("#settlement_weight").val());
         });
 
+        $("#edit_tareweight").change(function (e) {
+            calculateNetEdit();
+        });
+
+        $("#edit_A").change(function (e) {
+            computeTotalWeightEdit();
+        });
+
+        $("#edit_B").change(function (e) {
+            computeTotalWeightEdit();
+        });
+
+        $("#edit_total").change(function (e) {
+            e.preventDefault();
+            calculateNetEdit();            
+        });
+
         $('#manual_weight').change(function () {
             var manual_weight = document.getElementById('manual_weight');
             var reading = document.getElementById('reading');
@@ -397,6 +458,21 @@
 
         });
 
+        $('#manual_agg').change(function () {
+            var manual_agg = document.getElementById('manual_agg');
+            var agg_no = document.getElementById('agg_no');
+            if (manual_agg.checked == true) {
+                agg_no.readOnly = false;
+                agg_no.focus();
+                $('#agg_no').val("");
+
+            } else {
+                agg_no.readOnly = true;
+
+            }
+
+        });
+
         // edit scale 1
         $("body").on("click", "#editModalShow", function (a) {
             a.preventDefault();
@@ -405,17 +481,32 @@
             var receipt = $(this).data('receipt');
             var side_A = $(this).data('weight1');
             var side_B = $(this).data('weight2');
+            var item_code = $(this).data('item_code');
+            var item_desc = $(this).data('item_desc');
+            var vendor_no = $(this).data('vendor_no');
+            var vendor_name = $(this).data('vendor_name');
+            var net = $(this).data('net');
+            var settlement = $(this).data('settlement');
+            var class_code = $(this).data('class_code');
             var total = $(this).data('total');
             var tare_weight = $(this).data('tare_weight');
             var item_name = $(this).data('item_name');
 
             $('#item_id').val(id);
             $('#edit_receipt').val(receipt);
+            $('#edit_item_code').val(item_code);
+            $('#edit_item_desc').val(item_desc);
+            $('#edit_vendor_no').val(vendor_no);
+            $('#edit_vendor_name').val(vendor_name);
+            $('#edit_net').val(net);
+            $('#edit_settlement').val(settlement);
+            $('#edit_classification_code').val(class_code);
+            $('#edit_vendor_name').val(vendor_name);
             $('#edit_A').val(side_A);
             $('#edit_B').val(side_B);
             $('#edit_total').val(total);
             $('#edit_tareweight').val(tare_weight);
-            $('#item_name').val(item_name);
+            $('#edit_item_name').val(item_name);
 
             $('#editModal').modal('show');
         });
@@ -529,6 +620,39 @@
         /* End weigh data ajax */
     }
 
+    function loadWeighDataEdit() {
+        /* Start weigh data ajax */
+        var receipt = $('#edit_receipt').val();
+        if (receipt != null) {
+            $.ajax({
+                type: "GET",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: "{{ url('slaughter/weigh-data-ajax') }}",
+                data: {
+                    'receipt': receipt,
+
+                },
+                dataType: 'JSON',
+                success: function (res) {
+                    if (res) {
+                        var str = JSON.stringify(res);
+                        var obj = JSON.parse(str);
+
+                        $('#edit_item_code').val(obj.vendor[0].item_code);
+                        $('#edit_item_desc').val(obj.vendor[0].description);
+                        $('#edit_vendor_no').val(obj.vendor[0].vendor_no);
+                        $('#edit_vendor_name').val(obj.vendor[0].vendor_name);
+                    }
+
+                }
+            });
+
+        }
+        /* End weigh data ajax */
+    }
+
     function validateOnSubmit() {
         if ($('#item_code').val() == 'BG1101' || $('#item_code').val() == 'BG1201') {
             // lamb or goat
@@ -555,6 +679,16 @@
             alert("You have exhausted vendor received Qty.");
             return false;
         }
+    }
+
+    function validateOnSubmitEdit() {     
+        var net = $('#edit_net').val();
+
+        if (net < 5) {
+            alert("Please ensure you have valid weight of min 5kgs.");
+            return false;
+        }
+
     }
 
     function getReset() {
@@ -602,6 +736,16 @@
         getSettlementWeight();
     }
 
+    function computeTotalWeightEdit() {
+        var sideA = $('#edit_A').val();
+        var sideB = $('#edit_B').val();
+        var add = parseFloat(sideA) + parseFloat(sideB);
+        var total = (Math.round(add * 100) / 100).toFixed(2);
+        $('#edit_total').val(total);
+
+        getSettlementWeight();
+    }
+
     function getNet() {
         if ($('#item_code').val() == 'BG1101' || $('#item_code').val() == 'BG1201') {
             var total_gross = $('#total_weight2').val();
@@ -613,6 +757,18 @@
         var tareweight = $('#tare_weight').val();
 
         return total_gross - tareweight;
+    }
+
+    function calculateNetEdit() {
+        var total_gross = $('#edit_total').val();
+        
+        var tareweight = $('#edit_tareweight').val();
+
+        var new_net = total_gross - tareweight;
+
+        $('#edit_net').val(new_net);
+
+        getSettlementWeightEdit();
     }
 
     function getSettlementWeight() {
@@ -627,6 +783,14 @@
 
         // get classification
         getClassificationCode((parseInt(cold_weight * 100) / 100).toFixed(2));
+    }
+
+    function getSettlementWeightEdit(){
+        var net = $('#edit_net').val();
+        var cold_weight = 0.975 * net;
+        var settlement_weight = (parseInt(cold_weight * 100) / 100).toFixed(2);
+        $('#edit_settlement').val(settlement_weight);
+        getClassificationCodeEdit(settlement_weight);
     }
 
     function getNextReceipt(receipt) {
@@ -773,6 +937,179 @@
 
                     default:
                         $('#classification_code').val('**');
+                }
+            }
+        }
+
+    }
+
+    function transformToLivestockCode(item_code)
+    {
+        if (item_code == 'BG1021') {
+            return 'BG1006';
+            
+        } else if (item_code == 'BG1022') {
+            return 'BG1007';
+
+        } else if (item_code == 'BG1023') {
+            return 'BG1008';
+
+        } else if (item_code == 'BG1024') {
+            return 'BG1009';
+
+        } else if (item_code == 'BG1031') {
+            return 'BG1011';
+
+        } else if (item_code == 'BG1032') {
+            return 'BG1012';
+
+        } else if (item_code == 'BG1033') {
+            return 'BG1013';
+
+        } else if (item_code == 'BG1034') {
+            return 'BG1014';
+            
+        } else if (item_code == 'BG1036') {
+            return 'BG1016';
+
+        } else if (item_code == 'BG1037') {
+            return 'BG1018';
+
+        } else if (item_code == 'BG1900') {
+            return 'BG1101';
+
+        } else if (item_code == 'BG1202') {
+            return 'BG1201';
+
+        } else {
+            return '';
+        }
+    }
+
+    function getClassificationCodeEdit(s_weight) {
+        $('#edit_classification_code').val('--');
+
+        var carcass_code = $('#edit_item_code').val();
+        var item_code = transformToLivestockCode(carcass_code);
+
+        if (s_weight > 1 && item_code != '') {
+            if (item_code == 'BG1101' || item_code == 'BG1201') {
+                // lamb/goat classes
+                switch (true) {
+                    case (item_code == 'BG1101'):
+                        // lamb
+                        if (s_weight > 25) {
+                            $('#edit_classification_code').val('LAMB-STD');
+
+                        } else if (s_weight >= 14 && s_weight < 25) {
+                            $('#edit_classification_code').val('LAMB-PRM');
+
+                        } else if (s_weight >= 11 && s_weight < 14) {
+                            $('#edit_classification_code').val('LAMB-STD');
+                        }
+                        break;
+
+                    case (item_code == 'BG1201'):
+                        // goat
+                        $('#edit_classification_code').val('GOATLCL');
+                        break;
+
+                    default:
+                        $('#edit_classification_code').val('**');
+                }
+
+            } else if (item_code == 'BG1005' || item_code == 'BG1006' || item_code == 'BG1007' || item_code ==
+                'BG1008' ||
+                item_code == 'BG1009') {
+                // High Grade 
+                switch (true) {
+                    case (s_weight >= 165 && s_weight < 170):
+                        // code block
+                        $('#edit_classification_code').val('HG+165');
+                        break;
+
+                    case (s_weight >= 170 && s_weight < 175):
+                        // code block
+                        $('#edit_classification_code').val('HG+170');
+                        break;
+
+                    case (s_weight >= 175 && s_weight <= 250):
+                        // code block
+                        $('#edit_classification_code').val('HG+175');
+                        break;
+
+                    case (s_weight > 250):
+                        // code block
+                        $('#edit_classification_code').val('HG+250.1');
+                        break;
+
+                    default:
+                        $('#edit_classification_code').val('**');
+                }
+            } else if (item_code == 'BG1011' || item_code == 'BG1012' || item_code == 'BG1013' || item_code ==
+                'BG1014') {
+                // comm-beef
+                switch (true) {
+                    case (s_weight < 120):
+                        $('#edit_classification_code').val('CG-120');
+                        break;
+
+                    case (s_weight >= 120 && s_weight < 150):
+                        $('#edit_classification_code').val('CG+150');
+                        break;
+
+                    case (s_weight >= 150 && s_weight < 160):
+                        $('#edit_classification_code').val('CG+150');
+                        break;
+
+                    case (s_weight >= 160 && s_weight < 165):
+                        $('#edit_classification_code').val('CG+160');
+                        break;
+
+                    case (s_weight >= 165 && s_weight < 170):
+                        $('#edit_classification_code').val('CG+165');
+                        break;
+
+                    case (s_weight >= 170 && s_weight < 175):
+                        $('#edit_classification_code').val('CG+170');
+                        break;
+
+                    case (s_weight > 175):
+                        $('#edit_classification_code').val('CG+175');
+                        break;
+
+                    default:
+                        $('#edit_classification_code').val('**');
+                }
+
+            } else if (item_code == 'BG1016') {
+                // CMFAQ
+                switch (true) {
+                    case (s_weight >= 150 && s_weight < 160):
+                        $('#edit_classification_code').val('FAQ+150');
+                        break;
+
+                    case (s_weight >= 160):
+                        $('#edit_classification_code').val('FAQ+160');
+                        break;
+
+                    default:
+                        $('#edit_classification_code').val('**');
+                }
+
+            } else if (item_code == 'BG1018') {
+                // CMSTD
+                switch (true) {
+                    case (s_weight >= 120 && s_weight <= 149):
+                        $('#edit_classification_code').val('STDA-149');
+                        break;
+
+                    case (s_weight <= 119):
+                        $('#edit_classification_code').val('STDB-119');
+                        break;
+
+                    default:
+                        $('#edit_classification_code').val('**');
                 }
             }
         }
