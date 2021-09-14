@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 
 class Helpers
@@ -94,6 +95,7 @@ class Helpers
         $curl = curl_init();
 
         $url = $this->getComportListServiceUrl();
+        Log::info('ports url: ' . $url);
 
         curl_setopt_array($curl, array(
             CURLOPT_URL => $url,
@@ -152,5 +154,15 @@ class Helpers
             // Goat
             return 'BG1202';
         }
+    }
+
+    public function insertChangeDataLogs($table_name, $item_id, $entry_type)
+    {
+        DB::table('change_logs')->insert([
+            'table_name' => $table_name,
+            'item_id' => $item_id,
+            'entry_type' => $entry_type,
+            'user_id' => $this->authenticatedUserId(),
+        ]);
     }
 }

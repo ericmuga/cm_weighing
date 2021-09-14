@@ -29,10 +29,12 @@ class SlaughterController extends Controller
 
         $slaughtered = DB::table('slaughter_data')
             ->whereDate('created_at', today())
+            ->where('deleted', '!=', 1)
             ->count();
 
         $total_weight = DB::table('slaughter_data')
             ->whereDate('created_at', today())
+            ->where('deleted', '!=', 1)
             ->sum('slaughter_data.total_net');
 
         return view('slaughter.dashboard', compact('title', 'helpers', 'lined_up', 'slaughtered', 'total_weight'));
@@ -59,6 +61,7 @@ class SlaughterController extends Controller
 
         $slaughter_data = DB::table('slaughter_data')
             ->whereDate('slaughter_data.created_at', today())
+            ->where('slaughter_data.deleted', '!=', 1)
             ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
             ->select('slaughter_data.*', 'carcass_types.description')
             ->latest()
@@ -71,10 +74,12 @@ class SlaughterController extends Controller
     {
         $total_weighed_per_vendor = DB::table('slaughter_data')
             ->whereDate('created_at', today())
+            ->where('deleted', '!=', 1)
             ->where('receipt_no', $request->receipt)
             ->count();
 
         $agg_count = DB::table('slaughter_data')
+            ->where('deleted', '!=', 1)
             ->whereDate('created_at', today())
             ->count();
 
@@ -156,18 +161,21 @@ class SlaughterController extends Controller
     {
         try {
             // update
-            DB::table('slaughter_data')
-                ->where('id', $request->item_id)
-                ->update([
-                    'tare_weight' => $request->edit_tareweight,
-                    'total_weight' => $request->edit_total,
-                    'total_net' => $request->edit_net,
-                    'sideA_weight' => $request->edit_A,
-                    'sideB_weight' => $request->edit_B,
-                    'settlement_weight' => $request->edit_settlement,
-                    'classification_code' => $request->edit_classification_code,
-                    'updated_at' => now(),
-                ]);
+            DB::transaction(function () use ($request, $helpers) {
+                DB::table('slaughter_data')
+                    ->where('id', $request->item_id)
+                    ->update([
+                        'tare_weight' => $request->edit_tareweight,
+                        'total_weight' => $request->edit_total,
+                        'total_net' => $request->edit_net,
+                        'sideA_weight' => $request->edit_A,
+                        'sideB_weight' => $request->edit_B,
+                        'settlement_weight' => $request->edit_settlement,
+                        'classification_code' => $request->edit_classification_code,
+                        'updated_at' => now(),
+                    ]);
+                $helpers->insertChangeDataLogs('slaughter_data', $request->item_id, '3');
+            });
 
 
             Toastr::success("record {$request->edit_item_name} updated successfully", 'Success');
@@ -273,6 +281,7 @@ class SlaughterController extends Controller
 
         if (!$filter) {
             $slaughter_data = DB::table('slaughter_data')
+                ->where('slaughter_data.deleted', '!=', 1)
                 ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
                 ->select('slaughter_data.*', 'carcass_types.description AS item_name')
                 ->orderBy('slaughter_data.created_at', 'desc')
@@ -280,6 +289,7 @@ class SlaughterController extends Controller
                 ->get();
         } elseif ($filter == 'today') {
             $slaughter_data = DB::table('slaughter_data')
+                ->where('slaughter_data.deleted', '!=', 1)
                 ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
                 ->select('slaughter_data.*', 'carcass_types.description AS item_name')
                 ->orderBy('slaughter_data.created_at', 'desc')

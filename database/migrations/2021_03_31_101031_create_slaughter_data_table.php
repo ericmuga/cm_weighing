@@ -27,6 +27,7 @@ class CreateSlaughterDataTable extends Migration
             $table->double('total_net', 8, 2);
             $table->double('settlement_weight', 8, 2);
             $table->string('classification_code', 20)->nullable();
+            $table->tinyInteger('deleted')->default(0);
             $table->foreignId('user_id')->constrained('users');
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent();
