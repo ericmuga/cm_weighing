@@ -112,6 +112,7 @@ class Helpers
 
         $response = curl_exec($curl);
         curl_close($curl);
+        Log::info('response: ' . $response);
         return $response;
     }
 
