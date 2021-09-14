@@ -63,8 +63,7 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title"></h3>
-                <h3 class="card-title"> Imported Receipts Entries | <span id="subtext-h1-title"><small> view, filter,
-                            print/download</small> </span></h3>
+                <h3 class="card-title"> Imported Receipts Entries | <span id="subtext-h1-title"><small> Showing <strong>{{ $filter? : "Last 100" }}</strong> entries</small> </span></h3>
             </div>
             <!-- /.card-header -->
             <div class="card-body">

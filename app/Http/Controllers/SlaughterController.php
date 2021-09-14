@@ -182,18 +182,25 @@ class SlaughterController extends Controller
         }
     }
 
-    public function receipts(Helpers $helpers)
+    public function receipts(Helpers $helpers, $filter = null)
     {
         $title = "receipts";
 
-        $receipts = Cache::remember('imported_receipts', now()->addMinutes(360), function () {
-            return DB::table('receipts')
+        if (!$filter) {
+            $receipts = Cache::remember('imported_receipts', now()->addMinutes(360), function () {
+                return DB::table('receipts')
+                    ->orderBy('created_at', 'DESC')
+                    ->take(100)
+                    ->get();
+            });
+        } elseif ($filter == 'today') {
+            $receipts =  DB::table('receipts')
                 ->orderBy('created_at', 'DESC')
-                ->take(100)
+                ->whereDate('receipts.slaughter_date', today())
                 ->get();
-        });
+        }
 
-        return view('slaughter.receipts', compact('title', 'receipts', 'helpers'));
+        return view('slaughter.receipts', compact('title', 'receipts', 'helpers', 'filter'));
     }
 
     public function importReceipts(Request $request, Helpers $helpers)
@@ -262,18 +269,27 @@ class SlaughterController extends Controller
         }
     }
 
-    public function slaughterReport(Helpers $helpers)
+    public function slaughterReport(Helpers $helpers, $filter = null)
     {
         $title = "Slaughter Data";
 
-        $slaughter_data = DB::table('slaughter_data')
-            ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
-            ->select('slaughter_data.*', 'carcass_types.description AS item_name')
-            ->orderBy('slaughter_data.created_at', 'desc')
-            ->take(1000)
-            ->get();
+        if (!$filter) {
+            $slaughter_data = DB::table('slaughter_data')
+                ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
+                ->select('slaughter_data.*', 'carcass_types.description AS item_name')
+                ->orderBy('slaughter_data.created_at', 'desc')
+                ->take(1000)
+                ->get();
+        } elseif ($filter == 'today') {
+            $slaughter_data = DB::table('slaughter_data')
+                ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
+                ->select('slaughter_data.*', 'carcass_types.description AS item_name')
+                ->orderBy('slaughter_data.created_at', 'desc')
+                ->whereDate('slaughter_data.created_at', today())
+                ->get();
+        }
 
-        return view('slaughter.report', compact('title', 'helpers', 'slaughter_data'));
+        return view('slaughter.report', compact('title', 'helpers', 'slaughter_data', 'filter'));
     }
 
     public function scaleConfigs(Helpers $helpers)
@@ -302,7 +318,6 @@ class SlaughterController extends Controller
                     'tareweight' => $request->edit_tareweight,
                     'updated_at' => Carbon::now(),
                 ]);
-
 
             Toastr::success("record {$request->item_name} updated successfully", 'Success');
             return redirect()->back();

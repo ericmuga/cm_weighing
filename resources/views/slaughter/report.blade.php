@@ -83,7 +83,7 @@ aria-hidden="true">
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Slaughter Data Report| <span id="subtext-h1-title"><small> showing all
+                <h3 class="card-title">Slaughter Data Report| <span id="subtext-h1-title"><small> showing <strong>{{ $filter? : "Last 1,000" }}</strong>
                             entries</small> </span></h3>
             </div>
             <!-- /.card-header -->

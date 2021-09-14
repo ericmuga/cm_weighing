@@ -30,9 +30,9 @@ Route::prefix('slaughter')->group(function () {
     Route::get('/weigh-data-ajax', [SlaughterController::class, 'loadWeighDataAjax']);
     Route::get('/next-receipt-ajax', [SlaughterController::class, 'nextReceiptAjax']);
     Route::post('/weigh-save', [SlaughterController::class, 'saveWeighData'])->name('save_weigh');
-    Route::get('/receipts', [SlaughterController::class, 'receipts'])->name('receipts');
+    Route::get('/receipts/{filter?}', [SlaughterController::class, 'receipts'])->name('receipts');
     Route::post('/receipts/import', [SlaughterController::class, 'importReceipts'])->name('receipts_import');
-    Route::get('/report', [SlaughterController::class, 'slaughterReport'])->name('slaughter_report');
+    Route::get('/report/{filter?}', [SlaughterController::class, 'slaughterReport'])->name('slaughter_report');
     Route::get('/configs', [SlaughterController::class, 'scaleConfigs'])->name('scale_configs');
     Route::post('/scale/update', [SlaughterController::class, 'updateScaleConfigs'])->name('update_scale_configs');
     Route::get('/comport-list', [SlaughterController::class, 'comportListApiService']);
