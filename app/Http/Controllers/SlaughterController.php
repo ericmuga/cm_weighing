@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use PhpParser\Node\Stmt\TryCatch;
 
 class SlaughterController extends Controller
 {
@@ -21,7 +20,6 @@ class SlaughterController extends Controller
     public function index(Helpers $helpers)
     {
         $title = "dashboard";
-        $date = today();
 
         $lined_up = Cache::remember('lined_up', now()->addMinutes(120), function () {
             return DB::table('receipts')
@@ -34,10 +32,10 @@ class SlaughterController extends Controller
             ->count();
 
         $total_weight = DB::table('slaughter_data')
-            ->whereDate('created_at', Carbon::today())
+            ->whereDate('created_at', today())
             ->sum('slaughter_data.total_net');
 
-        return view('slaughter.dashboard', compact('title', 'helpers', 'date', 'lined_up', 'slaughtered', 'total_weight'));
+        return view('slaughter.dashboard', compact('title', 'helpers', 'lined_up', 'slaughtered', 'total_weight'));
     }
 
     public function weigh(Helpers $helpers)
@@ -54,13 +52,13 @@ class SlaughterController extends Controller
 
         $receipts = Cache::remember('weigh_receipts', now()->addMinutes(120), function () {
             return DB::table('receipts')
-                ->whereDate('slaughter_date', Carbon::today())
+                ->whereDate('slaughter_date', today())
                 ->select('receipt_no', 'vendor_name')
                 ->get();
         });
 
         $slaughter_data = DB::table('slaughter_data')
-            ->whereDate('slaughter_data.created_at', Carbon::today())
+            ->whereDate('slaughter_data.created_at', today())
             ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
             ->select('slaughter_data.*', 'carcass_types.description')
             ->latest()
@@ -72,7 +70,7 @@ class SlaughterController extends Controller
     public function loadWeighDataAjax(Request $request)
     {
         $total_weighed_per_vendor = DB::table('slaughter_data')
-            ->whereDate('created_at', Carbon::today())
+            ->whereDate('created_at', today())
             ->where('receipt_no', $request->receipt)
             ->count();
 
@@ -81,7 +79,7 @@ class SlaughterController extends Controller
             ->count();
 
         $vendor_data = DB::table('receipts')
-            ->whereDate('slaughter_date', Carbon::today())
+            ->whereDate('slaughter_date', today())
             ->where('receipt_no', $request->receipt)
             ->select('vendor_no', 'vendor_name', 'item_code', 'description', DB::raw('SUM(received_qty) as total_received'))
             ->groupBy('vendor_no', 'vendor_name', 'item_code', 'description')
@@ -95,7 +93,7 @@ class SlaughterController extends Controller
     public function nextReceiptAjax(Request $request)
     {
         $receipts_arr = DB::table('receipts')
-            ->whereDate('created_at', '>=', Carbon::today())
+            ->whereDate('created_at', '>=', today())
             ->select('receipt_no')
             ->get()->toArray();
 
@@ -168,7 +166,7 @@ class SlaughterController extends Controller
                     'sideB_weight' => $request->edit_B,
                     'settlement_weight' => $request->edit_settlement,
                     'classification_code' => $request->edit_classification_code,
-                    'updated_at' => Carbon::now(),
+                    'updated_at' => now(),
                 ]);
 
 
@@ -316,7 +314,7 @@ class SlaughterController extends Controller
                     'comport' => $request->edit_comport,
                     'baudrate' => $request->edit_baud,
                     'tareweight' => $request->edit_tareweight,
-                    'updated_at' => Carbon::now(),
+                    'updated_at' => now(),
                 ]);
 
             Toastr::success("record {$request->item_name} updated successfully", 'Success');
