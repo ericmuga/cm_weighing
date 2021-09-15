@@ -94,8 +94,8 @@ class Helpers
     {
         $curl = curl_init();
 
-        $url = $this->getComportListServiceUrl();
-        Log::info('ports url: ' . $url);
+        // $url = $this->getComportListServiceUrl();
+        $url = 'http://' . \Request::getClientIp(true) . config('app.list_comport_api_url');
 
         curl_setopt_array($curl, array(
             CURLOPT_URL => $url,
@@ -112,7 +112,6 @@ class Helpers
 
         $response = curl_exec($curl);
         curl_close($curl);
-        Log::info('response: ' . $response);
         return $response;
     }
 
