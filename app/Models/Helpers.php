@@ -69,7 +69,9 @@ class Helpers
     public function get_scale_read($comport)
     {
         $curl = curl_init();
-        $url = $this->getReadScaleApiServiceUrl();
+
+        $url = 'http://' . \Request::getClientIp(true) . $this->getReadScaleApiServiceUrl();
+
         $full_url = $url . '/' . $comport;
 
         curl_setopt_array($curl, array(
@@ -94,8 +96,7 @@ class Helpers
     {
         $curl = curl_init();
 
-        // $url = $this->getComportListServiceUrl();
-        $url = 'http://' . \Request::getClientIp(true) . config('app.list_comport_api_url');
+        $url = 'http://' . \Request::getClientIp(true) . $this->getComportListServiceUrl();
 
         curl_setopt_array($curl, array(
             CURLOPT_URL => $url,
