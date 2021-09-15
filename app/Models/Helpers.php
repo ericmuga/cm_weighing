@@ -94,7 +94,8 @@ class Helpers
     {
         $curl = curl_init();
 
-        $url = $this->getComportListServiceUrl();
+        // $url = $this->getComportListServiceUrl();
+        $url = 'http://127.0.0.1:3000/api/get-comport-list';
         Log::info('ports url: ' . $url);
 
         curl_setopt_array($curl, array(
