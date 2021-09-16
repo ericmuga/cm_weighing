@@ -26,10 +26,11 @@
                     <input type="number" style="text-align: center" step="0.01" class="form-control" id="reading"
                         name="reading" value="0.00" placeholder="" onclick="select()" readonly required>
                 </div>
-                <div class="form-check">
+                {{-- <div class="form-check">
                     <input type="checkbox" class="form-check-input" id="manual_weight">
                     <label class="form-check-label" for="manual_weight">Enter Manual weight</label>
-                </div> <br>
+                </div>  --}}
+                <br>
                 <div class="row form-group">
                     <div class="col-md-8">
                         <label for="exampleInputPassword1">Tare-Weight</label>
