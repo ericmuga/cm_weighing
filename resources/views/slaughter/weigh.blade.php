@@ -659,8 +659,8 @@
             // lamb or goat
             var net = $('#total_weight2').val();
 
-            if (!(net >= 10 && net <= 70)) {
-                alert("Please ensure you have valid weight of between 10-70 kgs.");
+            if (!(net >= 5 && net <= 70)) {
+                alert("Please ensure you have valid weight of between 5-70 kgs.");
                 return false;
             }
 
@@ -668,8 +668,8 @@
             var side_A = $('#side_A').val();
             var side_B = $('#side_B').val();
 
-            if (!(side_A >= 40 && side_A <= 200) || !(side_B >= 40 && side_B <= 200)) {
-                alert("Please ensure you have valid weight of between 40-200 kgs in both sides.");
+            if (!(side_A >= 5 && side_A <= 200) || !(side_B >= 5 && side_B <= 200)) {
+                alert("Please ensure you have valid weight of between 5-200 kgs in both sides.");
                 return false;
             }
         }
