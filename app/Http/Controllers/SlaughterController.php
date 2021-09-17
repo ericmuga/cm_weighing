@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\SlaughterSummaryExport;
 use App\Models\Helpers;
 use Brian2694\Toastr\Facades\Toastr;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
 class SlaughterController extends Controller
@@ -60,7 +63,7 @@ class SlaughterController extends Controller
         });
 
         $slaughter_data = DB::table('slaughter_data')
-            ->whereDate('slaughter_data.created_at', today())
+            // ->whereDate('slaughter_data.created_at', today())
             ->where('slaughter_data.deleted', '!=', 1)
             ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
             ->select('slaughter_data.*', 'carcass_types.description')
@@ -298,6 +301,24 @@ class SlaughterController extends Controller
         }
 
         return view('slaughter.report', compact('title', 'helpers', 'slaughter_data', 'filter'));
+    }
+
+    public function slaughterSummaryReport(Request $request, Helpers $helpers)
+    {
+
+        $from = date($request->from_date);
+        $to = date($request->to_date);
+
+        $data = DB::table('slaughter_data')
+            ->whereDate('created_at', '>=', $from)
+            ->whereDate('created_at', '<=', $to)
+            ->select('receipt_no', 'vendor_no', 'vendor_name', 'item_code', DB::raw('COUNT(slaughter_data.id) as qty'), DB::raw('SUM(slaughter_data.total_net) as total_net'), DB::raw('ROUND(SUM(slaughter_data.total_net * 0.975), 2) as total_settlement'))
+            ->groupBy('receipt_no', 'vendor_no', 'vendor_name', 'item_code')
+            ->get();
+
+        $exports = Session::put('session_export_data', $data);
+
+        return Excel::download(new SlaughterSummaryExport, 'SlaughterReportSummaryFrom-' . $request->from_date . '-To-' . $request->to_date . '.xlsx');
     }
 
     public function scaleConfigs(Helpers $helpers)
