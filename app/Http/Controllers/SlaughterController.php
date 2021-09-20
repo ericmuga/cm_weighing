@@ -63,7 +63,7 @@ class SlaughterController extends Controller
         });
 
         $slaughter_data = DB::table('slaughter_data')
-            // ->whereDate('slaughter_data.created_at', today())
+            ->whereDate('slaughter_data.created_at', today())
             ->where('slaughter_data.deleted', '!=', 1)
             ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
             ->select('slaughter_data.*', 'carcass_types.description')
