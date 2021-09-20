@@ -30,8 +30,8 @@
                 <div class="form-check">
                     <input type="checkbox" class="form-check-input" id="manual_weight">
                     <label class="form-check-label" for="manual_weight">Enter Manual weight</label>
-                </div> 
-                @endif                
+                </div>
+                @endif
                 <br>
                 <div class="row form-group">
                     <div class="col-md-8">
@@ -112,7 +112,23 @@
                         </div>
                     </div>
                 </div>
-                <input type="hidden" class="form-control " id="settlement_weight" name="settlement_weight" value="0.00">
+                {{-- <input type="hidden" class="form-control " id="settlement_weight" name="settlement_weight" value="0.00"> --}}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">Total Net</label>
+                            <input type="number" style="text-align: center" class="form-control" id="total_net"
+                                name="total_net" step="0.01" value="0.00" readonly required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="exampleInputPassword1">Settlement Weight </label>
+                            <input type="number" style="text-align: center" class="form-control" id="settlement_weight"
+                                name="settlement_weight" step="0.01" value="0.00" readonly required>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="card ">
@@ -276,8 +292,14 @@
                                     data-weight1="{{ number_format($data->sideA_weight, 2) }}"
                                     data-weight2="{{ number_format($data->sideB_weight, 2) }}"
                                     data-total="{{number_format($data->total_weight, 2) }}"
-                                    data-tare_weight="{{ $data->tare_weight }}" data-item_code="{{ $data->item_code }}" data-item_desc="{{ $data->description }}" data-vendor_no="{{ $data->vendor_no }}" data-net="{{ $data->total_net }}"  data-settlement="{{ number_format($data->settlement_weight, 2) }}"  data-class_code="{{ $data->classification_code }}"  data-vendor_name="{{ $data->vendor_name }}"
-                                    data-item_name="{{ $data->vendor_name }}"><a href="#">{{ $data->receipt_no }}</a></td>
+                                    data-tare_weight="{{ $data->tare_weight }}" data-item_code="{{ $data->item_code }}"
+                                    data-item_desc="{{ $data->description }}" data-vendor_no="{{ $data->vendor_no }}"
+                                    data-net="{{ $data->total_net }}"
+                                    data-settlement="{{ number_format($data->settlement_weight, 2) }}"
+                                    data-class_code="{{ $data->classification_code }}"
+                                    data-vendor_name="{{ $data->vendor_name }}"
+                                    data-item_name="{{ $data->vendor_name }}"><a href="#">{{ $data->receipt_no }}</a>
+                                </td>
                                 <td>{{ $data->item_code }}</td>
                                 <td>{{ $data->description }}</td>
                                 <td>{{ $data->vendor_no }}</td>
@@ -316,9 +338,7 @@
                     <h5 class="modal-title" id="exampleModalLabel">Edit Slaughter Entry: <strong><input
                                 style="border:none" type="text" id="edit_item_name" name="edit_item_name" value=""
                                 readonly></strong></h5>
-                                <strong><input
-                                style="border:none" type="text" id="edit_receipt" value=""
-                                readonly></strong></h5>
+                    <strong><input style="border:none" type="text" id="edit_receipt" value="" readonly></strong></h5>
                     <button class="close" type="button" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">×</span>
                     </button>
@@ -344,8 +364,8 @@
                         </div>
                         <div class="col-md-6 form-group">
                             <label for="exampleInputPassword1">Vendor Name</label>
-                            <input type="text" style="text-align: center" class="form-control"
-                                id="edit_vendor_name" placeholder="" readonly required>
+                            <input type="text" style="text-align: center" class="form-control" id="edit_vendor_name"
+                                placeholder="" readonly required>
                         </div>
                     </div>
                     <div class="row text-center">
@@ -393,8 +413,9 @@
                         </div>
                         <div class="col-md-5">
                             <label for="exampleInputPassword1" class="col-form-label">Class Code</label>
-                            <input type="text" style="text-align: center" class="form-control" id="edit_classification_code"
-                                name="edit_classification_code" value="" readonly required>
+                            <input type="text" style="text-align: center" class="form-control"
+                                id="edit_classification_code" name="edit_classification_code" value="" readonly
+                                required>
                         </div>
                     </div>
                     <input type="hidden" name="item_id" id="item_id" value="">
@@ -454,7 +475,7 @@
 
         $("#edit_total").change(function (e) {
             e.preventDefault();
-            calculateNetEdit();            
+            calculateNetEdit();
         });
 
         $('#manual_weight').change(function () {
@@ -695,7 +716,7 @@
         }
     }
 
-    function validateOnSubmitEdit() {     
+    function validateOnSubmitEdit() {
         var net = $('#edit_net').val();
 
         if (net < 5) {
@@ -769,13 +790,16 @@
         }
 
         var tareweight = $('#tare_weight').val();
+        
+        var net = total_gross - tareweight;
+        $('#total_net').val(net);
 
-        return total_gross - tareweight;
+        return net;
     }
 
     function calculateNetEdit() {
         var total_gross = $('#edit_total').val();
-        
+
         var tareweight = $('#edit_tareweight').val();
 
         var new_net = total_gross - tareweight;
@@ -799,7 +823,7 @@
         getClassificationCode((parseInt(cold_weight * 100) / 100).toFixed(2));
     }
 
-    function getSettlementWeightEdit(){
+    function getSettlementWeightEdit() {
         var net = $('#edit_net').val();
         var cold_weight = 0.975 * net;
         var settlement_weight = (parseInt(cold_weight * 100) / 100).toFixed(2);
@@ -878,7 +902,7 @@
                         $('#classification_code').val('FAQ+150');
                         break;
 
-                    case (s_weight >= 160 && s_weight < 165 ):
+                    case (s_weight >= 160 && s_weight < 165):
                         $('#classification_code').val('FAQ+160');
                         break;
 
@@ -975,11 +999,10 @@
 
     }
 
-    function transformToLivestockCode(item_code)
-    {
+    function transformToLivestockCode(item_code) {
         if (item_code == 'BG1021') {
             return 'BG1006';
-            
+
         } else if (item_code == 'BG1022') {
             return 'BG1007';
 
@@ -1000,7 +1023,7 @@
 
         } else if (item_code == 'BG1034') {
             return 'BG1014';
-            
+
         } else if (item_code == 'BG1036') {
             return 'BG1016';
 
