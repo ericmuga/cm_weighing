@@ -39,24 +39,35 @@
                             <option value="1.5" selected> 1.5</option>
                             <option value="1.8"> 1.8</option>
                             <option value="1.9"> 1.9</option>
+                            <option value="2.0"> 2.0</option>
                             <option value="2.2"> 2.2</option>
 
                             @elseif (old('tare_weight') == '1.8')
                             <option value="1.5"> 1.5</option>
                             <option value="1.8" selected> 1.8</option>
                             <option value="1.9"> 1.9</option>
+                            <option value="2.0"> 2.0</option>
                             <option value="2.2"> 2.2</option>
 
                             @elseif(old('tare_weight') == '1.9')
                             <option value="1.5"> 1.5</option>
                             <option value="1.8"> 1.8</option>
                             <option value="1.9" selected> 1.9</option>
+                            <option value="2.0"> 2.0</option>
+                            <option value="2.2"> 2.2</option>
+
+                            @elseif(old('tare_weight') == '2.0')
+                            <option value="1.5"> 1.5</option>
+                            <option value="1.8"> 1.8</option>
+                            <option value="1.9"> 1.9</option>
+                            <option value="2.0" selected> 2.0</option>
                             <option value="2.2"> 2.2</option>
 
                             @elseif(old('tare_weight') == '2.2')
                             <option value="1.5"> 1.5</option>
                             <option value="1.8"> 1.8</option>
                             <option value="1.9"> 1.9</option>
+                            <option value="2.0"> 2.0</option>
                             <option value="2.2" selected> 2.2</option>
                             @endif
                         </select>
