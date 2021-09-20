@@ -67,7 +67,7 @@ class SlaughterController extends Controller
             ->where('slaughter_data.deleted', '!=', 1)
             ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
             ->select('slaughter_data.*', 'carcass_types.description')
-            ->latest()
+            ->orderBy('slaughter_data.agg_no', 'ASC')
             ->get();
 
         return view('slaughter.weigh', compact('title', 'configs', 'receipts', 'helpers', 'slaughter_data'));
@@ -287,7 +287,7 @@ class SlaughterController extends Controller
                 ->where('slaughter_data.deleted', '!=', 1)
                 ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
                 ->select('slaughter_data.*', 'carcass_types.description AS item_name')
-                ->orderBy('slaughter_data.created_at', 'desc')
+                ->orderBy('slaughter_data.created_at', 'DESC')
                 ->take(1000)
                 ->get();
         } elseif ($filter == 'today') {
@@ -295,7 +295,7 @@ class SlaughterController extends Controller
                 ->where('slaughter_data.deleted', '!=', 1)
                 ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
                 ->select('slaughter_data.*', 'carcass_types.description AS item_name')
-                ->orderBy('slaughter_data.created_at', 'desc')
+                ->orderBy('slaughter_data.agg_no', 'ASC')
                 ->whereDate('slaughter_data.created_at', today())
                 ->get();
         }

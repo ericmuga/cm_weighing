@@ -1069,7 +1069,7 @@
                         break;
 
                     case (s_weight >= 120 && s_weight < 150):
-                        $('#edit_classification_code').val('CG+150');
+                        $('#edit_classification_code').val('CG-150');
                         break;
 
                     case (s_weight >= 150 && s_weight < 160):
