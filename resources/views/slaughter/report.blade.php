@@ -24,7 +24,7 @@
                     <table id="example1" class="table table-bordered table-striped " width="100%">
                         <thead>
                             <tr>
-                                <th>#</th>
+                                {{-- <th>#</th> --}}
                                 <th>Agg No </th>
                                 <th>Receipt No.</th>
                                 <th>Item Code </th>
@@ -42,7 +42,7 @@
                         </thead>
                         <tfoot>
                             <tr>
-                                <th>#</th>
+                                {{-- <th>#</th> --}}
                                 <th>Agg No </th>
                                 <th>Receipt No.</th>
                                 <th>Item Code </th>
@@ -61,7 +61,7 @@
                         <tbody>
                             @foreach($slaughter_data as $data)
                             <tr>
-                                <td>{{ $i++ }}</td>
+                                {{-- <td>{{ $i++ }}</td> --}}
                                 <td>{{ $data->agg_no }}</td>
                                 <td>{{ $data->receipt_no }}</td>
                                 <td>{{ $data->item_code }}</td>

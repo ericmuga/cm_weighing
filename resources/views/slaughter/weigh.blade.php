@@ -247,7 +247,7 @@
                     <table id="example1" class="table table-bordered table-striped">
                         <thead>
                             <tr>
-                                <th>#</th>
+                                {{-- <th>#</th> --}}
                                 <th>Agg No </th>
                                 <th>Receipt No.</th>
                                 <th>Code</th>
@@ -266,7 +266,7 @@
                         </thead>
                         <tfoot>
                             <tr>
-                                <th>#</th>
+                                {{-- <th>#</th> --}}
                                 <th>Agg No </th>
                                 <th>Receipt No.</th>
                                 <th>Code</th>
@@ -286,7 +286,7 @@
                         <tbody>
                             @foreach($slaughter_data as $data)
                             <tr>
-                                <td>{{ $loop->iteration }}</td>
+                                {{-- <td>{{ $loop->iteration }}</td> --}}
                                 <td>{{ $data->agg_no }}</td>
                                 <td id="editModalShow" data-id="{{$data->id}}" data-receipt="{{ $data->receipt_no }}"
                                     data-weight1="{{ number_format($data->sideA_weight, 2) }}"
