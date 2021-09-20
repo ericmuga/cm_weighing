@@ -26,10 +26,12 @@
                     <input type="number" style="text-align: center" step="0.01" class="form-control" id="reading"
                         name="reading" value="0.00" placeholder="" onclick="select()" readonly required>
                 </div>
-                {{-- <div class="form-check">
+                @if (config('app.show_manual_weight') == 1)
+                <div class="form-check">
                     <input type="checkbox" class="form-check-input" id="manual_weight">
                     <label class="form-check-label" for="manual_weight">Enter Manual weight</label>
-                </div>  --}}
+                </div> 
+                @endif                
                 <br>
                 <div class="row form-group">
                     <div class="col-md-8">
@@ -162,15 +164,15 @@
         <div class="card text-center" style="padding-top: ">
             <div class="card-body">
                 <div class="row form-group">
-                    <div class="col-md-6">
+                    <div class="text-center" style="width: 50%; margin: 0 auto;">
                         <label for="exampleInputPassword1">Agg No. </label>
                         <input type="number" style="text-align: center" class="form-control" value="" name="agg_no"
                             id="agg_no" placeholder="" readonly required>
                     </div>
-                    <div class="col-md-6" style="padding-top: 10%">
+                    {{-- <div class="col-md-6" style="padding-top: 10%">
                         <input type="checkbox" class="form-check-input" id="manual_agg">
                         <label class="form-check-label" for="manual_agg">Enter Manual Agg No</label>
-                    </div>
+                    </div> --}}
                 </div>
                 <div class="row form-group">
                     <div class="text-center" style="width: 70%; margin: 0 auto;">
