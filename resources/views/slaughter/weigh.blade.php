@@ -864,6 +864,24 @@
                 item_code == 'BG1009') {
                 // High Grade 
                 switch (true) {
+                    case (s_weight < 120):
+                        // code block
+                        $('#classification_code').val('STDB-119');
+                        break;
+
+                    case (s_weight >= 120 && s_weight < 150):
+                        // code block
+                        $('#classification_code').val('STDA-149');
+                        break;
+
+                    case (s_weight >= 150 && s_weight < 160):
+                        $('#classification_code').val('FAQ+150');
+                        break;
+
+                    case (s_weight >= 160 && s_weight < 165 ):
+                        $('#classification_code').val('FAQ+160');
+                        break;
+
                     case (s_weight >= 165 && s_weight < 170):
                         // code block
                         $('#classification_code').val('HG+165');
