@@ -82,8 +82,9 @@ class SlaughterController extends Controller
             ->count();
 
         $agg_count = DB::table('slaughter_data')
-            ->where('deleted', '!=', 1)
             ->whereDate('created_at', today())
+            ->where('deleted', '!=', 1)
+            ->where('receipt_no', $request->receipt)
             ->count();
 
         $vendor_data = DB::table('receipts')

@@ -112,7 +112,6 @@
                         </div>
                     </div>
                 </div>
-                {{-- <input type="hidden" class="form-control " id="settlement_weight" name="settlement_weight" value="0.00"> --}}
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
@@ -247,7 +246,7 @@
                     <table id="example1" class="table table-bordered table-striped">
                         <thead>
                             <tr>
-                                {{-- <th>#</th> --}}
+                                <th>#</th>
                                 <th>Agg No </th>
                                 <th>Receipt No.</th>
                                 <th>Code</th>
@@ -266,7 +265,7 @@
                         </thead>
                         <tfoot>
                             <tr>
-                                {{-- <th>#</th> --}}
+                                <th>#</th>
                                 <th>Agg No </th>
                                 <th>Receipt No.</th>
                                 <th>Code</th>
@@ -286,7 +285,7 @@
                         <tbody>
                             @foreach($slaughter_data as $data)
                             <tr>
-                                {{-- <td>{{ $loop->iteration }}</td> --}}
+                                <td>{{ $loop->iteration }}</td>
                                 <td>{{ $data->agg_no }}</td>
                                 <td id="editModalShow" data-id="{{$data->id}}" data-receipt="{{ $data->receipt_no }}"
                                     data-weight1="{{ number_format($data->sideA_weight, 2) }}"
@@ -619,6 +618,7 @@
     function loadWeighData() {
         /* Start weigh data ajax */
         var receipt = $('#receipt_no').val();
+
         if (receipt != null) {
             $.ajax({
                 type: "GET",
@@ -628,7 +628,6 @@
                 url: "{{ url('slaughter/weigh-data-ajax') }}",
                 data: {
                     'receipt': receipt,
-
                 },
                 dataType: 'JSON',
                 success: function (res) {
