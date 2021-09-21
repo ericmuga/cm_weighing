@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\QAController;
 use App\Http\Controllers\SlaughterController;
 use Illuminate\Support\Facades\Route;
 use Rap2hpoutre\LaravelLogViewer\LogViewerController;
@@ -38,5 +39,12 @@ Route::prefix('slaughter')->group(function () {
     Route::post('/scale/update', [SlaughterController::class, 'updateScaleConfigs'])->name('update_scale_configs');
     Route::get('/comport-list', [SlaughterController::class, 'comportListApiService']);
     Route::get('/read-scale', [SlaughterController::class, 'readScaleApiService']);
+});
+/* -------------------------------- End Slaughter ------------------------------------------------ */
+
+
+/* -------------------------------- Start QA ------------------------------------------------ */
+Route::prefix('QA')->group(function () {
+    Route::get('/dashboard', [QAController::class, 'index'])->name('qa_dashboard');
 });
 /* -------------------------------- End Slaughter ------------------------------------------------ */
