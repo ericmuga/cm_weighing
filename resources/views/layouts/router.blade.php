@@ -63,15 +63,15 @@ scratch. This page gets rid of all links and provides the needed markup only.
                                     <a class="card-body text-center card-block stretched-link text-decoration-none"
                                         href="#">
                                         <h4 class="card-title">Butchery</h4>
-                                        <p class="card-text">Select this option to switch to butchery.
+                                        <p class="card-text">This Inteface is in development
                                         </p>
                                     </a>
                                 </div>
                                 <div class="card p-2 bg-success" style="height: 250px">
                                     <a class="card-body text-center card-block stretched-link text-decoration-none card-link"
-                                        href="{{ route('qa_dashboard') }}">
+                                        href="#">
                                         <h4 class="card-title">QA</h4>
-                                        <p class="card-text">Select this option to switch to QA interphase grading.
+                                        <p class="card-text">This Inteface is in development.
                                         </p>
                                     </a>
                                 </div>
