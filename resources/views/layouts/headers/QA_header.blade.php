@@ -18,7 +18,7 @@
                     <a href="{{ route('qa_dashboard') }}" class="nav-link">Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('slaughter_weigh') }}" class="nav-link">Grading</a>
+                    <a href="#" class="nav-link">Grading</a>
                 </li>
                 <li class="nav-item dropdown">
                     <a id="dropdownSubMenu1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"

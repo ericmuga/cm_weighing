@@ -21,7 +21,7 @@
         <div class="small-box bg-info">
             <div class="inner">
                 <h3>{{ $lined_up }}</h3>
-                <p>No. of Animals brought in</p>
+                <p>No. of Animals brought in For Slaughter</p>
             </div>
             <div class="icon">
                 <i class="ion ion-bag"></i>
@@ -36,12 +36,12 @@
         <div class="small-box bg-success">
             <div class="inner">
                 <h3>{{ $slaughtered }}<sup style="font-size: 20px"></sup></h3>
-                <p>No. of already Slaughtered</p>
+                <p>No. of Carcasses Weighed</p>
             </div>
             <div class="icon">
                 <i class="ion ion-stats-bars"></i>
             </div>
-            <a href="{{ route('slaughter_report', 'today') }}" class="small-box-footer">More info <i
+            <a href="#" class="small-box-footer">More info <i
                     class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
