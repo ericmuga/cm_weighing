@@ -31,7 +31,11 @@ class QAController extends Controller
             ->where('deleted', '!=', 1)
             ->count();
 
-        $graded = 14;
+        $graded = DB::table('slaughter_data')
+            ->whereDate('created_at', today())
+            ->where('deleted', '!=', 1)
+            ->where('fat_group', '!=', null)
+            ->count();
 
         return view('QA.dashboard', compact('title', 'helpers', 'lined_up', 'slaughtered', 'graded'));
     }
