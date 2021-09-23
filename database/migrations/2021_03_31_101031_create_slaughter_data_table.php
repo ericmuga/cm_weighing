@@ -27,6 +27,10 @@ class CreateSlaughterDataTable extends Migration
             $table->double('total_net', 8, 2);
             $table->double('settlement_weight', 8, 2);
             $table->string('classification_code', 20)->nullable();
+            $table->string('fat_group', 20)->nullable();
+            $table->string('narration', 255)->nullable();
+            $table->bigInteger('grading_user')->nullable();
+            $table->timestamp('graded_at')->nullable();
             $table->tinyInteger('deleted')->default(0);
             $table->foreignId('user_id')->constrained('users');
             $table->timestamp('created_at')->useCurrent();

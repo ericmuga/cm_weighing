@@ -69,7 +69,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                                 </div>
                                 <div class="card p-2 bg-success" style="height: 250px">
                                     <a class="card-body text-center card-block stretched-link text-decoration-none card-link"
-                                        href="#">
+                                        href="{{ route('qa_dashboard') }}">
                                         <h4 class="card-title">QA</h4>
                                         <p class="card-text">This Inteface is in development.
                                         </p>
@@ -79,7 +79,6 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         </div>
                     </div>
                 </div>
-
                 <!-- /.content -->
             </div>
             <!-- /.content-wrapper -->

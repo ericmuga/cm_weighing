@@ -18,13 +18,13 @@
                     <a href="{{ route('qa_dashboard') }}" class="nav-link">Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link">Grading</a>
+                    <a href="{{ route('qa_grading') }}" class="nav-link">Grading</a>
                 </li>
                 <li class="nav-item dropdown">
                     <a id="dropdownSubMenu1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
                         class="nav-link dropdown-toggle">Data Management</a>
                     <ul aria-labelledby="dropdownSubMenu1" class="dropdown-menu border-0 shadow">
-                        <li><a href="{{ route('receipts') }}" class="dropdown-item">Grading Report
+                        <li><a href="#" class="dropdown-item">Grading Report
                                 </a></li>
                     </ul>
                 </li>

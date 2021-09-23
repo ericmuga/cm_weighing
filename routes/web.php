@@ -46,5 +46,7 @@ Route::prefix('slaughter')->group(function () {
 /* -------------------------------- Start QA ------------------------------------------------ */
 Route::prefix('QA')->group(function () {
     Route::get('/dashboard', [QAController::class, 'index'])->name('qa_dashboard');
+    Route::get('/grading', [QAController::class, 'grade'])->name('qa_grading');
+    Route::post('update/grade', [QAController::class, 'updateGrading'])->name('qa_update_grading');
 });
 /* -------------------------------- End Slaughter ------------------------------------------------ */

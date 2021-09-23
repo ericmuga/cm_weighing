@@ -21,6 +21,11 @@ class Helpers
         return date("F jS, Y", strtotime($date));
     }
 
+    public function shortDateTime($db_time)
+    {
+        return date('d-m-Y :i A', strtotime($db_time));
+    }
+
     public function forgetCache($key)
     {
         Cache::forget($key);

@@ -104,7 +104,7 @@
                                 <td>{{ $data->description }}</td>
                                 <td>{{ $data->received_qty }}</td>
                                 <td>{{ $helpers->dateToHumanFormat($data->slaughter_date) }}</td>
-                                <td>{{ $data->created_at }}</td>
+                                <td>{{ $helpers->shortDateTime($data->created_at) }}</td>
                             </tr>
                             @endforeach
                         </tbody>

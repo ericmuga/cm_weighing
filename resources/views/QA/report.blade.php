@@ -68,7 +68,7 @@
                                 <td>{{ number_format($data->total_net, 2) }}</td>
                                 <td>{{ number_format($data->settlement_weight, 2) }}</td>
                                 <td>{{ $data->classification_code }}</td>
-                                <td>{{ $data->created_at }}</td>
+                                <td>{{ $helpers->shortDateTime($data->created_at) }}</td>
                             </tr>
                             @endforeach
                         </tbody>

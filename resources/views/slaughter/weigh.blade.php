@@ -310,7 +310,7 @@
                                 <td>{{ number_format($data->total_net, 2) }}</td>
                                 <td>{{ number_format($data->settlement_weight, 2) }}</td>
                                 <td>{{ $data->classification_code }}</td>
-                                <td>{{ $data->created_at }}</td>
+                                <td>{{ $helpers->shortDateTime($data->created_at) }}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -421,7 +421,7 @@
                 </div>
                 <div class="modal-footer">
                     <div class="form-group">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         <button class="btn btn-warning" onclick="return validateOnSubmitEdit()">
                             <i class="fa fa-save"></i> Update
                         </button>
