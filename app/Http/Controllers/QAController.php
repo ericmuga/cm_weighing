@@ -41,7 +41,7 @@ class QAController extends Controller
         $title = "Grading";
 
         $slaughter_data = DB::table('slaughter_data')
-            // ->whereDate('slaughter_data.created_at', today())
+            ->whereDate('slaughter_data.created_at', today())
             ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
             ->select('slaughter_data.*', 'carcass_types.description AS item_name')
             ->orderBy('slaughter_data.created_at', 'DESC')
@@ -56,7 +56,6 @@ class QAController extends Controller
 
     public function updateGrading(Request $request, Helpers $helpers)
     {
-        // dd($request->all());
         try {
             DB::transaction(function () use ($request, $helpers) {
                 DB::table('slaughter_data')
