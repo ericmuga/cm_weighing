@@ -334,7 +334,7 @@
             @csrf
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Edit Slaughter Entry: <strong><input
+                    <h5 class="modal-title" id="exampleModalLabel">Re-Weigh Slaughter Entry: <strong><input
                                 style="border:none" type="text" id="edit_item_name" name="edit_item_name" value=""
                                 readonly></strong></h5>
                     <strong><input style="border:none" type="text" id="edit_receipt" value="" readonly></strong></h5>
@@ -369,6 +369,21 @@
                     </div>
                     <div class="row text-center">
                         <div class="col-md-3">
+                            <button type="button" onclick="getScaleReading2()" class="btn btn-info btn-lg btn-block"><i
+                                    class="fas fa-balance-scale"></i> Re-Weigh</button>
+                            <button class="btn btn-secondary" onclick="getReset2()" type="button" style="margin-top: 10%">
+                                <strong>Reset</strong>
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="exampleInputPassword1" class="col-form-label">Scale Reading</label>
+                                <input type="number" style="text-align: center" class="form-control"
+                                    id="reading2" onclick="select()" name="reading2" step="0.01"
+                                    value="0.00" required>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
                             <label for="exampleInputPassword1" class="col-form-label">Tare-Weight</label>
                             <select class="form-control" name="edit_tareweight" id="edit_tareweight">
                                 <option value="1.5">1.5</option>
@@ -377,40 +392,40 @@
                                 <option value="2.2">2.2</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="form-group">
                                 <label for="exampleInputPassword1" class="col-form-label">Side A</label>
                                 <input type="number" style="text-align: center" class="form-control" id="edit_A"
-                                    name="edit_A" step="0.01" value="0.00" required>
+                                    name="edit_A" step="0.01" value="0.00" readonly required>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="form-group">
                                 <label for="exampleInputPassword1" class="col-form-label">Side B</label>
                                 <input type="number" style="text-align: center" class="form-control" id="edit_B"
-                                    name="edit_B" step="0.01" value="0.00" required>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="exampleInputPassword1" class="col-form-label">Total </label>
-                                <input type="number" style="text-align: center" class="form-control" id="edit_total"
-                                    name="edit_total" step="0.01" value="" required>
+                                    name="edit_B" step="0.01" value="0.00" readonly required>
                             </div>
                         </div>
                     </div>
                     <div class="row form-group">
                         <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="exampleInputPassword1" class="col-form-label">Total </label>
+                                <input type="number" style="text-align: center" class="form-control" id="edit_total"
+                                    name="edit_total" step="0.01" value="" readonly required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
                             <label for="exampleInputPassword1" class="col-form-label">Net</label>
                             <input type="number" style="text-align: center" class="form-control" id="edit_net"
                                 name="edit_net" step="0.01" value="0.00" readonly required>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label for="exampleInputPassword1" class="col-form-label">Settlement Weight</label>
                             <input type="number" style="text-align: center" class="form-control" id="edit_settlement"
                                 name="edit_settlement" step="0.01" value="0.00" readonly required>
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-3">
                             <label for="exampleInputPassword1" class="col-form-label">Class Code</label>
                             <input type="text" style="text-align: center" class="form-control"
                                 id="edit_classification_code" name="edit_classification_code" value="" readonly
@@ -419,13 +434,11 @@
                     </div>
                     <input type="hidden" name="item_id" id="item_id" value="">
                 </div>
-                <div class="modal-footer">
-                    <div class="form-group">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button class="btn btn-warning" onclick="return validateOnSubmitEdit()">
-                            <i class="fa fa-save"></i> Update
-                        </button>
-                    </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button class="btn btn-warning btn-lg" onclick="return validateOnSubmitEdit()">
+                        <i class="fa fa-save"></i> Update
+                    </button>
                 </div>
             </div>
         </form>
@@ -447,6 +460,11 @@
         $("#reading").change(function (e) {
             e.preventDefault();
             getReadingRouter();
+        });
+
+        $("#reading2").change(function (e) {
+            e.preventDefault();
+            getReadingRouter2();
         });
 
         $("#tare_weight").change(function (e) {
@@ -532,7 +550,7 @@
             $('#edit_item_desc').val(item_desc);
             $('#edit_vendor_no').val(vendor_no);
             $('#edit_vendor_name').val(vendor_name);
-            $('#edit_net').val(net);
+            $('#edit_net').val((Math.round(net * 100) / 100).toFixed(2));
             $('#edit_settlement').val(settlement);
             $('#edit_classification_code').val(class_code);
             $('#edit_vendor_name').val(vendor_name);
@@ -593,6 +611,54 @@
                         reading.value = obj.response;
 
                         getReadingRouter();
+
+                    } else if (obj.success == false) {
+                        alert('error occured in response: ' + obj.response);
+
+                    } else {
+                        alert('No response from service');
+
+                    }
+
+                },
+                error: function (data) {
+                    var errors = data.responseJSON;
+                    console.log(errors);
+                    alert('error occured when sending request');
+                }
+            });
+
+        } else {
+            alert("Please set comport value first");
+        }
+    }
+
+    function getScaleReading2() {
+        var comport = $('#comport_value').val();
+
+        if (comport != null) {
+            $.ajax({
+                type: "GET",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]')
+                        .attr('content')
+                },
+                url: "{{ url('slaughter/read-scale') }}",
+
+                data: {
+                    'comport': comport,
+
+                },
+                dataType: 'JSON',
+                success: function (data) {
+
+                    var obj = JSON.parse(data);
+
+                    if (obj.success == true) {
+                        var reading = document.getElementById('reading');
+                        reading.value = obj.response;
+
+                        getReadingRouter2();
 
                     } else if (obj.success == false) {
                         alert('error occured in response: ' + obj.response);
@@ -726,11 +792,23 @@
     }
 
     function getReset() {
+        $("#reading").val('0.00');
         $("#side_A").val('0.00');
         $('#side_B').val('0.00');
         $('#total_weight').val('0.00');
         $('#total_weight2').val('0.00');
+        $('#total_net').val('0.00');
         $('#settlement_weight').val('0.00');
+    }
+
+    function getReset2() {
+        $("#reading2").val('0.00');
+        $("#edit_A").val('0.00');
+        $('#edit_B').val('0.00');
+        $('#edit_total').val('0.00');
+        $('#edit_net').val('0.00');
+        $('#edit_settlement').val('0.00');
+        $('#edit_classification_code').val('--');
     }
 
     function getReadingRouter() {
@@ -754,6 +832,27 @@
         computeTotalWeight();
     }
 
+    function getReadingRouter2() {
+        var reading2 = $('#reading2').val();
+        var item = $('#edit_item_code').val();
+            
+        if ( item == 'BG1900' || item == 'BG1202') {
+            $('#edit_total').val(reading2);
+
+        } else {
+            var side_a = $('#edit_A').val();
+            var side_b = $('#edit_B').val();
+
+            if (side_a > 0) {
+                $('#edit_B').val(reading2);
+
+            } else {
+                $('#edit_A').val(reading2);
+            }
+        }
+        computeTotalWeightEdit();
+    }
+
     function computeTotalWeight() {
         if ($('#item_code').val() == 'BG1101' || $('#item_code').val() == 'BG1201') {
             var reading = $('#reading').val();
@@ -769,15 +868,24 @@
 
         getSettlementWeight();
     }
+    
 
     function computeTotalWeightEdit() {
-        var sideA = $('#edit_A').val();
-        var sideB = $('#edit_B').val();
-        var add = parseFloat(sideA) + parseFloat(sideB);
-        var total = (Math.round(add * 100) / 100).toFixed(2);
-        $('#edit_total').val(total);
+        var item = $('#edit_item_code').val();
 
-        getSettlementWeight();
+        if (item == 'BG1900' || item == 'BG1202') {
+            // goat/ lamb
+            
+        } else {
+            var sideA = $('#edit_A').val();
+            var sideB = $('#edit_B').val();
+            var add = parseFloat(sideA) + parseFloat(sideB);
+            var total = (Math.round(add * 100) / 100).toFixed(2);
+            $('#edit_total').val(total);
+        }
+        
+        calculateNetEdit();
+        getSettlementWeightEdit();
     }
 
     function getNet() {
@@ -789,7 +897,7 @@
         }
 
         var tareweight = $('#tare_weight').val();
-        
+
         var net = total_gross - tareweight;
         $('#total_net').val(net);
 
@@ -803,7 +911,7 @@
 
         var new_net = total_gross - tareweight;
 
-        $('#edit_net').val(new_net);
+        $('#edit_net').val((parseInt(new_net * 100) / 100).toFixed(2));
 
         getSettlementWeightEdit();
     }
@@ -827,6 +935,7 @@
         var cold_weight = 0.975 * net;
         var settlement_weight = (parseInt(cold_weight * 100) / 100).toFixed(2);
         $('#edit_settlement').val(settlement_weight);
+
         getClassificationCodeEdit(settlement_weight);
     }
 
@@ -849,6 +958,48 @@
 
             }
         });
+    }
+
+    function transformToLivestockCode(item_code) {
+        if (item_code == 'BG1021') {
+            return 'BG1006';
+
+        } else if (item_code == 'BG1022') {
+            return 'BG1007';
+
+        } else if (item_code == 'BG1023') {
+            return 'BG1008';
+
+        } else if (item_code == 'BG1024') {
+            return 'BG1009';
+
+        } else if (item_code == 'BG1031') {
+            return 'BG1011';
+
+        } else if (item_code == 'BG1032') {
+            return 'BG1012';
+
+        } else if (item_code == 'BG1033') {
+            return 'BG1013';
+
+        } else if (item_code == 'BG1034') {
+            return 'BG1014';
+
+        } else if (item_code == 'BG1036') {
+            return 'BG1016';
+
+        } else if (item_code == 'BG1037') {
+            return 'BG1018';
+
+        } else if (item_code == 'BG1900') {
+            return 'BG1101';
+
+        } else if (item_code == 'BG1202') {
+            return 'BG1201';
+
+        } else {
+            return '';
+        }
     }
 
     function getClassificationCode(s_weight) {
@@ -998,53 +1149,11 @@
 
     }
 
-    function transformToLivestockCode(item_code) {
-        if (item_code == 'BG1021') {
-            return 'BG1006';
-
-        } else if (item_code == 'BG1022') {
-            return 'BG1007';
-
-        } else if (item_code == 'BG1023') {
-            return 'BG1008';
-
-        } else if (item_code == 'BG1024') {
-            return 'BG1009';
-
-        } else if (item_code == 'BG1031') {
-            return 'BG1011';
-
-        } else if (item_code == 'BG1032') {
-            return 'BG1012';
-
-        } else if (item_code == 'BG1033') {
-            return 'BG1013';
-
-        } else if (item_code == 'BG1034') {
-            return 'BG1014';
-
-        } else if (item_code == 'BG1036') {
-            return 'BG1016';
-
-        } else if (item_code == 'BG1037') {
-            return 'BG1018';
-
-        } else if (item_code == 'BG1900') {
-            return 'BG1101';
-
-        } else if (item_code == 'BG1202') {
-            return 'BG1201';
-
-        } else {
-            return '';
-        }
-    }
-
     function getClassificationCodeEdit(s_weight) {
         $('#edit_classification_code').val('--');
 
-        var carcass_code = $('#edit_item_code').val();
-        var item_code = transformToLivestockCode(carcass_code);
+        var code = $('#edit_item_code').val();
+        var item_code = transformToLivestockCode(code);
 
         if (s_weight > 1 && item_code != '') {
             if (item_code == 'BG1101' || item_code == 'BG1201') {
@@ -1077,6 +1186,24 @@
                 item_code == 'BG1009') {
                 // High Grade 
                 switch (true) {
+                    case (s_weight < 120):
+                        // code block
+                        $('#edit_classification_code').val('STDB-119');
+                        break;
+
+                    case (s_weight >= 120 && s_weight < 150):
+                        // code block
+                        $('#edit_classification_code').val('STDA-149');
+                        break;
+
+                    case (s_weight >= 150 && s_weight < 160):
+                        $('#edit_classification_code').val('FAQ+150');
+                        break;
+
+                    case (s_weight >= 160 && s_weight < 165):
+                        $('#edit_classification_code').val('FAQ+160');
+                        break;
+
                     case (s_weight >= 165 && s_weight < 170):
                         // code block
                         $('#edit_classification_code').val('HG+165');
@@ -1109,7 +1236,7 @@
                         break;
 
                     case (s_weight >= 120 && s_weight < 150):
-                        $('#edit_classification_code').val('CG-150');
+                        $('#edit_classification_code').val('CG+150');
                         break;
 
                     case (s_weight >= 150 && s_weight < 160):
