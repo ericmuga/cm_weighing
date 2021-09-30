@@ -371,16 +371,15 @@
                         <div class="col-md-3">
                             <button type="button" onclick="getScaleReading2()" class="btn btn-info btn-lg btn-block"><i
                                     class="fas fa-balance-scale"></i> Re-Weigh</button>
-                            <button class="btn btn-secondary" onclick="getReset2()" type="button" style="margin-top: 10%">
+                            <button class="btn btn-secondary" onclick="getReset2()" type="button"
+                                style="margin-top: 10%">
                                 <strong>Reset</strong>
                             </button>
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label for="exampleInputPassword1" class="col-form-label">Scale Reading</label>
-                                <input type="number" style="text-align: center" class="form-control"
-                                    id="reading2" onclick="select()" name="reading2" step="0.01"
-                                    value="0.00" required>
+                                <input type="number" style="text-align: center" class="form-control" onclick="select()" id="reading2" name="reading2" step="0.01" value="0.00" required @if (config('app.show_manual_weight') != 1) readonly @endif>
                             </div>
                         </div>
                         <div class="col-md-2">
@@ -655,7 +654,7 @@
                     var obj = JSON.parse(data);
 
                     if (obj.success == true) {
-                        var reading = document.getElementById('reading');
+                        var reading = document.getElementById('reading2');
                         reading.value = obj.response;
 
                         getReadingRouter2();
@@ -835,8 +834,8 @@
     function getReadingRouter2() {
         var reading2 = $('#reading2').val();
         var item = $('#edit_item_code').val();
-            
-        if ( item == 'BG1900' || item == 'BG1202') {
+
+        if (item == 'BG1900' || item == 'BG1202') {
             $('#edit_total').val(reading2);
 
         } else {
@@ -868,14 +867,14 @@
 
         getSettlementWeight();
     }
-    
+
 
     function computeTotalWeightEdit() {
         var item = $('#edit_item_code').val();
 
         if (item == 'BG1900' || item == 'BG1202') {
             // goat/ lamb
-            
+
         } else {
             var sideA = $('#edit_A').val();
             var sideB = $('#edit_B').val();
@@ -883,7 +882,7 @@
             var total = (Math.round(add * 100) / 100).toFixed(2);
             $('#edit_total').val(total);
         }
-        
+
         calculateNetEdit();
         getSettlementWeightEdit();
     }
