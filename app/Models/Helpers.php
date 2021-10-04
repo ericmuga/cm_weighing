@@ -162,12 +162,13 @@ class Helpers
         }
     }
 
-    public function insertChangeDataLogs($table_name, $item_id, $entry_type)
+    public function insertChangeDataLogs($table_name, $item_id, $entry_type, $description)
     {
         DB::table('change_logs')->insert([
             'table_name' => $table_name,
             'item_id' => $item_id,
             'entry_type' => $entry_type,
+            'description' => $description,
             'user_id' => $this->authenticatedUserId(),
         ]);
     }

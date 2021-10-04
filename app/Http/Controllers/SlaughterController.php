@@ -178,7 +178,8 @@ class SlaughterController extends Controller
                         'classification_code' => $request->edit_classification_code,
                         'updated_at' => now(),
                     ]);
-                $helpers->insertChangeDataLogs('slaughter_data', $request->item_id, '3');
+                $desc = 'new net:' . $request->edit_net;
+                $helpers->insertChangeDataLogs('slaughter_data', $request->item_id, '3', $desc);
             });
 
 

@@ -291,7 +291,7 @@
                                     data-weight1="{{ number_format($data->sideA_weight, 2) }}"
                                     data-weight2="{{ number_format($data->sideB_weight, 2) }}"
                                     data-total="{{number_format($data->total_weight, 2) }}"
-                                    data-tare_weight="{{ $data->tare_weight }}" data-item_code="{{ $data->item_code }}"
+                                    data-tare_weight="{{ number_format($data->tare_weight, 1) }}" data-item_code="{{ $data->item_code }}"
                                     data-item_desc="{{ $data->description }}" data-vendor_no="{{ $data->vendor_no }}"
                                     data-net="{{ $data->total_net }}"
                                     data-settlement="{{ number_format($data->settlement_weight, 2) }}"
@@ -388,6 +388,7 @@
                                 <option value="1.5">1.5</option>
                                 <option value="1.8">1.8</option>
                                 <option value="1.9">1.9</option>
+                                <option value="2.0">2.0</option>
                                 <option value="2.2">2.2</option>
                             </select>
                         </div>

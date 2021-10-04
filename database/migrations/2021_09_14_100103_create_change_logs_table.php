@@ -18,6 +18,7 @@ class CreateChangeLogsTable extends Migration
             $table->string('table_name');
             $table->bigInteger('item_id');
             $table->integer('entry_type');
+            $table->longText('description');
             $table->foreignId('user_id')->constrained('users');
             $table->tinyInteger('is_processed')->default(0);
             $table->timestamp('created_at')->useCurrent();
