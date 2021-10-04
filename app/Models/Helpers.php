@@ -23,7 +23,7 @@ class Helpers
 
     public function shortDateTime($db_time)
     {
-        return date('d-m-Y :i A', strtotime($db_time));
+        return date('d-m-Y H:i A', strtotime($db_time));
     }
 
     public function forgetCache($key)
