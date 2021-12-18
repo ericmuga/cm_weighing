@@ -3,7 +3,7 @@
 @section('content')
 
 <!-- weigh -->
-<form id="form_slaughter_weigh" action="{{ route('save_weigh') }}" method="post">
+<form id="form_slaughter_weigh" class="form-prevent-multiple-submits" action="{{ route('save_weigh') }}" method="post">
     @csrf
     <div class="card-group">
         <div class="card ">
@@ -215,7 +215,7 @@
                 </div>
                 <div class="form-group" style="padding-top: 5%">
                     <button id="submit_form" type="submit" onclick="return validateOnSubmit()"
-                        class="btn btn-success btn-lg "><i class="fa fa-paper-plane" aria-hidden="true"></i>
+                        class="btn btn-success btn-lg btn-prevent-multiple-submits"><i class="fa fa-paper-plane" aria-hidden="true"></i>
                         Save</button>
                 </div>
             </div>
@@ -330,7 +330,7 @@
 <div id="editModal" class="modal fade" role="dialog">
     <div class="modal-dialog modal-lg">
         <!--Start create user modal-->
-        <form id="form-edit-slaughter" action="{{route('slaughter_edit')}}" method="post">
+        <form id="form-edit-slaughter" class="form-prevent-multiple-submits" action="{{route('slaughter_edit')}}" method="post">
             @csrf
             <div class="modal-content">
                 <div class="modal-header">
@@ -436,7 +436,7 @@
                 </div>
                 <div class="modal-footer justify-content-between">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button class="btn btn-warning btn-lg" onclick="return validateOnSubmitEdit()">
+                    <button class="btn btn-warning btn-lg btn-prevent-multiple-submits" onclick="return validateOnSubmitEdit()">
                         <i class="fa fa-save"></i> Update
                     </button>
                 </div>
@@ -451,6 +451,10 @@
 @section('scripts')
 <script>
     $(document).ready(function () {
+        $('.form-prevent-multiple-submits').on('submit', function(){
+            $(".btn-prevent-multiple-submits").attr('disabled', true);
+        });
+        
         listenForEnterKeyPress();
 
         hideShowDivs();
