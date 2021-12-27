@@ -893,14 +893,15 @@
     }
 
     function getNet() {
+        var tareweight = $('#tare_weight').val();
+
         if ($('#item_code').val() == 'BG1101' || $('#item_code').val() == 'BG1201') {
             var total_gross = $('#total_weight2').val();
 
         } else {
             var total_gross = $('#total_weight').val();
+            tareweight = tareweight * 2;
         }
-
-        var tareweight = $('#tare_weight').val();
 
         var net = total_gross - tareweight;
         $('#total_net').val(net);
@@ -912,6 +913,13 @@
         var total_gross = $('#edit_total').val();
 
         var tareweight = $('#edit_tareweight').val();
+
+        if ($('#edit_item_code').val() == 'BG1101' || $('#edit_item_code').val() == 'BG1201') {
+            tareweight = tareweight;
+
+        } else {
+            tareweight = tareweight * 2;
+        }
 
         var new_net = total_gross - tareweight;
 
