@@ -128,7 +128,7 @@ class SlaughterController extends Controller
                     'sideB_weight' => $request->side_B,
                     'total_weight' => $request->total_weight,
                     'tare_weight' => $request->tare_weight,
-                    'total_net' => $request->total_net,
+                    'total_net' => $request->total_net, //updated
                     'settlement_weight' => $request->settlement_weight,
                     'classification_code' => $request->classification_code,
                     'user_id' => $helpers->authenticatedUserId(),
