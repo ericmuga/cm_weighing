@@ -914,7 +914,7 @@
 
         var tareweight = $('#edit_tareweight').val();
 
-        if ($('#edit_item_code').val() == 'BG1101' || $('#edit_item_code').val() == 'BG1201') {
+        if ($('#edit_item_code').val() == 'BG1900' || $('#edit_item_code').val() == 'BG1202') {
             tareweight = tareweight;
 
         } else {
