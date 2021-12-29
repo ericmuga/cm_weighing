@@ -256,7 +256,7 @@
                                 <th>Side A</th>
                                 <th>Side B</th>
                                 <th>Total Weight</th>
-                                <th>Total Tareweight(kgs)</th>
+                                <th>Total Tareweight</th>
                                 <th>Total Net</th>
                                 <th>Settlement</th>
                                 <th>Class Code</th>
@@ -274,8 +274,8 @@
                                 <th>Vendor Name</th>
                                 <th>Side A</th>
                                 <th>Side B</th>
-                                <th>Total Tareweight(kgs)</th>
-                                <th>Tareweight</th>
+                                <th>Total Weight</th>
+                                <th>Total Tareweight</th>
                                 <th>Total Net</th>
                                 <th>Settlement</th>
                                 <th>Class Code</th>
