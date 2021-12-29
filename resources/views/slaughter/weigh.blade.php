@@ -256,7 +256,7 @@
                                 <th>Side A</th>
                                 <th>Side B</th>
                                 <th>Total Weight</th>
-                                <th>Tareweight</th>
+                                <th>Total Tareweight(kgs)</th>
                                 <th>Total Net</th>
                                 <th>Settlement</th>
                                 <th>Class Code</th>
@@ -274,7 +274,7 @@
                                 <th>Vendor Name</th>
                                 <th>Side A</th>
                                 <th>Side B</th>
-                                <th>Total Weight</th>
+                                <th>Total Tareweight(kgs)</th>
                                 <th>Tareweight</th>
                                 <th>Total Net</th>
                                 <th>Settlement</th>
@@ -306,7 +306,11 @@
                                 <td>{{ number_format($data->sideA_weight, 2) }}</td>
                                 <td>{{ number_format($data->sideB_weight, 2) }}</td>
                                 <td>{{ number_format($data->total_weight, 2) }}</td>
-                                <td>{{ number_format($data->tare_weight, 2) }}</td>
+                                @if ($data->item_code == 'BG1900' || $data->item_code == 'BG1202')
+                                    <td>{{ number_format($data->tare_weight, 2) }}</td>                                    
+                                @else
+                                    <td>{{ number_format(($data->tare_weight * 2), 2) }}</td>    
+                                @endif
                                 <td>{{ number_format($data->total_net, 2) }}</td>
                                 <td>{{ number_format($data->settlement_weight, 2) }}</td>
                                 <td>{{ $data->classification_code }}</td>
