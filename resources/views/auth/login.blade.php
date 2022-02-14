@@ -23,7 +23,7 @@
                     </div>
                 </div>
                 <div class="input-group mb-3">
-                    <input type="password" class="form-control" name="password" placeholder="Password" required>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
                     <div class="input-group-append">
                         <div class="input-group-text">
                             <span class="fas fa-lock"></span>
@@ -33,9 +33,10 @@
                 <div class="row">
                     <div class="col-7">
                         <div class="icheck-primary">
-                            <input type="checkbox" id="remember" name="remember" {{ old('remember') ? 'checked' : '' }}>
+                            <input type="checkbox" id="remember" name="remember"
+                                {{ old('remember') ? 'checked' : '' }} onclick="showPassword()">
                             <label for="remember">
-                                Remember Me
+                                Show Password
                             </label>
                         </div>
                     </div>
