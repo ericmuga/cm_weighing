@@ -483,7 +483,6 @@
         $("#receipt_no").change(function (e) {
             e.preventDefault();
             loadWeighData();
-            getClassificationCode($("#settlement_weight").val());
         });
 
         $("#edit_tareweight").change(function (e) {
@@ -717,6 +716,8 @@
                         $('#total_received').val(obj.vendor[0].total_received);
                         $('#total_weighed').val(obj.total_weighed);
                         $('#total_remaining').val(obj.vendor[0].total_received - obj.total_weighed);
+
+                        getClassificationCode();
                     }
 
                     // show/hide total weights divs
@@ -1018,7 +1019,9 @@
         }
     }
 
-    function getClassificationCode(s_weight) {
+    function getClassificationCode() {
+        var s_weight = $("#settlement_weight").val();
+        
         $('#classification_code').val('--');
 
         var item_code = $('#item_code').val();
@@ -1104,7 +1107,7 @@
                         break;
 
                     case (s_weight >= 120 && s_weight < 150):
-                        $('#classification_code').val('CG+150');
+                        $('#classification_code').val('CG-150');
                         break;
 
                     case (s_weight >= 150 && s_weight < 160):
