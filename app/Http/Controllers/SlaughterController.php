@@ -87,6 +87,12 @@ class SlaughterController extends Controller
             ->where('receipt_no', $request->receipt)
             ->count();
 
+        $weighed_net = DB::table('slaughter_data')
+            ->whereDate('created_at', today())
+            ->where('deleted', '!=', 1)
+            ->where('receipt_no', $request->receipt)
+            ->sum('total_net');
+
         $vendor_data = DB::table('receipts')
             ->whereDate('slaughter_date', today())
             ->where('receipt_no', $request->receipt)
@@ -94,7 +100,7 @@ class SlaughterController extends Controller
             ->groupBy('vendor_no', 'vendor_name', 'item_code', 'description')
             ->get()->toArray();
 
-        $dataArray = array('agg_count' => $agg_count, 'total_weighed' => $total_weighed_per_vendor, 'vendor' => $vendor_data);
+        $dataArray = array('agg_count' => $agg_count, 'total_weighed' => $total_weighed_per_vendor, 'weighed_net' => $weighed_net, 'vendor' => $vendor_data);
 
         return response()->json($dataArray);
     }
