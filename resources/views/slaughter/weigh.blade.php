@@ -1077,28 +1077,13 @@
                         $('#classification_code').val('FAQ+150');
                         break;
 
-                    case (s_weight >= 160 && s_weight < 165):
-                        $('#classification_code').val('FAQ+160');
+                    case (s_weight >= 160 && s_weight < 170):
+                        $('#classification_code').val('HG+160');
                         break;
 
-                    case (s_weight >= 165 && s_weight < 170):
-                        // code block
-                        $('#classification_code').val('HG+165');
-                        break;
-
-                    case (s_weight >= 170 && s_weight < 175):
+                    case (s_weight >= 170 && s_weight < 400):
                         // code block
                         $('#classification_code').val('HG+170');
-                        break;
-
-                    case (s_weight >= 175 && s_weight <= 250):
-                        // code block
-                        $('#classification_code').val('HG+175');
-                        break;
-
-                    case (s_weight > 250):
-                        // code block
-                        $('#classification_code').val('HG+250.1');
                         break;
 
                     default:
@@ -1120,20 +1105,12 @@
                         $('#classification_code').val('CG+150');
                         break;
 
-                    case (s_weight >= 160 && s_weight < 165):
+                    case (s_weight >= 160 && s_weight < 170):
                         $('#classification_code').val('CG+160');
                         break;
 
-                    case (s_weight >= 165 && s_weight < 170):
-                        $('#classification_code').val('CG+165');
-                        break;
-
-                    case (s_weight >= 170 && s_weight < 175):
+                    case (s_weight >= 170 && s_weight < 400):
                         $('#classification_code').val('CG+170');
-                        break;
-
-                    case (s_weight > 175):
-                        $('#classification_code').val('CG+175');
                         break;
 
                     default:
@@ -1225,29 +1202,14 @@
                         $('#edit_classification_code').val('FAQ+150');
                         break;
 
-                    case (s_weight >= 160 && s_weight < 165):
-                        $('#edit_classification_code').val('FAQ+160');
+                    case (s_weight >= 160 && s_weight < 170):
+                        $('#edit_classification_code').val('HG+160');
                         break;
-
-                    case (s_weight >= 165 && s_weight < 170):
-                        // code block
-                        $('#edit_classification_code').val('HG+165');
-                        break;
-
-                    case (s_weight >= 170 && s_weight < 175):
+                
+                    case (s_weight >= 170 && s_weight < 400):
                         // code block
                         $('#edit_classification_code').val('HG+170');
-                        break;
-
-                    case (s_weight >= 175 && s_weight <= 250):
-                        // code block
-                        $('#edit_classification_code').val('HG+175');
-                        break;
-
-                    case (s_weight > 250):
-                        // code block
-                        $('#edit_classification_code').val('HG+250.1');
-                        break;
+                        break;                    
 
                     default:
                         $('#edit_classification_code').val('**');
@@ -1268,20 +1230,12 @@
                         $('#edit_classification_code').val('CG+150');
                         break;
 
-                    case (s_weight >= 160 && s_weight < 165):
+                    case (s_weight >= 160 && s_weight < 170):
                         $('#edit_classification_code').val('CG+160');
                         break;
 
-                    case (s_weight >= 165 && s_weight < 170):
-                        $('#edit_classification_code').val('CG+165');
-                        break;
-
-                    case (s_weight >= 170 && s_weight < 175):
+                    case (s_weight >= 170 && s_weight < 400):
                         $('#edit_classification_code').val('CG+170');
-                        break;
-
-                    case (s_weight > 175):
-                        $('#edit_classification_code').val('CG+175');
                         break;
 
                     default:
