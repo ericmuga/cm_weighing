@@ -197,20 +197,28 @@
                     </div>
                 </div>
                 <div class="row form-group">
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label for="exampleInputPassword1">Total weighed </label>
                         <input type="number" style="text-align: center" class="form-control" value="" name=""
                             id="total_weighed" placeholder="" readonly required>
                     </div>
-                    <div class="col-md-4">
+                    
+                    <div class="col-md-6">
+                        <label for="exampleInputPassword1">Total remaining </label>
+                        <input type="number" style="text-align: center" class="form-control" value="" name=""
+                            id="total_remaining" placeholder="" readonly required>
+                    </div>
+                </div>
+                <div class="row form-group">
+                    <div class="col-md-6">
                         <label for="exampleInputPassword1">Total Net(kgs) </label>
                         <input type="number" style="text-align: center" class="form-control" value="0.00"
                             id="weighed_net" placeholder="" readonly required>
                     </div>
-                    <div class="col-md-4">
-                        <label for="exampleInputPassword1">Total remaining </label>
-                        <input type="number" style="text-align: center" class="form-control" value="" name=""
-                            id="total_remaining" placeholder="" readonly required>
+                    <div class="col-md-6">
+                        <label for="exampleInputPassword1">Total CDW(kgs) </label>
+                        <input type="number" style="text-align: center" class="form-control" value="0.00"
+                            id="weighed_cdw" placeholder="" readonly required>
                     </div>
                 </div>
                 <div class="form-group">
@@ -721,6 +729,7 @@
                         $('#total_received').val(obj.vendor[0].total_received);
                         $('#total_weighed').val(obj.total_weighed);
                         $('#weighed_net').val(parseFloat(obj.weighed_net).toFixed(2));
+                        $('#weighed_cdw').val(parseFloat(obj.weighed_net * 0.975).toFixed(2));
                         $('#total_remaining').val(obj.vendor[0].total_received - obj.total_weighed);
 
                         getClassificationCode();
