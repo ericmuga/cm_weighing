@@ -26,7 +26,7 @@
                     <input type="number" style="text-align: center" step="0.01" class="form-control" id="reading"
                         name="reading" value="0.00" placeholder="" onclick="select()" readonly required>
                 </div>
-                @if (config('app.show_manual_weight') == 1)
+                @if (Session::get('session_userName') == 'EMuga' || Session::get('session_userName') == 'EKaranja' || Session::get('session_userName') == 'EMugo')
                 <div class="form-check">
                     <input type="checkbox" class="form-check-input" id="manual_weight">
                     <label class="form-check-label" for="manual_weight">Enter Manual weight</label>
@@ -396,7 +396,7 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label for="exampleInputPassword1" class="col-form-label">Scale Reading</label>
-                                <input type="number" style="text-align: center" class="form-control" onclick="select()" id="reading2" name="reading2" step="0.01" value="0.00" required @if (config('app.show_manual_weight') != 1) readonly @endif>
+                                <input type="number" style="text-align: center" class="form-control" onclick="select()" id="reading2" name="reading2" step="0.01" value="0.00" required @if (Session::get('session_userName') == 'EMuga' || Session::get('session_userName') == 'EKaranja' || Session::get('session_userName') == 'EMugo') @else readonly @endif>
                             </div>
                         </div>
                         <div class="col-md-2">
