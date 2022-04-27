@@ -3,7 +3,7 @@
         <a href="#" class="navbar-brand">
             <img src="{{ asset('assets/img/choice1.png') }}" alt="FCL Calibra Logo"
                 class="brand-image" style="">
-            <span class="brand-text font-weight-light"><strong> FCL Weight Management System</strong></span>
+            <span class="brand-text font-weight-light"><strong> CML Weight Management System</strong></span>
         </a>
 
         <button class="navbar-toggler order-1" type="button" data-toggle="collapse" data-target="#navbarCollapse"
