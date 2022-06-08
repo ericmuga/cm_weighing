@@ -24,7 +24,7 @@
                 <p>No. of Animals brought in For Slaughter</p>
             </div>
             <div class="icon">
-                <i class="ion ion-bag"></i>
+                <i class="fa fa-share-alt"></i>
             </div>
             <a href="{{ route('receipts', 'today') }}" class="small-box-footer">More info <i
                     class="fas fa-arrow-circle-right"></i></a>
@@ -39,7 +39,7 @@
                 <p>No. of Carcasses Weighed</p>
             </div>
             <div class="icon">
-                <i class="ion ion-stats-bars"></i>
+                <i class="fa fa-balance-scale"></i>
             </div>
             <a href="{{ route('slaughter_report', 'today') }}" class="small-box-footer">More info <i
                     class="fas fa-arrow-circle-right"></i></a>
@@ -53,7 +53,7 @@
                 <p>Remaining count</p>
             </div>
             <div class="icon">
-                <i class="ion ion-alert"></i>
+                <i class="fa fa-eye-slash" aria-hidden="true"></i>
             </div>
             <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
         </div>
@@ -68,7 +68,7 @@
                 <p> Total Weight Output</p>
             </div>
             <div class="icon">
-                <i class="ion ion-pie-graph"></i>
+                <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
             </div>
             <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
         </div>
