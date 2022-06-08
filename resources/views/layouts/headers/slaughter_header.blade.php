@@ -1,5 +1,5 @@
 <nav class="main-header navbar navbar-expand-md navbar-light navbar-white">
-    <div class="container">
+    <div class="container-fluid">
         <a href="{{ route('slaughter_dashboard') }}" class="navbar-brand">
             <img src="{{ asset('assets/img/choice1.png') }}" alt="CML Calibra Logo"
                 class="brand-image" style="">
