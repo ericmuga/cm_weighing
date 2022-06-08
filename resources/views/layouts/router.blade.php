@@ -56,6 +56,9 @@ scratch. This page gets rid of all links and provides the needed markup only.
                                         <p class="card-text">Select this option to switch to slaughter.
                                         </p>
                                     </a>
+                                    <div class="icon text-center">
+                                        <i class="fa fa-shopping-basket fa-4x" aria-hidden="true"></i>
+                                    </div>
                                 </div>
                                 <div class="card p-2 bg-warning" style="height: 250px">
                                     <a class="card-body text-center card-block stretched-link text-decoration-none"
@@ -64,6 +67,9 @@ scratch. This page gets rid of all links and provides the needed markup only.
                                         <p class="card-text">This Inteface is in development
                                         </p>
                                     </a>
+                                    <div class="icon text-center">
+                                        <i class="fa fa-cut fa-4x" aria-hidden="true"></i>
+                                    </div>
                                 </div>
                                 <div class="card p-2 bg-success" style="height: 250px">
                                     <a class="card-body text-center card-block stretched-link text-decoration-none card-link"
@@ -72,6 +78,9 @@ scratch. This page gets rid of all links and provides the needed markup only.
                                         <p class="card-text">This Inteface is in development.
                                         </p>
                                     </a>
+                                    <div class="icon text-center">
+                                        <i class="fa fa-check fa-4x" aria-hidden="true"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
