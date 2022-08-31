@@ -794,6 +794,8 @@
             if (!(side_A >= 5 && side_A <= 300) || !(side_B >= 5 && side_B <= 300)) {
                 alert("Please ensure you have valid weight of between 5-300 kgs in both sides.");
                 return false;
+
+                //comment
             }
         }
 
