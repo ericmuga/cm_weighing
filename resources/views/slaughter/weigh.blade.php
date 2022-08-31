@@ -795,7 +795,7 @@
                 alert("Please ensure you have valid weight of between 5-300 kgs in both sides.");
                 return false;
 
-                //comment
+                //commenthjhkhk
             }
         }
 
