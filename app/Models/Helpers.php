@@ -75,7 +75,14 @@ class Helpers
     {
         $curl = curl_init();
 
-        $url = 'http://' . \Request::getClientIp(true) . $this->getReadScaleApiServiceUrl();
+        $client_ip = \Request::getClientIp(true);
+
+        if ($client_ip == '::1') {
+            # code...
+            $client_ip = 'localhost';
+        }
+
+        $url = 'http://' . $client_ip . $this->getReadScaleApiServiceUrl();
 
         $full_url = $url . '/' . $comport;
 
@@ -101,7 +108,16 @@ class Helpers
     {
         $curl = curl_init();
 
-        $url = 'http://' . \Request::getClientIp(true) . $this->getComportListServiceUrl();
+        $client_ip = \Request::getClientIp(true);
+
+        if ($client_ip == '::1') {
+            # code...
+            $client_ip = 'localhost';
+        }
+
+        $url = 'http://' . $client_ip . $this->getComportListServiceUrl();
+
+        info($url);
 
         curl_setopt_array($curl, array(
             CURLOPT_URL => $url,
