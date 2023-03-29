@@ -117,8 +117,6 @@ class Helpers
 
         $url = 'http://' . $client_ip . $this->getComportListServiceUrl();
 
-        info($url);
-
         curl_setopt_array($curl, array(
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
