@@ -26,12 +26,12 @@
                     <input type="number" style="text-align: center" step="0.01" class="form-control" id="reading"
                         name="reading" value="0.00" placeholder="" onclick="select()" readonly required>
                 </div>
-                @if (Session::get('session_userName') == 'EMuga' || Session::get('session_userName') == 'EKaranja' || Session::get('session_userName') == 'EMugo')
+                {{-- @if (Session::get('session_userName') == 'EMuga' || Session::get('session_userName') == 'EKaranja' || Session::get('session_userName') == 'EMugo') --}}
                 <div class="form-check">
                     <input type="checkbox" class="form-check-input" id="manual_weight">
                     <label class="form-check-label" for="manual_weight">Enter Manual weight</label>
                 </div>
-                @endif
+                {{-- @endif --}}
                 <br>
                 <div class="row form-group">
                     <div class="col-md-8">
