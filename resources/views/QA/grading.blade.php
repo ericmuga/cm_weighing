@@ -136,7 +136,7 @@
                     <div class="form-group">
                         <label for="email" class="col-form-label">Fat Group Classifications</label>
                         <select class="form-control select2" name="fat_group" id="fat_group" required>
-                            {{-- <option disabled selected> select an option </option> --}}
+                            <option disabled selected> select an option </option>
                             @foreach($classifications as $cls)
                                 <option value="{{ $cls->code }}" selected="selected">
                                     {{ $cls->code }}
@@ -187,6 +187,8 @@
             $('#settlement_weight').val((Math.round(settlement * 100) / 100).toFixed(2));
             $('#fat_group').val(fat_group);
             $('#narration').val(narration);
+
+            $('#fat_group').select2('destroy').select2();
 
             $('#gradingShow').modal('show');
         });
