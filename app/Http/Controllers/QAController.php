@@ -70,7 +70,9 @@ class QAController extends Controller
                         'grading_user' => $helpers->authenticatedUserId(),
                         'graded_at' => now(),
                     ]);
-                $helpers->insertChangeDataLogs('slaughter_data', $request->item_id, '3');
+                $desc = 'new fat_group:' . $request->fat_group . ', narration: ' . $request->narration;
+
+                $helpers->insertChangeDataLogs('slaughter_data', $request->item_id, '3', $desc);
             });
 
             Toastr::success("Carcass no. {$request->agg_no} graded successfully", 'Success');

@@ -74,7 +74,7 @@
                             @endif
                         </select>
                     </div>
-                    <div class="col-md-4" style="padding-top: 7.5%">
+                    <div class="col-md-4" style="padding-top: 6%">
                         <button class="btn btn-secondary btn-sm form-control" onclick="getReset()" type="button">
                             <strong>Reset</strong>
                         </button>

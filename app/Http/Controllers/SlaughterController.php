@@ -184,10 +184,11 @@ class SlaughterController extends Controller
                         'classification_code' => $request->edit_classification_code,
                         'updated_at' => now(),
                     ]);
+
                 $desc = 'new net:' . $request->edit_net;
+
                 $helpers->insertChangeDataLogs('slaughter_data', $request->item_id, '3', $desc);
             });
-
 
             Toastr::success("record {$request->edit_item_name} updated successfully", 'Success');
             return redirect()->back();

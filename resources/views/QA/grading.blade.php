@@ -48,32 +48,41 @@
                         </tfoot>
                         <tbody>
                             @foreach($slaughter_data as $data)
-                            <tr>
-                                <td>{{ $i++ }}</td>
-                                <td>{{ $data->agg_no }}</td>
-                                <td>{{ $data->receipt_no }}</td>
-                                <td>{{ $data->item_name }}</td>
-                                <td>{{ $data->vendor_no }}</td>
-                                <td>{{ number_format($data->total_net, 2) }}</td>
-                                <td>{{ number_format($data->settlement_weight, 2) }}</td>
-                                <td>{{ $data->classification_code }}</td>
-                                <td>{{ $data->fat_group }}</td>
+                                <tr>
+                                    <td>{{ $i++ }}</td>
+                                    <td>{{ $data->agg_no }}</td>
+                                    <td>{{ $data->receipt_no }}</td>
+                                    <td>{{ $data->item_name }}</td>
+                                    <td>{{ $data->vendor_no }}</td>
+                                    <td>{{ number_format($data->total_net, 2) }}</td>
+                                    <td>{{ number_format($data->settlement_weight, 2) }}</td>
+                                    <td>{{ $data->classification_code }}</td>
+                                    <td>{{ $data->fat_group }}</td>
 
-                                @if ($data->fat_group == null)
-                                <td>
-                                    <span type="button" class="badge badge-warning gradingShow"
-                                        data-agg_no="{{ $data->agg_no }}" data-item_code="{{ $data->item_code }}" data-id="{{ $data->id }}" data-item_name="{{ $data->item_name }}" data-vendor="{{ $data->vendor_no }}" data-fat_group="{{ $data->fat_group }}" data-settlement="{{ $data->settlement_weight }}" >pending</span>
-                                </td>
-                                    
-                                @else
-                                <td>
-                                    <span type="button" class="badge badge-success gradingShow"
-                                        data-agg_no="{{ $data->agg_no }}" data-item_code="{{ $data->item_code }}" data-id="{{ $data->id }}" data-item_name="{{ $data->item_name }}" data-vendor="{{ $data->vendor_no }}" data-fat_group="{{ $data->fat_group }}" data-settlement="{{ $data->settlement_weight }}" >Graded</span>
-                                </td>
-                                    
-                                @endif
-                                <td>{{ $helpers->shortDateTime($data->created_at) }}</td>
-                            </tr>
+                                    @if($data->fat_group == null)
+                                        <td class="gradingShow" data-agg_no="{{ $data->agg_no }}"
+                                            data-item_code="{{ $data->item_code }}" data-id="{{ $data->id }}"
+                                            data-item_name="{{ $data->item_name }}"
+                                            data-vendor="{{ $data->vendor_no }}"
+                                            data-settlement="{{ $data->settlement_weight }}"><a href="#"
+                                                class="text-warning">pending</a>
+                                        </td>
+
+                                    @else
+
+                                        <td class="gradingShow link-success" data-agg_no="{{ $data->agg_no }}"
+                                            data-item_code="{{ $data->item_code }}" data-id="{{ $data->id }}"
+                                            data-item_name="{{ $data->item_name }}"
+                                            data-vendor="{{ $data->vendor_no }}"
+                                            data-fat_group="{{ $data->fat_group }}"
+                                            data-narration="{{ $data->narration }}"
+                                            data-settlement="{{ $data->settlement_weight }}"><a href="#"
+                                                class="text-success">Graded</a>
+                                        </td>
+
+                                    @endif
+                                    <td>{{ $helpers->shortDateTime($data->created_at) }}</td>
+                                </tr>
                             @endforeach
                         </tbody>
                     </table>
@@ -93,8 +102,8 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">Grading For Carcass No: <strong><input
-                                style="border:none" type="text" id="agg_no" name="agg_no" value=""
-                                readonly></strong></h5>
+                                style="border:none" type="text" id="agg_no" name="agg_no" value="" readonly></strong>
+                    </h5>
                     <button class="close" type="button" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">×</span>
                     </button>
@@ -103,20 +112,20 @@
                     <div class="row text-center">
                         <div class="col-md-6 form-group">
                             <label for="exampleInputPassword1">Item Code</label>
-                            <input type="text" style="text-align: center" class="form-control" value=""
-                                id="item_code" placeholder="" readonly>
+                            <input type="text" style="text-align: center" class="form-control" value="" id="item_code"
+                                placeholder="" readonly>
                         </div>
                         <div class="col-md-6 form-group">
                             <label for="exampleInputPassword1">Item Description</label>
-                            <input type="text" style="text-align: center" class="form-control" value=""
-                                id="item_name" placeholder="" readonly>
+                            <input type="text" style="text-align: center" class="form-control" value="" id="item_name"
+                                placeholder="" readonly>
                         </div>
                     </div>
                     <div class="row text-center">
                         <div class="col-md-6 form-group">
                             <label for="exampleInputPassword1">Vendor Number</label>
-                            <input type="text" style="text-align: center" class="form-control" value=""
-                                id="vendor_no" placeholder="" readonly>
+                            <input type="text" style="text-align: center" class="form-control" value="" id="vendor_no"
+                                placeholder="" readonly>
                         </div>
                         <div class="col-md-6 form-group">
                             <label for="exampleInputPassword1">Settlement Weight</label>
@@ -126,12 +135,12 @@
                     </div>
                     <div class="form-group">
                         <label for="email" class="col-form-label">Fat Group Classifications</label>
-                        <select class="form-control " name="fat_group" id="fat_group" required>
+                        <select class="form-control select2" name="fat_group" id="fat_group" required>
                             {{-- <option disabled selected> select an option </option> --}}
                             @foreach($classifications as $cls)
-                            <option value="{{ $cls->code }}" selected="selected">
-                                {{ $cls->code }}
-                            </option>
+                                <option value="{{ $cls->code }}" selected="selected">
+                                    {{ $cls->code }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -144,7 +153,7 @@
                         <div class="form-group">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                             <button type="submit" class="btn btn-warning btn-lg">
-                                <i class="fa fa-paper-plane"                             aria-hidden="true"></i> Update
+                                <i class="fa fa-paper-plane" aria-hidden="true"></i> Update
                             </button>
                         </div>
                     </div>
@@ -168,6 +177,7 @@
             var vendor = $(this).data('vendor');
             var settlement = $(this).data('settlement');
             var fat_group = $(this).data('fat_group');
+            var narration = $(this).data('narration');
 
             $('#item_id').val(id);
             $('#agg_no').val(agg_no);
@@ -176,13 +186,14 @@
             $('#vendor_no').val(vendor);
             $('#settlement_weight').val((Math.round(settlement * 100) / 100).toFixed(2));
             $('#fat_group').val(fat_group);
+            $('#narration').val(narration);
 
             $('#gradingShow').modal('show');
         });
 
         $('#form-grading-slaughter').validate({
             rules: {
-               fat_group: {
+                fat_group: {
                     required: true,
                 },
                 narration: {
