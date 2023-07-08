@@ -170,10 +170,14 @@ class SlaughterController extends Controller
     public function edit(Request $request, Helpers $helpers)
     {
         try {
+            // Retrieve the current data
+            $itemId = $request->item_id;
+            $currentData = DB::table('slaughter_data')->where('id', $itemId)->first();
+
             // update
-            DB::transaction(function () use ($request, $helpers) {
+            DB::transaction(function () use ($request, $helpers, $itemId, $currentData) {
                 DB::table('slaughter_data')
-                    ->where('id', $request->item_id)
+                    ->where('id', $itemId)
                     ->update([
                         'tare_weight' => $request->edit_tareweight,
                         'total_weight' => $request->edit_total,
@@ -185,7 +189,8 @@ class SlaughterController extends Controller
                         'updated_at' => now(),
                     ]);
 
-                $desc = 'new net:' . $request->edit_net;
+                // previous data
+                $desc = json_encode($currentData);
 
                 $helpers->insertChangeDataLogs('slaughter_data', $request->item_id, '3', $desc);
             });
