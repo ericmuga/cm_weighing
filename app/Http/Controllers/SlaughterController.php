@@ -302,7 +302,7 @@ class SlaughterController extends Controller
                 ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
                 ->select('slaughter_data.*', 'carcass_types.description AS item_name')
                 ->orderBy('slaughter_data.created_at', 'DESC')
-                ->take(1000)
+                ->take(5000)
                 ->get();
         } elseif ($filter == 'today') {
             $slaughter_data = DB::table('slaughter_data')
