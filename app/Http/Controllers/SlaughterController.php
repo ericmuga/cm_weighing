@@ -401,13 +401,14 @@ class SlaughterController extends Controller
                         INNER JOIN [CM$Purch_ Cr_ Memo Hdr_] as d 
                             ON d.No_ = c.[Document No_] 
                             AND d.[Your Reference] = a.[Your Reference]) AS netAmount'),
-                DB::raw('(COALESCE(SUM(b.Amount), 0) - 
+                DB::raw('(CASE WHEN SUM(CASE WHEN b.[Type] <> 1 THEN b.Quantity ELSE 0 END) = 0 THEN 0 ELSE
+                (COALESCE(SUM(b.Amount), 0) - 
                     (SELECT ISNULL(SUM(Amount), 0) 
                         FROM [CM$Purch_ Cr_ Memo Line] as c 
                         INNER JOIN [CM$Purch_ Cr_ Memo Hdr_] as d 
                             ON d.No_ = c.[Document No_] 
                             AND d.[Your Reference] = a.[Your Reference])) / 
-                    (SUM(CASE WHEN b.[Type] <> 1 THEN b.Quantity ELSE 0 END)) AS unitPrice')
+                (SUM(CASE WHEN b.[Type] <> 1 THEN b.Quantity ELSE 0 END)) END) AS unitPrice')
             )
             ->join('CM$Purch_ Inv_ Line as b', 'a.No_', '=', 'b.Document No_')
             ->where('a.Vendor Posting Group', '=', 'COWFARMERS')
