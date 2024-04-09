@@ -39,6 +39,9 @@ Route::prefix('slaughter')->group(function () {
     Route::post('/scale/update', [SlaughterController::class, 'updateScaleConfigs'])->name('update_scale_configs');
     Route::get('/comport-list', [SlaughterController::class, 'comportListApiService']);
     Route::get('/read-scale', [SlaughterController::class, 'readScaleApiService']);
+
+    Route::get('/pending-etims', [SlaughterController::class, 'pendingEtimsData'])->name('pending_etims');
+    Route::post('/update-pending-etims', [SlaughterController::class, 'updatePendingEtimsData'])->name('update_pending_etims');
 });
 /* -------------------------------- End Slaughter ------------------------------------------------ */
 

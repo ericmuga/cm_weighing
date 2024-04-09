@@ -383,4 +383,73 @@ class SlaughterController extends Controller
 
         return response()->json($result);
     }
+
+    public function pendingEtimsData(Helpers $helpers)
+    {
+        $title = "Purchases for Etims Update";
+
+       $results = Cache::remember('pendings_for_etims', now()->addHours(2), function () {
+            return DB::connection('main')->table('CM$Purch_ Inv_ Header as a')
+                ->select(
+                DB::raw('a.[Buy-from Vendor No_] as vendor_no'),
+                DB::raw('a.[Buy-from Vendor Name] as vendor_name'),
+                DB::raw('a.[Your Reference] as settlement_no'),
+                DB::raw('SUM(CASE WHEN b.[Type] <> 1 THEN b.Quantity ELSE 0 END) AS totalWeight'),
+                DB::raw('COALESCE(SUM(b.Amount), 0) - 
+                    (SELECT ISNULL(SUM(Amount), 0) 
+                        FROM [CM$Purch_ Cr_ Memo Line] as c 
+                        INNER JOIN [CM$Purch_ Cr_ Memo Hdr_] as d 
+                            ON d.No_ = c.[Document No_] 
+                            AND d.[Your Reference] = a.[Your Reference]) AS netAmount'),
+                DB::raw('(COALESCE(SUM(b.Amount), 0) - 
+                    (SELECT ISNULL(SUM(Amount), 0) 
+                        FROM [CM$Purch_ Cr_ Memo Line] as c 
+                        INNER JOIN [CM$Purch_ Cr_ Memo Hdr_] as d 
+                            ON d.No_ = c.[Document No_] 
+                            AND d.[Your Reference] = a.[Your Reference])) / 
+                    (SUM(CASE WHEN b.[Type] <> 1 THEN b.Quantity ELSE 0 END)) AS unitPrice')
+            )
+            ->join('CM$Purch_ Inv_ Line as b', 'a.No_', '=', 'b.Document No_')
+            ->where('a.Vendor Posting Group', '=', 'COWFARMERS')
+            ->where('a.Buy-from County', '=', '')
+            ->where('a.Posting Date', '>=', '2024-04-01 00:00:00.000')
+            ->groupBy('a.Your Reference', 'a.Buy-from Vendor No_', 'a.Buy-from Vendor No_', 'a.Buy-from Vendor Name', 'a.Your Reference')
+            ->orderBy('a.Buy-from Vendor No_')
+            ->get();
+        });        
+
+        return view('slaughter.pending-etims', compact('title', 'results', 'helpers'));
+    }
+
+    public function updatePendingEtimsData(Request $request, Helpers $helpers)
+    {
+        try {
+            
+            info($request->item_name.':'.$request->cu_inv_no);            
+            $helpers->forgetCache('pendings_for_etims');
+
+            DB::transaction(function () use ($request, $helpers) {
+                DB::connection('main')
+                    ->table('CM$Purch_ Inv_ Header')
+                    ->where('Your Reference', $request->item_name) // Use column name directly without alias
+                    ->update([
+                        'Buy-from County' => $request->cu_inv_no,
+                    ]);
+                
+                DB::table('settlement_purchase_invoices')
+                    ->insert([
+                        'settlement_no' => $request->item_name,
+                        'cu_inv_no' => $request->cu_inv_no,
+                        'user_id' => $helpers->authenticatedUserId()
+                    ]);
+            });
+
+            Toastr::success("Purchase Invoice no for  {$request->item_name} updated successfully", 'Success');
+            return redirect()->back();
+        } catch (\Exception $e) {
+            Toastr::error($e->getMessage(), 'Error!');
+            $helpers->CustomErrorlogger($e->getMessage(),  __FUNCTION__);
+            return back();
+        }
+    }
 }

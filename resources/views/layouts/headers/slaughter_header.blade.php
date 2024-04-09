@@ -38,6 +38,11 @@
                                     <a tabindex="-1" href="{{ route('slaughter_report') }}"
                                         class="dropdown-item">Slaughter Report</a>
                                 </li>
+                                <li class="dropdown-divider"></li>
+                                <li>
+                                    <a tabindex="-1" href="{{ route('pending_etims') }}"
+                                        class="dropdown-item">Pending Etims Invoices</a>
+                                </li>
                             </ul>
                         </li>
                         <!-- End Level two -->
