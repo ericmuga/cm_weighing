@@ -400,24 +400,34 @@ class SlaughterController extends Controller
                         FROM [CM$Purch_ Cr_ Memo Line] as c 
                         INNER JOIN [CM$Purch_ Cr_ Memo Hdr_] as d 
                             ON d.No_ = c.[Document No_] 
+                            AND RIGHT(d.[Vendor Cr_ Memo No_], 2) <> \'-R\'
                             AND d.[Your Reference] = a.[Your Reference]) AS netAmount'),
-                DB::raw('(CASE WHEN SUM(CASE WHEN b.[Type] <> 1 THEN b.Quantity ELSE 0 END) = 0 THEN 0 ELSE
-                (COALESCE(SUM(b.Amount), 0) - 
-                    (SELECT ISNULL(SUM(Amount), 0) 
-                        FROM [CM$Purch_ Cr_ Memo Line] as c 
-                        INNER JOIN [CM$Purch_ Cr_ Memo Hdr_] as d 
-                            ON d.No_ = c.[Document No_] 
-                            AND d.[Your Reference] = a.[Your Reference])) / 
-                (SUM(CASE WHEN b.[Type] <> 1 THEN b.Quantity ELSE 0 END)) END) AS unitPrice')
+                    DB::raw('(CASE WHEN SUM(CASE WHEN b.[Type] <> 1 THEN b.Quantity ELSE 0 END) = 0 THEN 0 ELSE
+                        (COALESCE(SUM(b.Amount), 0) - 
+                            (SELECT ISNULL(SUM(Amount), 0) 
+                                FROM [CM$Purch_ Cr_ Memo Line] as c 
+                                INNER JOIN [CM$Purch_ Cr_ Memo Hdr_] as d 
+                                    ON d.No_ = c.[Document No_] 
+                                    AND d.[Your Reference] = a.[Your Reference])) / 
+                        (SUM(CASE WHEN b.[Type] <> 1 THEN b.Quantity ELSE 0 END)) END) AS unitPrice')
+
             )
             ->join('CM$Purch_ Inv_ Line as b', 'a.No_', '=', 'b.Document No_')
-            ->where('a.Vendor Posting Group', '=', 'COWFARMERS')
+            ->where('a.Vendor Posting Group', '=', 'PIGFARMERS')
             ->where('a.Buy-from County', '=', '')
             ->where('a.Posting Date', '>=', '2024-04-01 00:00:00.000')
+            ->where('a.Your Reference', '<>', '')
+            ->where(function ($query) {
+                $query->whereRaw('(
+                    SELECT COUNT(*) 
+                    FROM [CM$Purch_ Cr_ Memo Hdr_] as e 
+                    WHERE e.[Vendor Cr_ Memo No_] = CONCAT(a.[Your Reference], \'-R\')
+                ) = 0');
+            })
             ->groupBy('a.Your Reference', 'a.Buy-from Vendor No_', 'a.Buy-from Vendor No_', 'a.Buy-from Vendor Name', 'a.Your Reference')
             ->orderBy('a.Buy-from Vendor No_')
             ->get();
-        });        
+        });      
 
         return view('slaughter.pending-etims', compact('title', 'results', 'helpers'));
     }
