@@ -413,7 +413,7 @@ class SlaughterController extends Controller
 
             )
             ->join('CM$Purch_ Inv_ Line as b', 'a.No_', '=', 'b.Document No_')
-            ->where('a.Vendor Posting Group', '=', 'PIGFARMERS')
+            ->where('a.Vendor Posting Group', '=', 'COWFARMERS')
             ->where('a.Buy-from County', '=', '')
             ->where('a.Posting Date', '>=', '2024-04-01 00:00:00.000')
             ->where('a.Your Reference', '<>', '')
