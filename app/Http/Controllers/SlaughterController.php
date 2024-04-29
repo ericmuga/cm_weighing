@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ReceiptsUploadCompleted;
 use App\Exports\SlaughterSummaryExport;
 use App\Models\Helpers;
 use Brian2694\Toastr\Facades\Toastr;
@@ -283,6 +284,10 @@ class SlaughterController extends Controller
                 }
             });
 
+            // info($database_date);
+
+            event(new ReceiptsUploadCompleted($database_date));
+
             Toastr::success('receipts uploaded successfully', 'Success');
             return redirect()->back();
         } catch (\Exception $e) {
@@ -290,6 +295,35 @@ class SlaughterController extends Controller
             return back()
                 ->withInput();
         }
+    }
+
+    public function insertForQAGrading($database_date)
+    {   
+        info('insert for grading triggered:');
+        info($database_date);
+
+        $getReceipts = DB::table('receipts')
+            ->where('slaughter_date', $database_date)
+            ->get();
+
+        // Check if the count of $getReceipts is greater than 0
+        if ($getReceipts->count() > 0) {
+            foreach ($getReceipts as $receipt) {
+                // Get the received quantity
+                $receivedQty = intval($receipt->received_qty);
+                
+                // Loop to insert aggregated numbers
+                for ($i = 1; $i <= $receivedQty; $i++) {
+                    DB::table('qa_grading')->insert([
+                        'receipt_no' => $receipt->receipt_no,
+                        'agg_no' => $i
+                    ]);
+                }
+            }
+        }
+
+
+        info($getReceipts);
     }
 
     public function slaughterReport(Helpers $helpers, $filter = null)
