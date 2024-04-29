@@ -298,10 +298,7 @@ class SlaughterController extends Controller
     }
 
     public function insertForQAGrading($database_date)
-    {   
-        info('insert for grading triggered:');
-        info($database_date);
-
+    {  
         $getReceipts = DB::table('receipts')
             ->where('slaughter_date', $database_date)
             ->get();
@@ -309,10 +306,8 @@ class SlaughterController extends Controller
         // Check if the count of $getReceipts is greater than 0
         if ($getReceipts->count() > 0) {
             foreach ($getReceipts as $receipt) {
-                // Get the received quantity
                 $receivedQty = intval($receipt->received_qty);
                 
-                // Loop to insert aggregated numbers
                 for ($i = 1; $i <= $receivedQty; $i++) {
                     DB::table('qa_grading')->insert([
                         'receipt_no' => $receipt->receipt_no,
@@ -322,8 +317,6 @@ class SlaughterController extends Controller
             }
         }
 
-
-        info($getReceipts);
     }
 
     public function slaughterReport(Helpers $helpers, $filter = null)
