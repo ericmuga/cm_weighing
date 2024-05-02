@@ -52,6 +52,7 @@ Route::prefix('QA')->group(function () {
     Route::get('/grading', [QAController::class, 'grade'])->name('qa_grading');
     Route::get('/grading/v2', [QAController::class, 'gradeV2'])->name('qa_grading_v2');
     Route::post('update/grade', [QAController::class, 'updateGrading'])->name('qa_update_grading');
+    Route::post('run/grading-classes', [QAController::class, 'runGradingClasses'])->name('run_grading_classes');
     Route::post('update/grade/v2', [QAController::class, 'updateGradingV2'])->name('qa_update_grading_v2');
 });
 /* -------------------------------- End Slaughter ------------------------------------------------ */

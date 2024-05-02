@@ -102,6 +102,73 @@ class QAController extends Controller
         }
     }
 
+    public function runGradingClasses()
+    {
+        $qa_graded = DB::table('qa_grading')
+            ->whereDate('slaughter_date', today())
+            ->whereNotNull('classification')
+            ->select('receipt_no', 'agg_no', 'classification')
+            ->get();
+
+        if ($qa_graded->isNotEmpty()) {
+            // Combine receipt_no and agg_no into pairs
+            $combined_pairs = $qa_graded->map(function ($item) {
+                return $item->receipt_no . '_' . $item->agg_no;
+            });
+
+            $slaughter_data = DB::table('slaughter_data as a')
+                ->whereDate('a.created_at', today())
+                ->whereIn(DB::raw("CONCAT(a.receipt_no, '_', a.agg_no)"), $combined_pairs)
+                ->select('a.settlement_weight', 'a.receipt_no', 'a.agg_no', 'b.classification')
+                ->join('qa_grading as b', function ($join) {
+                    $join->on('b.receipt_no', '=', 'a.receipt_no')
+                        ->on('b.agg_no', '=', 'a.agg_no');
+                })
+                ->get();
+
+            info('Slaughter:');
+            info($slaughter_data);
+
+            foreach ($slaughter_data as $d) {
+                # code...
+                
+                $class_type = $this->getClassificationCode($d->classification, $d->settlement_weight);
+
+                $this->updateClassificationCode($d->receipt_no, $d->agg_no, $class_type);
+            }
+
+
+            if ($slaughter_data->isEmpty()) {
+                // Handle case where no slaughter data found
+            }
+        }
+
+        return 1;
+    }
+    
+    private function getClassificationCode($class_type, $settlement_weight)
+    {
+        return 'HG+170';
+    }
+
+    private function updateClassificationCode($receipt_no, $agg_no, $class_type)
+    {
+        try {
+            //code...
+            DB::table('qa_grading')
+                ->where('receipt_no', $receipt_no)
+                ->where('agg_no', $agg_no)
+                ->update([
+                    'classification_code' => $class_type
+                ]);
+            Log::info('grading class successful');
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return back();
+        }
+        
+    }
+
     public function updateGradingV2(Request $request, Helpers $helpers)
     {
         // dd($request->all());
@@ -110,7 +177,7 @@ class QAController extends Controller
                 DB::table('qa_grading')
                     ->where('id', $request->item_id)
                     ->update([
-                        'classification_code' => $request->fat_group,
+                        'classification' => $request->fat_group,
                         'narration' => $request->narration,
                         'graded_by' => $helpers->authenticatedUserId(),
                     ]);

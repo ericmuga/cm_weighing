@@ -17,8 +17,8 @@ class CreateQaGradingTable extends Migration
             $table->id();
             $table->string('receipt_no', 20);
             $table->integer('agg_no');
-            $table->smallInteger('classification_code')->nullable();
-            $table->string('weight_group', 20)->nullable();
+            $table->smallInteger('classification')->nullable();
+            $table->string('classification_code', 20)->nullable();
             $table->longText('narration')->nullable();
             $table->string('dentition', 50)->nullable();
             $table->string('fat_cover', 50)->nullable();

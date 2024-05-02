@@ -5,10 +5,14 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header row">
-                <div class="col-md-7">
+                <div class="col-md-8">
                     <h3 class="card-title">Grading Work Sheet V| <span id="subtext-h1-title"><small> showing
                                 <strong>Today's</strong>
-                                entries</small> </span></h3>
+                                entries</small> | <button class="btn btn-success" id="execute-grading-btn">Generate Classifications</button></span></h3>
+                </div>
+                <div class="col-md-4">
+                    <span class="text-danger" id="err"></span>
+                    <span class="text-success" id="succ"></span>
                 </div>
             </div>
             <!-- /.card-header -->
@@ -24,7 +28,7 @@
                                 <th>Item Name</th>
                                 <th>Vendor No</th>
                                 <th>QA Classification</th>
-                                <th>Weight Group</th>
+                                <th>Classification Code</th>
                                 <th>Grading Status</th>
                                 <th>Slaughter Date</th>
                             </tr>
@@ -37,7 +41,7 @@
                                 <th>Item Name</th>
                                 <th>Vendor No</th>
                                 <th>QA Classification</th>
-                                <th>Weight Group</th>
+                                <th>Classification Code</th>
                                 <th>Grading Status</th>
                                 <th>Slaughter Date</th>
                             </tr>
@@ -51,21 +55,21 @@
                                     <td>{{ $data->description }}</td>
                                     <td>{{ $data->vendor_no }}</td>
 
-                                    @if ($data->classification_code == 1)
+                                    @if ($data->classification == 1)
                                         <td>Premium</td>
-                                    @elseif ($data->classification_code == 2)
+                                    @elseif ($data->classification == 2)
                                         <td>High Grade</td>
-                                    @elseif ($data->classification_code == 3)
+                                    @elseif ($data->classification == 3)
                                         <td>Commercial</td>
-                                    @elseif ($data->classification_code == 4)
+                                    @elseif ($data->classification == 4)
                                         <td>Poor C</td>
                                     @else
                                         <td></td>
                                     @endif
 
-                                    <td>{{ $data->weight_group }}</td>
+                                    <td>{{ $data->classification_code }}</td>
 
-                                    @if($data->classification_code == null)
+                                    @if($data->classification == null)
                                         <td class="gradingShow" data-agg_no="{{ $data->agg_no }}"
                                             data-item_code="{{ $data->item_code }}" data-id="{{ $data->id }}"
                                             data-item_name="{{ $data->description }}"
@@ -180,6 +184,15 @@
             $(".btn-prevent-multiple-submits").attr('disabled', true);
         });
 
+        $("#execute-grading-btn").click(function (e) {
+            e.preventDefault();
+            runGradingClasses();
+        });
+
+        // $('#execute-grading-btn').click(function() {
+            
+        // });
+
         $("body").on("click", ".gradingShow", function (a) {
             a.preventDefault();
 
@@ -232,6 +245,39 @@
             }
         });
     });
+
+    const setUserMessage = (field_succ, field_err, message_succ, message_err) => {
+        document.getElementById(field_succ).innerHTML = message_succ
+        document.getElementById(field_err).innerHTML = message_err
+    }
+
+    const runGradingClasses = () => {
+        setUserMessage('succ', 'err', 'initiated classifications..', '')
+        $.ajax({
+            url: "{{ url('QA/run/grading-classes') }}",
+            type: 'POST',
+            dataType: 'json',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            // data: {
+            // },
+            success: function(response) {
+                // Redirect on success
+                console.log(response)
+                setUserMessage('succ', 'err', 'run grading successfully.reloading...', '')
+                setTimeout(function() {
+                    // Reload current route after delay
+                    window.location.reload();
+                }, 3000); // 3 seconds delay
+            },
+            error: function (data) {
+                var errors = data.responseJSON;
+                console.log(errors);
+                alert('error occured when sending request');
+            }
+        });
+    }
 
 </script>
 @endsection
