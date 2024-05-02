@@ -119,7 +119,7 @@ class QAController extends Controller
             $slaughter_data = DB::table('slaughter_data as a')
                 ->whereDate('a.created_at', today())
                 ->whereIn(DB::raw("CONCAT(a.receipt_no, '_', a.agg_no)"), $combined_pairs)
-                ->select('a.settlement_weight', 'a.receipt_no', 'a.agg_no', 'b.classification')
+                ->select('a.settlement_weight', 'a.receipt_no', 'a.agg_no', 'b.classification', 'a.item_code')
                 ->join('qa_grading as b', function ($join) {
                     $join->on('b.receipt_no', '=', 'a.receipt_no')
                         ->on('b.agg_no', '=', 'a.agg_no');
@@ -132,7 +132,7 @@ class QAController extends Controller
             foreach ($slaughter_data as $d) {
                 # code...
                 
-                $class_type = $this->getClassificationCode($d->classification, $d->settlement_weight);
+                $class_type = $this->getClassificationCode($d->classification, $d->settlement_weight, $d->item_code);
 
                 $this->updateClassificationCode($d->receipt_no, $d->agg_no, $class_type);
             }
@@ -146,9 +146,101 @@ class QAController extends Controller
         return 1;
     }
     
-    private function getClassificationCode($class_type, $settlement_weight)
+    private function getClassificationCode($class_type, $settlement_weight, $item_code)
     {
-        return 'HG+170';
+        // return 'HG+170';
+
+        $classification_code = '--';
+
+        if ($settlement_weight > 1 && $item_code != '') {
+            if ($item_code == 'BG1101' || $item_code == 'BG1201') {
+                // lamb/goat classes
+                switch (true) {
+                    case ($item_code == 'BG1101'):
+                        // lamb
+                        if ($settlement_weight > 25) {
+                            $classification_code = 'LAMB-STD';
+
+                        } else if ($settlement_weight >= 14 && $settlement_weight < 25) {
+                            $classification_code = 'LAMB-PRM';
+
+                        } else if ($settlement_weight >= 11 && $settlement_weight < 14) {
+                            $classification_code = 'LAMB-STD';
+                        }
+                        break;
+
+                    case ($item_code == 'BG1201'):
+                        // goat
+                        $classification_code = 'GOATLCL';
+                        break;
+
+                    default:
+                        $classification_code = '**';
+                }
+
+            } else if ($class_type == 2) {
+                // High Grade 
+                switch (true) {
+                    case ($settlement_weight < 120):
+                        $classification_code = 'STDB-119';
+                        break;
+
+                    case ($settlement_weight >= 120 && $settlement_weight < 150):
+                        $classification_code = 'STDA-149';
+                        break;
+
+                    case ($settlement_weight >= 150 && $settlement_weight < 160):
+                        $classification_code = 'FAQ+150';                        
+                        break;
+
+                    case ($settlement_weight >= 160 && $settlement_weight < 170):
+                        $classification_code = 'HG+160';
+                        break;
+
+                    case ($settlement_weight >= 170 && $settlement_weight < 400):
+                        $classification_code = 'HG+170';
+                        break;
+
+                    default:
+                        $classification_code = '**';
+                }
+            } else if ($class_type == 3) {
+                // comm-beef
+                switch (true) {
+                    case ($settlement_weight < 120):
+                        $classification_code = 'CG-120';
+                        break;
+
+                    case ($settlement_weight >= 120 && $settlement_weight < 150):
+                        $classification_code = 'CG-150';
+                        break;
+
+                    case ($settlement_weight >= 150 && $settlement_weight < 160):
+                         $classification_code = 'CG+150';
+                        break;
+
+                    case ($settlement_weight >= 160 && $settlement_weight < 170):
+                        $classification_code = 'CG+160';
+                        break;
+
+                    case ($settlement_weight >= 170 && $settlement_weight < 400):
+                        $classification_code = 'CG+170';
+                        break;
+
+                    default:
+                        $classification_code = '**';
+                }
+            } else if ($class_type == 1) {
+                // premium
+                switch (true) {
+                    case ($settlement_weight > 170):
+                        $classification_code = 'PG+170';
+                        break;
+                }
+            } 
+        }
+
+        return $classification_code;
     }
 
     private function updateClassificationCode($receipt_no, $agg_no, $class_type)
