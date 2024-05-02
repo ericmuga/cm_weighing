@@ -305,13 +305,17 @@ class SlaughterController extends Controller
 
         // Check if the count of $getReceipts is greater than 0
         if ($getReceipts->count() > 0) {
+            //delete existing records of same slaughter date
+            DB::table('qa_grading')->where('slaughter_date', $database_date)->delete();
+
             foreach ($getReceipts as $receipt) {
                 $receivedQty = intval($receipt->received_qty);
                 
                 for ($i = 1; $i <= $receivedQty; $i++) {
                     DB::table('qa_grading')->insert([
                         'receipt_no' => $receipt->receipt_no,
-                        'agg_no' => $i
+                        'agg_no' => $i,
+                        'slaughter_date' => $database_date
                     ]);
                 }
             }

@@ -58,6 +58,24 @@ class QAController extends Controller
         return view('QA.grading', compact('title', 'helpers', 'slaughter_data', 'classifications'));
     }
 
+    public function gradeV2(Helpers $helpers)
+    {
+        $title = "Grading V2";
+
+        $grading_data = DB::table('qa_grading as a')
+            ->select('a.*', 'b.vendor_no', 'b.description', 'b.item_code')
+            ->join('receipts as b', function ($join) {
+                $join->on('a.receipt_no', '=', 'b.receipt_no')
+                    ->on('a.slaughter_date', '=', 'b.slaughter_date');
+            })
+            ->where('a.slaughter_date', today())
+            ->get();
+
+        // dd($data);
+
+        return view('QA.grading-v2', compact('title', 'helpers', 'grading_data'));
+    }
+
     public function updateGrading(Request $request, Helpers $helpers)
     {
         try {
@@ -73,6 +91,32 @@ class QAController extends Controller
                 $desc = 'new fat_group:' . $request->fat_group . ', narration: ' . $request->narration;
 
                 $helpers->insertChangeDataLogs('slaughter_data', $request->item_id, '3', $desc);
+            });
+
+            Toastr::success("Carcass no. {$request->agg_no} graded successfully", 'Success');
+            return redirect()->back();
+        } catch (\Exception $e) {
+            Toastr::error($e->getMessage(), 'Error!');
+            Log::error($e->getMessage());
+            return back();
+        }
+    }
+
+    public function updateGradingV2(Request $request, Helpers $helpers)
+    {
+        // dd($request->all());
+        try {
+            DB::transaction(function () use ($request, $helpers) {
+                DB::table('qa_grading')
+                    ->where('id', $request->item_id)
+                    ->update([
+                        'classification_code' => $request->fat_group,
+                        'narration' => $request->narration,
+                        'graded_by' => $helpers->authenticatedUserId(),
+                    ]);
+                $desc = 'new fat_group:' . $request->fat_group . ', narration: ' . $request->narration;
+
+                $helpers->insertChangeDataLogs('qa_grading', $request->item_id, '3', $desc);
             });
 
             Toastr::success("Carcass no. {$request->agg_no} graded successfully", 'Success');
