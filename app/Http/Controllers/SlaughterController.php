@@ -297,30 +297,62 @@ class SlaughterController extends Controller
         }
     }
 
+    // public function insertForQAGrading($database_date)
+    // {  
+    //     $getReceipts = DB::table('receipts')
+    //         ->where('slaughter_date', $database_date)
+    //         ->get();
+
+    //     // Check if the count of $getReceipts is greater than 0
+    //     if ($getReceipts->count() > 0) {
+    //         //delete existing records of same slaughter date
+    //         DB::table('qa_grading')->where('slaughter_date', $database_date)->delete();
+
+    //         foreach ($getReceipts as $receipt) {
+    //             $receivedQty = intval($receipt->received_qty);
+                
+    //             for ($i = 1; $i <= $receivedQty; $i++) {
+    //                 DB::table('qa_grading')->insert([
+    //                     'receipt_no' => $receipt->receipt_no,
+    //                     'agg_no' => $i,
+    //                     'slaughter_date' => $database_date
+    //                 ]);
+    //             }
+    //         }
+    //     }
+
+    // }
+
     public function insertForQAGrading($database_date)
-    {  
+    {
         $getReceipts = DB::table('receipts')
             ->where('slaughter_date', $database_date)
             ->get();
 
-        // Check if the count of $getReceipts is greater than 0
+        // Check if there are receipts for the given slaughter date
         if ($getReceipts->count() > 0) {
-            //delete existing records of same slaughter date
-            DB::table('qa_grading')->where('slaughter_date', $database_date)->delete();
-
             foreach ($getReceipts as $receipt) {
                 $receivedQty = intval($receipt->received_qty);
-                
+
                 for ($i = 1; $i <= $receivedQty; $i++) {
-                    DB::table('qa_grading')->insert([
-                        'receipt_no' => $receipt->receipt_no,
-                        'agg_no' => $i,
-                        'slaughter_date' => $database_date
-                    ]);
+                    // Check if the record already exists
+                    $exists = DB::table('qa_grading')
+                        ->where('receipt_no', $receipt->receipt_no)
+                        ->where('agg_no', $i)
+                        ->where('slaughter_date', $database_date)
+                        ->exists();
+
+                    // If the record does not exist, then insert it
+                    if (!$exists) {
+                        DB::table('qa_grading')->insert([
+                            'receipt_no' => $receipt->receipt_no,
+                            'agg_no' => $i,
+                            'slaughter_date' => $database_date
+                        ]);
+                    }
                 }
             }
         }
-
     }
 
     public function slaughterReport(Helpers $helpers, $filter = null)

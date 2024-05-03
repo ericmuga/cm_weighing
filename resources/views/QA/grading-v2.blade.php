@@ -64,12 +64,12 @@
                                     @elseif ($data->classification == 4)
                                         <td>Poor C</td>
                                     @else
-                                        <td></td>
+                                        <td><span class="text-danger">Pending QA Class</span></td>
                                     @endif
 
                                     <td>{{ $data->classification_code }}</td>
 
-                                    @if($data->classification == null)
+                                    @if($data->classification == null || $data->classification_code == null)
                                         <td class="gradingShow" data-agg_no="{{ $data->agg_no }}"
                                             data-item_code="{{ $data->item_code }}" data-id="{{ $data->id }}"
                                             data-item_name="{{ $data->description }}"
@@ -80,7 +80,7 @@
                                     @else
 
                                         <td class="gradingShow" data-agg_no="{{ $data->agg_no }}"
-                                            data-item_code="{{ $data->item_code }}" data-id="{{ $data->id }}"
+                                            data-item_code="{{ $data->item_code }}" data-id="{{ $data->id }}" 
                                             data-item_name="{{ $data->description }}"
                                             data-vendor="{{ $data->vendor_no }}"><a href="#"
                                                 class="text-success">graded</a>
@@ -260,8 +260,6 @@
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
-            // data: {
-            // },
             success: function(response) {
                 // Redirect on success
                 console.log(response)
@@ -269,7 +267,7 @@
                 setTimeout(function() {
                     // Reload current route after delay
                     window.location.reload();
-                }, 3000); // 3 seconds delay
+                }, 1000); // 1 seconds delay
             },
             error: function (data) {
                 var errors = data.responseJSON;

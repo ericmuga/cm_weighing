@@ -63,11 +63,12 @@ class QAController extends Controller
         $title = "Grading V2";
 
         $grading_data = DB::table('qa_grading as a')
-            ->select('a.*', 'b.vendor_no', 'b.description', 'b.item_code')
+            ->select('a.*', 'b.vendor_no', 'b.description', 'b.item_code', )
             ->join('receipts as b', function ($join) {
                 $join->on('a.receipt_no', '=', 'b.receipt_no')
                     ->on('a.slaughter_date', '=', 'b.slaughter_date');
             })
+            
             ->where('a.slaughter_date', today())
             ->get();
 
@@ -146,101 +147,178 @@ class QAController extends Controller
         return 1;
     }
     
+    // private function getClassificationCode($class_type, $settlement_weight, $item_code)
+    // {
+    //     $classification_code = '--';
+
+    //     if ($settlement_weight > 1 && $item_code != '') {
+    //         if ($item_code == 'BG1101' || $item_code == 'BG1201') {
+    //             // lamb/goat classes
+    //             switch (true) {
+    //                 case ($item_code == 'BG1101'):
+    //                     // lamb
+    //                     if ($settlement_weight > 25) {
+    //                         $classification_code = 'LAMB-STD';
+
+    //                     } else if ($settlement_weight >= 14 && $settlement_weight < 25) {
+    //                         $classification_code = 'LAMB-PRM';
+
+    //                     } else if ($settlement_weight >= 11 && $settlement_weight < 14) {
+    //                         $classification_code = 'LAMB-STD';
+    //                     }
+    //                     break;
+
+    //                 case ($item_code == 'BG1201'):
+    //                     // goat
+    //                     $classification_code = 'GOATLCL';
+    //                     break;
+
+    //                 default:
+    //                     $classification_code = '**';
+    //             }
+
+    //         } else if ($class_type == 2) {
+    //             // High Grade 
+    //             switch (true) {
+    //                 case ($settlement_weight < 120):
+    //                     $classification_code = 'STDB-119';
+    //                     break;
+
+    //                 case ($settlement_weight >= 120 && $settlement_weight < 150):
+    //                     $classification_code = 'STDA-149';
+    //                     break;
+
+    //                 case ($settlement_weight >= 150 && $settlement_weight < 160):
+    //                     $classification_code = 'FAQ+150';                        
+    //                     break;
+
+    //                 case ($settlement_weight >= 160 && $settlement_weight < 170):
+    //                     $classification_code = 'HG+160';
+    //                     break;
+
+    //                 case ($settlement_weight >= 170):
+    //                     $classification_code = 'HG+170';
+    //                     break;
+
+    //                 default:
+    //                     $classification_code = '**';
+    //             }
+    //         } else if ($class_type == 3) {
+    //             // comm-beef
+    //             switch (true) {
+    //                 case ($settlement_weight < 120):
+    //                     $classification_code = 'CG-120';
+    //                     break;
+
+    //                 case ($settlement_weight >= 120 && $settlement_weight < 150):
+    //                     $classification_code = 'CG+120';
+    //                     break;
+
+    //                 case ($settlement_weight >= 150 && $settlement_weight < 160):
+    //                      $classification_code = 'CG+150';
+    //                     break;
+
+    //                 case ($settlement_weight >= 160 && $settlement_weight < 170):
+    //                     $classification_code = 'CG+160';
+    //                     break;
+
+    //                 case ($settlement_weight >= 170):
+    //                     $classification_code = 'CG+170';
+    //                     break;
+
+    //                 default:
+    //                     $classification_code = '**';
+    //             }
+    //         } else if ($class_type == 1) {
+    //             // premium
+    //             switch (true) {
+    //                 case ($settlement_weight > 170):
+    //                     $classification_code = 'PG+170';
+    //                     break;
+    //                 default:
+    //                     $classification_code = '**';
+    //             }
+    //         } else if ($class_type == 4) {
+    //             // premium
+    //             $classification_code = 'Poor C';
+    //         }
+    //     }
+
+    //     return $classification_code;
+    // }
+
     private function getClassificationCode($class_type, $settlement_weight, $item_code)
     {
-        // return 'HG+170';
-
-        $classification_code = '--';
-
-        if ($settlement_weight > 1 && $item_code != '') {
-            if ($item_code == 'BG1101' || $item_code == 'BG1201') {
-                // lamb/goat classes
-                switch (true) {
-                    case ($item_code == 'BG1101'):
-                        // lamb
-                        if ($settlement_weight > 25) {
-                            $classification_code = 'LAMB-STD';
-
-                        } else if ($settlement_weight >= 14 && $settlement_weight < 25) {
-                            $classification_code = 'LAMB-PRM';
-
-                        } else if ($settlement_weight >= 11 && $settlement_weight < 14) {
-                            $classification_code = 'LAMB-STD';
-                        }
-                        break;
-
-                    case ($item_code == 'BG1201'):
-                        // goat
-                        $classification_code = 'GOATLCL';
-                        break;
-
-                    default:
-                        $classification_code = '**';
-                }
-
-            } else if ($class_type == 2) {
-                // High Grade 
-                switch (true) {
-                    case ($settlement_weight < 120):
-                        $classification_code = 'STDB-119';
-                        break;
-
-                    case ($settlement_weight >= 120 && $settlement_weight < 150):
-                        $classification_code = 'STDA-149';
-                        break;
-
-                    case ($settlement_weight >= 150 && $settlement_weight < 160):
-                        $classification_code = 'FAQ+150';                        
-                        break;
-
-                    case ($settlement_weight >= 160 && $settlement_weight < 170):
-                        $classification_code = 'HG+160';
-                        break;
-
-                    case ($settlement_weight >= 170 && $settlement_weight < 400):
-                        $classification_code = 'HG+170';
-                        break;
-
-                    default:
-                        $classification_code = '**';
-                }
-            } else if ($class_type == 3) {
-                // comm-beef
-                switch (true) {
-                    case ($settlement_weight < 120):
-                        $classification_code = 'CG-120';
-                        break;
-
-                    case ($settlement_weight >= 120 && $settlement_weight < 150):
-                        $classification_code = 'CG-150';
-                        break;
-
-                    case ($settlement_weight >= 150 && $settlement_weight < 160):
-                         $classification_code = 'CG+150';
-                        break;
-
-                    case ($settlement_weight >= 160 && $settlement_weight < 170):
-                        $classification_code = 'CG+160';
-                        break;
-
-                    case ($settlement_weight >= 170 && $settlement_weight < 400):
-                        $classification_code = 'CG+170';
-                        break;
-
-                    default:
-                        $classification_code = '**';
-                }
-            } else if ($class_type == 1) {
-                // premium
-                switch (true) {
-                    case ($settlement_weight > 170):
-                        $classification_code = 'PG+170';
-                        break;
-                }
-            } 
+        if ($settlement_weight <= 1 || $item_code == '') {
+            return '--'; // Early exit for invalid conditions
         }
 
-        return $classification_code;
+        switch ($item_code) {
+            case 'BG1101':
+                if ($settlement_weight > 25) {
+                    return 'LAMB-STD';
+                } elseif ($settlement_weight >= 14) {
+                    return 'LAMB-PRM';
+                } elseif ($settlement_weight >= 11) {
+                    return 'LAMB-STD';
+                } else {
+                    return '**';
+                }
+                break;
+
+            case 'BG1201':
+                return 'GOATLCL'; // Direct return for goat classification
+                break;
+
+            default:
+                break;
+        }
+
+        switch ($class_type) {
+            case 2: // High Grade
+                if ($settlement_weight < 120) {
+                    return 'STDB-119';
+                } elseif ($settlement_weight < 150) {
+                    return 'STDA-149';
+                } elseif ($settlement_weight < 160) {
+                    return 'FAQ+150';
+                } elseif ($settlement_weight < 170) {
+                    return 'HG+160';
+                } else {
+                    return 'HG+170';
+                }
+                break;
+
+            case 3: // Comm-Beef
+                if ($settlement_weight < 120) {
+                    return 'CG-120';
+                } elseif ($settlement_weight < 150) {
+                    return 'CG+120';
+                } elseif ($settlement_weight < 160) {
+                    return 'CG+150';
+                } elseif ($settlement_weight < 170) {
+                    return 'CG+160';
+                } else {
+                    return 'CG+170';
+                }
+                break;
+
+            case 1: // Premium
+                if ($settlement_weight > 170) {
+                    return 'PG+170';
+                } else {
+                    return '**';
+                }
+                break;
+
+            case 4: // Poor C
+                return 'Poor C';
+                break;
+
+            default:
+                return '**'; // Default case
+                break;
+        }
     }
 
     private function updateClassificationCode($receipt_no, $agg_no, $class_type)

@@ -67,9 +67,7 @@
                                             data-settlement="{{ $data->settlement_weight }}"><a href="#"
                                                 class="text-warning">pending</a>
                                         </td>
-
                                     @else
-
                                         <td class="gradingShow link-success" data-agg_no="{{ $data->agg_no }}"
                                             data-item_code="{{ $data->item_code }}" data-id="{{ $data->id }}"
                                             data-item_name="{{ $data->item_name }}"
@@ -79,7 +77,6 @@
                                             data-settlement="{{ $data->settlement_weight }}"><a href="#"
                                                 class="text-success">Graded</a>
                                         </td>
-
                                     @endif
                                     <td>{{ $helpers->shortDateTime($data->created_at) }}</td>
                                 </tr>
