@@ -349,6 +349,12 @@ class QAController extends Controller
                     ->update([
                         'classification' => $request->fat_group,
                         'narration' => $request->narration,
+                        'dentition' => $request->dentition,  
+                        'fat_cover' => $request->fat_cover,  
+                        'fat_color' => $request->fat_color,  
+                        'meat_color' => $request->meat_color,  
+                        'bruising' => $request->bruising,  
+                        'muscle_conformation' => $request->muscle,  
                         'graded_by' => $helpers->authenticatedUserId(),
                     ]);
                 $desc = 'new fat_group:' . $request->fat_group . ', narration: ' . $request->narration;
