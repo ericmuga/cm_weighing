@@ -63,16 +63,18 @@ class QAController extends Controller
         $title = "Grading V2";
 
         $grading_data = DB::table('qa_grading as a')
-            ->select('a.*', 'b.vendor_no', 'b.description', 'b.item_code', )
+            ->select('a.*', 'b.vendor_no', 'b.description', 'b.item_code', 'c.settlement_weight')
             ->join('receipts as b', function ($join) {
                 $join->on('a.receipt_no', '=', 'b.receipt_no')
                     ->on('a.slaughter_date', '=', 'b.slaughter_date');
             })
-            
+            ->leftJoin('slaughter_data as c', function ($join) {
+                $join->on('a.agg_no', '=', 'c.agg_no')
+                    ->on('a.receipt_no', '=', 'c.receipt_no')
+                    ->whereDate('c.created_at', '=', today());
+            })            
             ->where('a.slaughter_date', today())
             ->get();
-
-        // dd($data);
 
         return view('QA.grading-v2', compact('title', 'helpers', 'grading_data'));
     }
@@ -126,9 +128,6 @@ class QAController extends Controller
                         ->on('b.agg_no', '=', 'a.agg_no');
                 })
                 ->get();
-
-            info('Slaughter:');
-            info($slaughter_data);
 
             foreach ($slaughter_data as $d) {
                 # code...
@@ -254,19 +253,21 @@ class QAController extends Controller
         }
 
         switch ($item_code) {
-            case 'BG1101':
+            //lamb
+            case 'BG1900':
                 if ($settlement_weight > 25) {
-                    return 'LAMB-STD';
+                    return '2nd Grade';
                 } elseif ($settlement_weight >= 14) {
-                    return 'LAMB-PRM';
-                } elseif ($settlement_weight >= 11) {
-                    return 'LAMB-STD';
+                    return '1st Grade';
+                } elseif ($settlement_weight <= 11) {
+                    return 'Class R';
                 } else {
-                    return '**';
+                    return 'lamb**';
                 }
                 break;
 
-            case 'BG1201':
+            //Goat
+            case 'BG1202':
                 return 'GOATLCL'; // Direct return for goat classification
                 break;
 
@@ -331,7 +332,7 @@ class QAController extends Controller
                 ->update([
                     'classification_code' => $class_type
                 ]);
-            Log::info('grading class successful');
+            // Log::info('grading class successful');
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             return back();

@@ -28,6 +28,7 @@
                                 <th>Receipt No.</th>
                                 <th>Item Name</th>
                                 <th>Vendor No</th>
+                                <th>Settlement</th>
                                 <th>QA Classification</th>
                                 <th>Classification Code</th>
                                 <th>Grading Status</th>
@@ -41,6 +42,7 @@
                                 <th>Receipt No.</th>
                                 <th>Item Name</th>
                                 <th>Vendor No</th>
+                                <th>Settlement</th>
                                 <th>QA Classification</th>
                                 <th>Classification Code</th>
                                 <th>Grading Status</th>
@@ -55,7 +57,7 @@
                                     <td>{{ $data->receipt_no }}</td>
                                     <td>{{ $data->description }}</td>
                                     <td>{{ $data->vendor_no }}</td>
-
+                                    <td>{{ number_format($data->settlement_weight, 2) }}</td>
                                     @if($data->classification == 1)
                                         <td>Premium</td>
                                     @elseif($data->classification == 2)
@@ -64,6 +66,12 @@
                                         <td>Commercial</td>
                                     @elseif($data->classification == 4)
                                         <td>Poor C</td>
+                                    @elseif($data->classification == 5)
+                                        <td>1st grade</td>
+                                    @elseif($data->classification == 6)
+                                        <td>2nd grade</td>
+                                    @elseif($data->classification == 7)
+                                        <td>Class R</td>
                                     @else
                                         <td><span class="text-danger">Pending QA Class</span></td>
                                     @endif
@@ -72,14 +80,14 @@
 
                                     @if($data->classification_code == null)                                        
                                         <td class="gradingShow" data-agg_no="{{ $data->agg_no }}"
-                                            data-item_code="{{ $data->item_code }}" data-id="{{ $data->id }}"
+                                            data-item_code="{{ $data->item_code }}" data-id="{{ $data->id }}" data-settlement_weight="{{ $data->settlement_weight }}"
                                             data-item_name="{{ $data->description }}"
                                             data-vendor="{{ $data->vendor_no }}"><a href="#"
                                                 class="text-warning">pending</a>
                                         </td>
                                     @else
                                         <td class="gradingShow" data-agg_no="{{ $data->agg_no }}"
-                                            data-item_code="{{ $data->item_code }}" data-id="{{ $data->id }}"
+                                            data-item_code="{{ $data->item_code }}" data-id="{{ $data->id }}" data-settlement_weight="{{ $data->settlement_weight }}"
                                             data-item_name="{{ $data->description }}"
                                             data-vendor="{{ $data->vendor_no }}"><a href="#"
                                                 class="text-success">graded</a>
@@ -139,7 +147,7 @@
                     <div class="row text-center form-group">
                         <div class="col-md-2">
                             <label for="email" class="col-form-label">Dentition</label>
-                            <select class="form-control select2 params" name="dentition" id="dentition" required>
+                            <select class="form-control select2 params" name="dentition" id="dentition">
                                 <<option value="" selected> Select an option </option>
                                 <option value="1">Full mouth </option>
                                 <option value="2">3 pairs </option>
@@ -150,7 +158,7 @@
                         </div>
                         <div class="col-md-2">
                             <label for="email" class="col-form-label">Fat Cover</label>
-                            <select class="form-control select2 params" name="fat_cover" id="fat_cover" required>
+                            <select class="form-control select2 params" name="fat_cover" id="fat_cover">
                                 <option disabled selected> select an option </option>
                                 <option value="1">Good fat cover (to be 3 to 10mm (or more), evenly and well distributed </option>
                                 <option value="2">Fair fat cover(2-7mm) </option>
@@ -159,7 +167,7 @@
                         </div>
                         <div class="col-md-2">
                             <label for="email" class="col-form-label">Fat Color</label>
-                            <select class="form-control select2 params" name="fat_color" id="fat_color" required>
+                            <select class="form-control select2 params" name="fat_color" id="fat_color">
                                 <option disabled selected> select an option </option>
                                 <option value="1">Creamish white fat </option>
                                 <option value="2">Deep yellow fat </option>
@@ -167,7 +175,7 @@
                         </div>
                         <div class="col-md-2">
                             <label for="email" class="col-form-label">Meat Color</label>
-                            <select class="form-control select2 params" name="meat_color" id="meat_color" required>
+                            <select class="form-control select2 params" name="meat_color" id="meat_color">
                                 <option disabled selected> select an option </option>
                                 <option value="1">Bright red colour </option>
                                 <option value="2">Dark meat colour </option>
@@ -175,7 +183,7 @@
                         </div>
                         <div class="col-md-2">
                             <label for="email" class="col-form-label">Bruising</label>
-                            <select class="form-control select2 params" name="bruising" id="bruising" required>
+                            <select class="form-control select2 params" name="bruising" id="bruising">
                                 <option disabled selected> select an option </option>
                                 <option value="1">Mild Bruises </option>
                                 <option value="2">Extensive bruises </option>
@@ -186,7 +194,7 @@
                         </div>
                         <div class="col-md-2">
                             <label for="email" class="col-form-label">Muscles</label>
-                            <select class="form-control select2 params" name="muscle" id="muscle" required>
+                            <select class="form-control select2 params" name="muscle" id="muscle">
                                 <option disabled selected> select an option </option>
                                 <option value="1">Well finished(good shape, well developed and thick flesh) </option>
                                 <option value="2">Fair muscle conformation </option>
@@ -197,11 +205,17 @@
                     <div class="form-group">
                         <label for="email" class="col-form-label">Classification</label>
                         <select class="form-control select2 params" name="fat_group" id="fat_group" required>
-                            <option disabled selected> select an option </option>
-                            <option value="1"> Premium</option>
-                            <option value="2" selected="selected"> High Grade</option>
-                            <option value="3"> Commercial</option>
-                            <option value="4"> Poor C</option>
+                            {{-- @if ()
+                                <option disabled selected> select an option </option>
+                                <option value="1"> Premium</option>
+                                <option value="2" selected="selected"> High Grade</option>
+                                <option value="3"> Commercial</option>
+                                <option value="4"> Poor C</option>
+                            @else
+                               <option value="5"> Lamb 1st grade</option>                             
+                               <option value="6"> Lamb 2nd grade</option>                             
+                               <option value="7"> Lamb Class R</option>                             
+                            @endif --}}
                         </select>
                     </div>
                     <div class="form-group">
@@ -249,7 +263,7 @@
             var item_code = $(this).data('item_code');
             var item_name = $(this).data('item_name');
             var vendor = $(this).data('vendor');
-            var settlement = $(this).data('settlement');
+            var settlement = $(this).data('settlement_weight');
             var fat_group = $(this).data('fat_group');
             var narration = $(this).data('narration');
 
@@ -261,6 +275,22 @@
             $('#settlement_weight').val((Math.round(settlement * 100) / 100).toFixed(2));
             $('#fat_group').val(fat_group);
             $('#narration').val(narration);
+
+            // Clear previous options
+            $('#fat_group').empty();
+
+            // Determine options based on item_code value
+            $('#fat_group').append('<option disabled selected> select an option </option>');
+            if (item_code == 'BG1006') {                
+                $('#fat_group').append('<option value="1">Premium</option>');
+                $('#fat_group').append('<option value="2">High Grade</option>');
+                $('#fat_group').append('<option value="3">Commercial</option>');
+                $('#fat_group').append('<option value="4">Poor C</option>');
+            } else {
+                $('#fat_group').append('<option value="5">Lamb 1st grade</option>');
+                $('#fat_group').append('<option value="6">Lamb 2nd grade</option>');
+                $('#fat_group').append('<option value="7">Lamb Class R</option>');
+            }
 
             $('#fat_group').select2('destroy').select2();
 
