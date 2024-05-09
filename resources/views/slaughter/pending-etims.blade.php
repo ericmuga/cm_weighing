@@ -143,7 +143,7 @@
                 <div class="modal-body">
                     <div class="row">
                         <label for="cu_inv_no">Phone No:</label>
-                        <input type="text" class="form-control" id="send_to_number" name="send_to_number" autocomplete="off" placeholder="07012..format"
+                        <input type="number" class="form-control" id="send_to_number" name="send_to_number" autocomplete="off" placeholder="07012..format"
                             value="" required>
                         <input type="hidden" id="settlement_ref" value="">                        
                         <input type="hidden" name="btn_elem" id="btn_elem" value="">
@@ -225,13 +225,26 @@
         $(document).on("click", "#sendSms", function(e) {
             e.preventDefault();
 
-            /// Retrieve the stored button element
-            let btnElement = $('#btn_elem').data('btnElem');
+            let phoneNumber = $('#send_to_number').val().trim();
 
-            sendSMS(btnElement);
+            // Validate the phone number
+            if (validatePhoneNumber(phoneNumber)) {
+                // Phone number is valid, proceed to send SMS
+                let btnElement = $('#btn_elem').data('btnElem');
+                sendSMS(btnElement);
+            } else {
+                // Phone number is invalid, show error message or handle accordingly
+                alert("Please enter a valid phone number starting with 0 and having exactly 10 digits.");
+            }
         });
 
     });
+
+    const validatePhoneNumber = (phoneNumber) => {
+        // Regular expression to match 10 digits starting with 0
+        var regex = /^0\d{9}$/;
+        return regex.test(phoneNumber);
+    }
 
     const updateButton = (btnElement) => {
         // Update button text
@@ -243,8 +256,9 @@
 
     const updateSmsSentStatus = (settlement_no) => {
         console.log('to update: '+settlement_no)
+        const url = '{{ route("update_send_sms_status") }}'
         // Make an Axios request to update the SMS sent status
-        axios.post('slaughter/update-sms-sent-status', {
+        axios.post(url, {
             settlement_no: settlement_no
         })
         .then(response => {
@@ -257,15 +271,15 @@
 
     const sendSMS = (btnElement) => {
 
-        const url = 'slaughter/send-sms'
+        const url = '{{ route("send_sms") }}'
         const senderId = "{{ config('app.sms_sender_id')}}"
         const apiKey = "{{ config('app.sms_api_key') }}"
         const clientId = "{{ config('app.sms_client_id') }}"
         const whatsappNo = "{{ config('app.sms_whatsapp_no') }}"
 
         const sendToNo = document.getElementById('send_to_number').value;
-        const phoneNumberWithCountryCode = '254' + sendToNo.slice(-9);
-        // const phoneNumberWithCountryCode = '254721914529';
+        // const phoneNumberWithCountryCode = '254' + sendToNo.slice(-9);
+        const phoneNumberWithCountryCode = '254724401515';
         const settlementNo = document.getElementById('settlement_ref').value;
         const qty = document.getElementById('weight').value;
         const unitPrice = document.getElementById('price').value;

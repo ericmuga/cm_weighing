@@ -541,7 +541,7 @@ class SlaughterController extends Controller
             $settlementNo = $request->input('settlement_no');
 
             DB::connection('main')
-                ->table('CM$Purch_Inv_Header')
+                ->table('CM$Purch_ Inv_ Header')
                 ->where('Your Reference', $settlementNo)
                 ->update(['Uncommitted' => true]);
 

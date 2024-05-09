@@ -47,6 +47,8 @@
     <!-- summernote -->
     <link rel="stylesheet"
         href="{{ asset('assets/plugins/summernote/summernote-bs4.min.css') }}">
+        <!-- axios -->
+    <script src="{{ asset('assets/axios.min.js') }}"></script>
 
     <!-- toastr -->
     <link rel="stylesheet" href="{{ asset('assets/toastr.min.css') }}">
