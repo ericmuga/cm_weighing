@@ -19,6 +19,11 @@ return [
     'login_api_url' => env('LOGIN_URL', ''),
     'show_manual_weight' => env('SHOW_MANUAL_WEIGHT', '0'),
 
+    'sms_send_url' => env('SMS_SEND_URL', ''),
+    'sms_sender_id' => env('SMS_SENDER_ID', ''),
+    'sms_api_key' => env('SMS_API_KEY', ''),
+    'sms_client_id' => env('SMS_CLIENT_ID', ''),
+    'sms_whatsapp_no' => env('SMS_WHATSAPP_NO', ''),
     /*
     |--------------------------------------------------------------------------
     | Application Environment

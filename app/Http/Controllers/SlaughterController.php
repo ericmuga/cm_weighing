@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
@@ -297,32 +298,6 @@ class SlaughterController extends Controller
         }
     }
 
-    // public function insertForQAGrading($database_date)
-    // {  
-    //     $getReceipts = DB::table('receipts')
-    //         ->where('slaughter_date', $database_date)
-    //         ->get();
-
-    //     // Check if the count of $getReceipts is greater than 0
-    //     if ($getReceipts->count() > 0) {
-    //         //delete existing records of same slaughter date
-    //         DB::table('qa_grading')->where('slaughter_date', $database_date)->delete();
-
-    //         foreach ($getReceipts as $receipt) {
-    //             $receivedQty = intval($receipt->received_qty);
-                
-    //             for ($i = 1; $i <= $receivedQty; $i++) {
-    //                 DB::table('qa_grading')->insert([
-    //                     'receipt_no' => $receipt->receipt_no,
-    //                     'agg_no' => $i,
-    //                     'slaughter_date' => $database_date
-    //                 ]);
-    //             }
-    //         }
-    //     }
-
-    // }
-
     public function insertForQAGrading($database_date)
     {
         $getReceipts = DB::table('receipts')
@@ -451,9 +426,10 @@ class SlaughterController extends Controller
     {
         $title = "Purchases for Etims Update";
 
-       $results = Cache::remember('pendings_for_etims', now()->addHours(2), function () {
-            return DB::connection('main')->table('CM$Purch_ Inv_ Header as a')
-                ->select(
+       $results = DB::connection('main')->table('CM$Purch_ Inv_ Header as a')
+            ->select(
+                'v.Phone No_ as phonenumber',
+                'a.Uncommitted as is_sms_sent',
                 DB::raw('a.[Buy-from Vendor No_] as vendor_no'),
                 DB::raw('a.[Buy-from Vendor Name] as vendor_name'),
                 DB::raw('a.[Your Reference] as settlement_no'),
@@ -474,23 +450,23 @@ class SlaughterController extends Controller
                                     AND d.[Your Reference] = a.[Your Reference])) / 
                         (SUM(CASE WHEN b.[Type] <> 1 THEN b.Quantity ELSE 0 END)) END) AS unitPrice')
 
-            )
-            ->join('CM$Purch_ Inv_ Line as b', 'a.No_', '=', 'b.Document No_')
-            ->where('a.Vendor Posting Group', '=', 'COWFARMERS')
-            ->where('a.Buy-from County', '=', '')
-            ->where('a.Posting Date', '>=', '2024-04-01 00:00:00.000')
-            ->where('a.Your Reference', '<>', '')
-            ->where(function ($query) {
-                $query->whereRaw('(
-                    SELECT COUNT(*) 
-                    FROM [CM$Purch_ Cr_ Memo Hdr_] as e 
-                    WHERE e.[Vendor Cr_ Memo No_] = CONCAT(a.[Your Reference], \'-R\')
-                ) = 0');
-            })
-            ->groupBy('a.Your Reference', 'a.Buy-from Vendor No_', 'a.Buy-from Vendor No_', 'a.Buy-from Vendor Name', 'a.Your Reference')
-            ->orderBy('a.Buy-from Vendor No_')
-            ->get();
-        });      
+        )
+        ->join('CM$Purch_ Inv_ Line as b', 'a.No_', '=', 'b.Document No_')
+        ->join('CM$Vendor as v', 'a.Pay-to Vendor No_', '=', 'v.No_')
+        ->where('a.Vendor Posting Group', '=', 'COWFARMERS')
+        ->where('a.Buy-from County', '=', '')
+        ->where('a.Posting Date', '>=', '2024-05-02 00:00:00.000')
+        ->where('a.Your Reference', '<>', '')
+        ->where(function ($query) {
+            $query->whereRaw('(
+                SELECT COUNT(*) 
+                FROM [CM$Purch_ Cr_ Memo Hdr_] as e 
+                WHERE e.[Vendor Cr_ Memo No_] = CONCAT(a.[Your Reference], \'-R\')
+            ) = 0');
+        })
+        ->groupBy('a.Your Reference', 'a.Buy-from Vendor No_', 'v.Phone No_', 'a.Buy-from Vendor No_', 'a.Buy-from Vendor Name', 'a.Your Reference', 'a.Uncommitted')
+        ->orderBy('a.Buy-from Vendor No_')
+        ->get();
 
         return view('slaughter.pending-etims', compact('title', 'results', 'helpers'));
     }
@@ -500,7 +476,7 @@ class SlaughterController extends Controller
         try {
             
             info($request->item_name.':'.$request->cu_inv_no);            
-            $helpers->forgetCache('pendings_for_etims');
+            // $helpers->forgetCache('pendings_for_etims');
 
             DB::transaction(function () use ($request, $helpers) {
                 DB::connection('main')
@@ -524,6 +500,55 @@ class SlaughterController extends Controller
             Toastr::error($e->getMessage(), 'Error!');
             $helpers->CustomErrorlogger($e->getMessage(),  __FUNCTION__);
             return back();
+        }
+    }
+
+    public function sendSmsCurl(Request $request)
+    {
+        $curl = curl_init();
+
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => config('app.sms_send_url'),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => json_encode($request->all()),
+            CURLOPT_HTTPHEADER => array(
+                'Content-Type: application/json'
+            ),
+            CURLOPT_SSL_VERIFYPEER => false, // Disable SSL certificate verification
+            CURLOPT_SSL_VERIFYHOST => false
+        ));
+
+        $response = curl_exec($curl);
+        if (curl_errno($curl)) {
+            $error_msg = curl_error($curl);
+            info("CURL Error: {$error_msg}");
+        }
+        
+        curl_close($curl);
+        // info($response);
+        return $response;
+    }
+
+    public function updateSmsSentStatus(Request $request)
+    {
+        try {
+            $settlementNo = $request->input('settlement_no');
+
+            DB::connection('main')
+                ->table('CM$Purch_Inv_Header')
+                ->where('Your Reference', $settlementNo)
+                ->update(['Uncommitted' => true]);
+
+            return response()->json(['success' => true, 'message' => 'SMS status for ' . $settlementNo . ' updated successfully']);
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to update SMS status. Error: ' . $e->getMessage()]);
         }
     }
 }
