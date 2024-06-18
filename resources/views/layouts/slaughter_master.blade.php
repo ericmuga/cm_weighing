@@ -181,6 +181,10 @@
 
     </script>
 
+    @if (app()->environment('production'))
+        @include('prevent-inspection')
+    @endif
+    
     @yield('scripts')
 
 </body>

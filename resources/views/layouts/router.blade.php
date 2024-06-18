@@ -112,6 +112,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
         <script src="{{ asset('assets/toastr.min.js') }}"></script>
         {!! Toastr::message() !!}
 
+        @if (app()->environment('production'))
+            @include('prevent-inspection')
+        @endif
+        
         @yield('scripts')
     </div>
 
