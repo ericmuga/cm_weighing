@@ -89,7 +89,11 @@
 </div>      
 
 <!--End weigh -->
->
+
+<!-- Container for the table of entries -->
+<div id="offals_entries">
+    @include('partials.table', ['entries' => $entries]) <!-- Initial list rendering -->
+</div>
 
 @endsection
 
@@ -204,6 +208,7 @@ async function saveWeight() {
             form.reset();
             btn_save.disabled = false;
             btn_save.innerHTML = 'Save';
+            refreshTable();
         } else {
             throw new Error(data.message);
         }
@@ -215,6 +220,12 @@ async function saveWeight() {
         btn_save.innerHTML = 'Save';
     });
 
+}
+
+async function refreshTable() {
+    const entriesResponse = await fetch("{{ route('weights.tabulate') }}");
+    const entriesHtml = await entriesResponse.text();
+    document.getElementById("offals_entries").innerHTML = entriesHtml;
 }
 </script>
 @endsection

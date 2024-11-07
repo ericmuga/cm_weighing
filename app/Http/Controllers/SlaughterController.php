@@ -90,7 +90,23 @@ class SlaughterController extends Controller
                 ->get()->toArray();
         });
 
-        return view('slaughter.weigh_offals', compact('title', 'offals_products', 'helpers'));
+        $entries = Offal::whereDate('offals.created_at', Carbon::today())
+        ->join('users', 'offals.user_id', '=', 'users.id')
+        ->select('offals.*', 'users.username')
+        ->orderBy('offals.created_at', 'DESC')
+        ->get();
+
+        return view('slaughter.weigh_offals', compact('title', 'offals_products', 'entries', 'helpers'));
+    }
+
+    public function weightsTabulate(Helpers $helpers) {
+        $entries = Offal::whereDate('offals.created_at', Carbon::today())
+        ->join('users', 'offals.user_id', '=', 'users.id')
+        ->select('offals.*', 'users.username')
+        ->orderBy('offals.created_at', 'DESC')
+        ->get();
+        
+        return view('partials.table', compact('entries', 'helpers'));
     }
 
     public function saveOffalsWeights(Request $request, Helpers $helpers) {
