@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Events\ReceiptsUploadCompleted;
 use App\Exports\SlaughterSummaryExport;
 use App\Models\Helpers;
+use App\Models\Item;
+use App\Models\Offal;
 use Brian2694\Toastr\Facades\Toastr;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -73,6 +75,44 @@ class SlaughterController extends Controller
             ->get();
 
         return view('slaughter.weigh', compact('title', 'configs', 'receipts', 'helpers', 'slaughter_data'));
+    }
+
+    public function weighOffals(Helpers $helpers, $type = null) {
+        $title = "Weigh {{$type}} Offals";
+
+        $offals_products = Item::where('category', 'cm-offals')->get();
+
+        $configs = Cache::remember('weigh_configs', now()->addMinutes(120), function () {
+            return DB::table('scale_configs')
+                ->where('scale', 'Scale 1')
+                ->where('section', 'offals')
+                ->select('tareweight', 'comport')
+                ->get()->toArray();
+        });
+
+        return view('slaughter.weigh_offals', compact('title', 'offals_products', 'helpers'));
+    }
+
+    public function saveOffalsWeights(Request $request, Helpers $helpers) {
+        $manual_weight = 0;
+        if ($request->manual_weight == 'on') {
+            $manual_weight = 1;
+        }
+        try {
+            Offal::create([
+                'product_code'=> $request->product_code,
+                'scale_reading'=> $request->scale_reading,
+                'net_weight'=> $request->net_weight,
+                'is_manual'=> $manual_weight,
+                'user_id' => $helpers->authenticatedUserId(),
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Offal weight saved successfully']);
+
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to save offal weight. Error: ' . $e->getMessage()]);
+        }
     }
 
     public function loadWeighDataAjax(Request $request)
