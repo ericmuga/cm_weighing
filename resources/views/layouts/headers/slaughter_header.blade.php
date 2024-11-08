@@ -17,8 +17,22 @@
                 <li class="nav-item">
                     <a href="{{ route('slaughter_dashboard') }}" class="nav-link">Dashboard</a>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ route('slaughter_weigh') }}" class="nav-link">Weigh</a>
+                <li class="nav-item dropdown">
+                    <a id="dropdownSubMenu1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                        class="nav-link dropdown-toggle">Weigh</a>
+                    <ul aria-labelledby="dropdownSubMenu1" class="dropdown-menu border-0 shadow">
+                        <li>
+                            <a href="{{ route('slaughter_weigh') }}" class="dropdown-item">Carcass</a>
+                        </li>
+                        <hr class="dropdown-divider"/>
+                        <li>
+                            <a href="{{ route('slaughter_weigh_offals', 'red') }}" class="dropdown-item">Red Offals</a>
+                        </li>
+                        <hr class="dropdown-divider"/>
+                        <li>
+                            <a href="{{ route('slaughter_weigh_offals', 'green') }}" class="dropdown-item">Green Offals</a>
+                        </li>
+                    </ul>
                 </li>
                 <li class="nav-item dropdown">
                     <a id="dropdownSubMenu1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
@@ -53,11 +67,10 @@
                         class="nav-link dropdown-toggle">Settings</a>
                     <ul aria-labelledby="dropdownSubMenu1" class="dropdown-menu border-0 shadow">
                         <li>
-                        <li class="dropdown-divider"></li>
-                        <li><a href="{{ route('scale_configs') }}"
-                                class="dropdown-item">Scale
-                                settings </a></li>
-                        <li class="dropdown-divider"></li>
+                            <a href="{{ route('scale_configs') }}" class="dropdown-item">
+                                Scale settings
+                            </a>
+                        </li>
                     </ul>
                 </li>
             </ul>
