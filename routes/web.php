@@ -15,9 +15,8 @@ Route::get('logs', [LogViewerController::class, 'index']);
 
 /* -------------------------------- Start Auth ------------------------------------------------ */
 
-Route::get('/', [LoginController::class, 'login'])->name('login');
+Route::get('/', [LoginController::class, 'home'])->name('home');
 Route::post('/', [LoginController::class, 'processLogin'])->name('process_login');
-Route::get('/redirect', [LoginController::class, 'redirector'])->name('redirector');
 Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 
 /* -------------------------------- End Auth ------------------------------------------------ */

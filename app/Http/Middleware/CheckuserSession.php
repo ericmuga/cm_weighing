@@ -28,12 +28,12 @@ class CheckuserSession
             if ($live_session != $user->session) {
                 // user session ended
                 Session::put('session_message', 'Your Session has Expired. Please login to proceed');
-                return redirect()->route('login');
+                return redirect()->route('home');
             }
         } else {
             # no session exists
             Session::put('session_message', 'Session timed out! Please login to proceed');
-            return redirect()->route('login');
+            return redirect()->route('home');
         }
 
         return $next($request);
