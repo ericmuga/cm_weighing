@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -183,7 +184,7 @@ class Helpers
             'item_id' => $item_id,
             'entry_type' => $entry_type,
             'description' => $description,
-            'user_id' => $this->authenticatedUserId(),
+            'user_id' => Auth::id(),
         ]);
     }
 }
