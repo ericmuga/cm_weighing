@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -11,11 +12,6 @@ use Illuminate\Support\Facades\Session;
 
 class Helpers
 {
-    public function authenticatedUserId()
-    {
-        return Session::get('session_userId');
-    }
-
     public function dateToHumanFormat($date)
     {
         return date("F jS, Y", strtotime($date));
@@ -183,7 +179,7 @@ class Helpers
             'item_id' => $item_id,
             'entry_type' => $entry_type,
             'description' => $description,
-            'user_id' => $this->authenticatedUserId(),
+            'user_id' => Auth::id(),
         ]);
     }
 }

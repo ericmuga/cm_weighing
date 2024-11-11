@@ -6,6 +6,7 @@ use App\Models\Helpers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Brian2694\Toastr\Facades\Toastr;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
@@ -14,20 +15,23 @@ class LoginController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('session_check', ['except' => ['login', 'processLogin']]);
+        $this->middleware('auth', ['except' => ['home', 'processLogin']]);
     }
 
-    public function login()
+    public function home()
     {
-        $title = 'Login';
-        return view('auth.login', compact('title'));
+        if (Auth::check()) {
+            // If user is logged in render the dashboard
+            $title = "Navigation";
+            return view('layouts.router', compact('title'));
+        } else {
+           // If user is not logged in render the login page
+           $title = 'Login';
+           return view('auth.login', compact('title'));
+        }
+        
     }
 
-    public function redirector()
-    {
-        $title = "Redirection";
-        return view('layouts.router', compact('title'));
-    }
     public function processLogin(Request $request, Helpers $helpers)
     {
         $validator = Validator::make($request->all(), [
@@ -85,29 +89,29 @@ class LoginController extends Controller
         $previous_session = $user->session;
 
         if ($previous_session) {
-            \Session::getHandler()->destroy($previous_session);
+            Session::getHandler()->destroy($previous_session);
         }
+        
+        // Log in the user
+        Auth::login($user);
 
-        Session::put('session_userId', $user->id);
-        Session::put('session_userName', $user->username);
-        Session::put('live_session_id', sha1(microtime()));
-
-        DB::table('users')
-            ->where('id', $user->id)
-            ->update([
-                'session' => Session::get('live_session_id'),
-                'updated_at' => now(),
-            ]);
+        // regenerate session to prevent session fixation
+        $request->session()->regenerate();
 
         # Redirecting
         Toastr::success('Successful login', 'Success');
-        return redirect()->route('redirector');
+        return redirect()->route('home');
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        Session::flush();
+        Auth::logout();
+    
+        $request->session()->invalidate();
+    
+        $request->session()->regenerateToken();
+    
         Toastr::success('Logout successful', 'Success');
-        return redirect()->route('login');
+        return redirect()->route('home');
     }
 }

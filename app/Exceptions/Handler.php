@@ -44,7 +44,7 @@ class Handler extends ExceptionHandler
     {
         if ($e instanceof \Illuminate\Session\TokenMismatchException) {
             Toastr::warning('Sorry, Seems the page has expired. Please login again', 'Warning');
-            return redirect()->route('login');
+            return redirect()->route('home');
         }
     }
 }
