@@ -11,6 +11,7 @@ use Brian2694\Toastr\Facades\Toastr;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
@@ -120,7 +121,7 @@ class SlaughterController extends Controller
                 'scale_reading'=> $request->scale_reading,
                 'net_weight'=> $request->net_weight,
                 'is_manual'=> $manual_weight,
-                'user_id' => $helpers->authenticatedUserId(),
+                'user_id' => Auth::id(),
             ]);
 
             return response()->json(['success' => true, 'message' => 'Offal weight saved successfully']);
@@ -195,7 +196,7 @@ class SlaughterController extends Controller
                     'total_net' => $request->total_net, //updated
                     'settlement_weight' => $request->settlement_weight,
                     'classification_code' => $request->classification_code,
-                    'user_id' => $helpers->authenticatedUserId(),
+                    'user_id' => Auth::id(),
                 ]);
             } else {
                 # insert for lamb/goat
@@ -210,7 +211,7 @@ class SlaughterController extends Controller
                     'total_net' => $request->total_net,
                     'settlement_weight' => $request->settlement_weight,
                     'classification_code' => $request->classification_code,
-                    'user_id' => $helpers->authenticatedUserId(),
+                    'user_id' => Auth::id(),
                 ]);
             }
 
@@ -334,7 +335,7 @@ class SlaughterController extends Controller
                             'item_code' => $row[5],
                             'description' => $row[6],
                             'received_qty' => $row[7],
-                            'user_id' => $helpers->authenticatedUserId(),
+                            'user_id' => Auth::id(),
                             'slaughter_date' => $database_date,
                         ]
                     );
@@ -546,7 +547,7 @@ class SlaughterController extends Controller
                     ->insert([
                         'settlement_no' => $request->item_name,
                         'cu_inv_no' => $request->cu_inv_no,
-                        'user_id' => $helpers->authenticatedUserId()
+                        'user_id' => Auth::id(),
                     ]);
             });
 

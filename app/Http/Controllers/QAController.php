@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Helpers;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -88,7 +89,7 @@ class QAController extends Controller
                     ->update([
                         'fat_group' => $request->fat_group,
                         'narration' => $request->narration,
-                        'grading_user' => $helpers->authenticatedUserId(),
+                        'grading_user' =>  Auth::id(),
                         'graded_at' => now(),
                     ]);
                 $desc = 'new fat_group:' . $request->fat_group . ', narration: ' . $request->narration;
@@ -356,7 +357,7 @@ class QAController extends Controller
                         'meat_color' => $request->meat_color,  
                         'bruising' => $request->bruising,  
                         'muscle_conformation' => $request->muscle,  
-                        'graded_by' => $helpers->authenticatedUserId(),
+                        'graded_by' =>  Auth::id(),
                     ]);
                 $desc = 'new fat_group:' . $request->fat_group . ', narration: ' . $request->narration;
 
