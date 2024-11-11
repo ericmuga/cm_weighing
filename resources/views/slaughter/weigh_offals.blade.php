@@ -12,7 +12,7 @@
                 <div class="col-md-6">
                     <div class="form-group mb-3">
                         <label for="product_code">Product Name</label>
-                        <select class="custom-select" id="product_code" name="product_code" required>
+                        <select  class="form-control select2" id="product_code" name="product_code" required>
                             <option value="">Choose...</option>
                             @foreach ($offals_products as $product)
                             <option value="{{ $product->code }}">{{ $product->code }} {{ $product->description }}</option>                                
