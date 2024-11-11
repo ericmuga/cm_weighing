@@ -103,9 +103,14 @@ class LoginController extends Controller
         return redirect()->route('home');
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        Session::flush();
+        Auth::logout();
+    
+        $request->session()->invalidate();
+    
+        $request->session()->regenerateToken();
+    
         Toastr::success('Logout successful', 'Success');
         return redirect()->route('home');
     }
