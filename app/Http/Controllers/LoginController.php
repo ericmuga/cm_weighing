@@ -15,7 +15,7 @@ class LoginController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('session_check', ['except' => ['home', 'processLogin']]);
+        $this->middleware('auth', ['except' => ['home', 'processLogin']]);
     }
 
     public function home()
