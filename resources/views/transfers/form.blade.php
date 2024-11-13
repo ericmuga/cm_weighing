@@ -277,13 +277,12 @@
                 if (data.success) {
                     toastr.success('Transfer saved successfully');
                     form.reset();
+                    location.reload();
                 } else {
                     console.error(data);
                     toastr.error(data.message);
                 }
             })
-
-            location.reload();
 
         } catch (error) {
             console.error(error);

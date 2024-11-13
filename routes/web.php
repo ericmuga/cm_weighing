@@ -66,5 +66,7 @@ Route::prefix('QA')->group(function () {
 Route::prefix('stock')->group(function () {
     Route::get('/transfers', [StockController::class, 'transfers'])->name('transfers_form');
     Route::post('/transfer/save', [StockController::class, 'saveTransfer'])->name('save_transfer');
+    Route::get('/records', [StockController::class, 'stockTake'])->name('stock_take');
+    Route::post('/records/save', [StockController::class, 'stockUpdate'])->name('stock_update');
 });
 /* -------------------------------- End Transfers ------------------------------------------------ */
