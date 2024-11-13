@@ -12,14 +12,14 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class TransferController extends Controller
+class StockController extends Controller
 {
     public function __construct()
     {
         $this->middleware('auth');
     }
 
-    public function form(Helpers $helpers)
+    public function transfers(Helpers $helpers)
     {
         $title = 'Transfer';
 

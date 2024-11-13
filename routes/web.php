@@ -3,7 +3,7 @@
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\QAController;
 use App\Http\Controllers\SlaughterController;
-use App\Http\Controllers\TransferController;
+use App\Http\Controllers\StockController;
 use Illuminate\Support\Facades\Route;
 use Rap2hpoutre\LaravelLogViewer\LogViewerController;
 
@@ -62,7 +62,9 @@ Route::prefix('QA')->group(function () {
 });
 /* -------------------------------- End Slaughter ------------------------------------------------ */
 
-/* -------------------------------- Start Transfers ------------------------------------------------ */
-Route::get('/transfers', [TransferController::class, 'form'])->name('transfers_form');
-Route::post('/transfer/save', [TransferController::class, 'saveTransfer'])->name('save_transfer');
+/* -------------------------------- Start Stocks ------------------------------------------------ */
+Route::prefix('stock')->group(function () {
+    Route::get('/transfers', [StockController::class, 'transfers'])->name('transfers_form');
+    Route::post('/transfer/save', [StockController::class, 'saveTransfer'])->name('save_transfer');
+});
 /* -------------------------------- End Transfers ------------------------------------------------ */
