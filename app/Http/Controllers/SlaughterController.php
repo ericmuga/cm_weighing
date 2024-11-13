@@ -430,12 +430,12 @@ class SlaughterController extends Controller
         return Excel::download(new SlaughterSummaryExport, 'SlaughterReportSummaryFrom-' . $request->from_date . '-To-' . $request->to_date . '.xlsx');
     }
 
-    public function scaleConfigs(Helpers $helpers)
+    public function scaleConfigs(Helpers $helpers, $section = null)
     {
         $title = "scale";
 
         $scale_settings = DB::table('scale_configs')
-            ->where('section', 'slaughter')
+            ->where('section', $section)
             ->get();
 
         return view('slaughter.scale_configs', compact('title', 'scale_settings', 'helpers'));

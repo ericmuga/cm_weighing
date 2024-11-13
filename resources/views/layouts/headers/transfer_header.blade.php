@@ -1,6 +1,6 @@
 <nav class="main-header navbar navbar-expand-md navbar-light navbar-white">
     <div class="container-fluid">
-        <a href="{{ route('slaughter_dashboard') }}" class="navbar-brand">
+        <a href="{{ route('transfers_form') }}" class="navbar-brand">
             <img src="{{ asset('assets/img/choice1.png') }}" alt="CML Calibra Logo"
                 class="brand-image" style="">
             <span class="brand-text font-weight-light"><strong> CML Weight Management System</strong></span>
@@ -15,66 +15,15 @@
             <!-- Left navbar links -->
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a href="{{ route('slaughter_dashboard') }}" class="nav-link">Dashboard</a>
-                </li>
-                <li class="nav-item dropdown">
-                    <a id="dropdownSubMenu1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-                        class="nav-link dropdown-toggle">Weigh</a>
-                    <ul aria-labelledby="dropdownSubMenu1" class="dropdown-menu border-0 shadow">
-                        <li>
-                            <a href="{{ route('slaughter_weigh') }}" class="dropdown-item">Carcass</a>
-                        </li>
-                        <hr class="dropdown-divider"/>
-                        <li>
-                            <a href="{{ route('slaughter_weigh_offals', 'red') }}" class="dropdown-item">Red Offals</a>
-                        </li>
-                        <hr class="dropdown-divider"/>
-                        <li>
-                            <a href="{{ route('slaughter_weigh_offals', 'green') }}" class="dropdown-item">Green Offals</a>
-                        </li>
-                    </ul>
-                </li>
-                <li class="nav-item dropdown">
-                    <a id="dropdownSubMenu1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-                        class="nav-link dropdown-toggle">Data Management</a>
-                    <ul aria-labelledby="dropdownSubMenu1" class="dropdown-menu border-0 shadow">
-                        <li><a href="{{ route('receipts') }}" class="dropdown-item">Imported
-                                Receipts</a></li>
-
-                        <li class="dropdown-divider"></li>
-
-                        <!-- Level two dropdown-->
-                        <li class="dropdown-submenu dropdown-hover">
-                            <a id="dropdownSubMenu2" href="#" role="button" data-toggle="dropdown" aria-haspopup="true"
-                                aria-expanded="false" class="dropdown-item dropdown-toggle">Reports</a>
-                            <ul aria-labelledby="dropdownSubMenu2" class="dropdown-menu border-0 shadow">
-                                <li>
-                                    <a tabindex="-1" href="{{ route('slaughter_report') }}"
-                                        class="dropdown-item">Slaughter Report</a>
-                                </li>
-                                <li class="dropdown-divider"></li>
-                                <li>
-                                    <a tabindex="-1" href="{{ route('pending_etims') }}"
-                                        class="dropdown-item">Pending Etims Invoices</a>
-                                </li>
-                            </ul>
-                        </li>
-                        <!-- End Level two -->
-                    </ul>
+                    <a href="{{ route('transfers_form') }}" class="nav-link">Create Transfer</a>
                 </li>
                 <li class="nav-item dropdown">
                     <a id="dropdownSubMenu1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
                         class="nav-link dropdown-toggle">Settings</a>
                     <ul aria-labelledby="dropdownSubMenu1" class="dropdown-menu border-0 shadow">
                         <li>
-                            <a href="{{ route('scale_configs', 'slaughter') }}" class="dropdown-item">
-                                Scale settings - Slaughter
-                            </a>
-                        </li>
-                        <hr class="dropdown-divider"/>
-                        <li>
-                            <a href="{{ route('scale_configs', 'offals') }}" class="dropdown-item">
-                                Scale settings - Offals
+                            <a href="{{ route('scale_configs', 'transfers') }}" class="dropdown-item">
+                                Scale settings - Transfers
                             </a>
                         </li>
                     </ul>

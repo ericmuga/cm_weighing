@@ -3,6 +3,7 @@
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\QAController;
 use App\Http\Controllers\SlaughterController;
+use App\Http\Controllers\TransferController;
 use Illuminate\Support\Facades\Route;
 use Rap2hpoutre\LaravelLogViewer\LogViewerController;
 
@@ -37,7 +38,7 @@ Route::prefix('slaughter')->group(function () {
     Route::post('/receipts/import', [SlaughterController::class, 'importReceipts'])->name('receipts_import');
     Route::get('/report/{filter?}', [SlaughterController::class, 'slaughterReport'])->name('slaughter_report');
     Route::post('/report/summary', [SlaughterController::class, 'slaughterSummaryReport'])->name('slaughter_summary_report');
-    Route::get('/configs', [SlaughterController::class, 'scaleConfigs'])->name('scale_configs');
+    Route::get('/configs/{section}', [SlaughterController::class, 'scaleConfigs'])->name('scale_configs');
     Route::post('/scale/update', [SlaughterController::class, 'updateScaleConfigs'])->name('update_scale_configs');
     Route::get('/comport-list', [SlaughterController::class, 'comportListApiService']);
     Route::get('/read-scale', [SlaughterController::class, 'readScaleApiService']);
@@ -60,3 +61,8 @@ Route::prefix('QA')->group(function () {
     Route::post('update/grade/v2', [QAController::class, 'updateGradingV2'])->name('qa_update_grading_v2');
 });
 /* -------------------------------- End Slaughter ------------------------------------------------ */
+
+/* -------------------------------- Start Transfers ------------------------------------------------ */
+Route::get('/transfers', [TransferController::class, 'form'])->name('transfers_form');
+Route::post('/transfer/save', [TransferController::class, 'saveTransfer'])->name('save_transfer');
+/* -------------------------------- End Transfers ------------------------------------------------ */
