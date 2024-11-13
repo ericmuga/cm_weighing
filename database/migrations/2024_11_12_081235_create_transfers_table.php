@@ -20,8 +20,8 @@ class CreateTransfersTable extends Migration
             $table->double('scale_reading', 8, 2);
             $table->double('net_weight', 8, 2);
             $table->integer('no_of_pieces')->nullable();
-            $table->integer('from_location_code');
-            $table->integer('to_location_code');
+            $table->string('from_location_code', 10);
+            $table->string('to_location_code', 10);
             $table->string('transfer_type', 20);           
             $table->string('narration', 255)->nullable();
             $table->boolean('manual_weight')->default(0);
