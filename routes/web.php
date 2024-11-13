@@ -38,7 +38,7 @@ Route::prefix('slaughter')->group(function () {
     Route::post('/receipts/import', [SlaughterController::class, 'importReceipts'])->name('receipts_import');
     Route::get('/report/{filter?}', [SlaughterController::class, 'slaughterReport'])->name('slaughter_report');
     Route::post('/report/summary', [SlaughterController::class, 'slaughterSummaryReport'])->name('slaughter_summary_report');
-    Route::get('/configs', [SlaughterController::class, 'scaleConfigs'])->name('scale_configs');
+    Route::get('/configs/{section}', [SlaughterController::class, 'scaleConfigs'])->name('scale_configs');
     Route::post('/scale/update', [SlaughterController::class, 'updateScaleConfigs'])->name('update_scale_configs');
     Route::get('/comport-list', [SlaughterController::class, 'comportListApiService']);
     Route::get('/read-scale', [SlaughterController::class, 'readScaleApiService']);

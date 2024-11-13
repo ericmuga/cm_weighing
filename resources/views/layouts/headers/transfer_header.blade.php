@@ -22,8 +22,8 @@
                         class="nav-link dropdown-toggle">Settings</a>
                     <ul aria-labelledby="dropdownSubMenu1" class="dropdown-menu border-0 shadow">
                         <li>
-                            <a href="{{ route('scale_configs') }}" class="dropdown-item">
-                                Scale settings
+                            <a href="{{ route('scale_configs', 'transfers') }}" class="dropdown-item">
+                                Scale settings - Transfers
                             </a>
                         </li>
                     </ul>
