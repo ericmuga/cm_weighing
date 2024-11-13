@@ -60,6 +60,17 @@ scratch. This page gets rid of all links and provides the needed markup only.
                                         <i class="fa fa-shopping-basket fa-4x" aria-hidden="true"></i>
                                     </div>
                                 </div>
+                                <div class="card p-2 bg-danger" style="height: 250px">
+                                    <a class="card-body text-center card-block stretched-link text-decoration-none card-link"
+                                        href="{{ route('transfers_form') }}">
+                                        <h4 class="card-title">Transfers</h4>
+                                        <p class="card-text">Select this option to switch to transfers.
+                                        </p>
+                                    </a>
+                                    <div class="icon text-center">
+                                        <i class="fa fa-arrow-right fa-4x" aria-hidden="true"></i>
+                                    </div>
+                                </div>
                                 <div class="card p-2 bg-warning" style="height: 250px">
                                     <a class="card-body text-center card-block stretched-link text-decoration-none"
                                         href="#">
