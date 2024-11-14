@@ -78,17 +78,23 @@ class StockController extends Controller
 
     public function stockTake(Helpers $helpers)
     {
-        $title = 'Transfer';
+        $title = 'Stock Take';
 
         $products = Cache::remember('prod_items', now()->addMinutes(120), function () {
             return Item::where('category', 'cm-prod')->get();
         });
 
-        return view('transfers.stocks', compact('title', 'products', 'helpers'));
+
+        $entries = Stock::where('stock_date', '>=', now()->subDays(10))
+                ->orderBy('stock_date', 'desc')
+                ->limit(1000)
+                ->get();
+
+        return view('transfers.stocks', compact('title', 'products', 'helpers', 'entries'));
         
     }
 
-    public function stockUpdate(Request $request, Helpers $helpers) {
+    public function stockUpdate(Request $request) {
         try {
             Stock::create([
                 'item_code'=> $request->item_code,
