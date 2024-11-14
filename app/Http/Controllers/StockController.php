@@ -5,21 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\Helpers;
 use App\Models\Transfer;
 use App\Models\Item;
+use App\Models\Stock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class TransferController extends Controller
+class StockController extends Controller
 {
     public function __construct()
     {
         $this->middleware('auth');
     }
 
-    public function form(Helpers $helpers)
+    public function transfers(Helpers $helpers)
     {
         $title = 'Transfer';
 
@@ -73,6 +73,44 @@ class TransferController extends Controller
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             return response()->json(['success' => false, 'message' => 'Failed to save transfer. Error: ' . $e->getMessage()]);
+        }
+    }
+
+    public function stockTake(Helpers $helpers)
+    {
+        $title = 'Stock Take';
+
+        $products = Cache::remember('prod_items', now()->addMinutes(120), function () {
+            return Item::where('category', 'cm-prod')->get();
+        });
+
+
+        $entries = Stock::where('stock_date', '>=', now()->subDays(10))
+                ->orderBy('stock_date', 'desc')
+                ->limit(1000)
+                ->get();
+
+        return view('transfers.stocks', compact('title', 'products', 'helpers', 'entries'));
+        
+    }
+
+    public function stockUpdate(Request $request) {
+        try {
+            Stock::create([
+                'item_code'=> $request->item_code,
+                'unit_of_measure'=> $request->unit_of_measure,
+                'weight'=> $request->weight,
+                'pieces'=> $request->pieces,
+                'location_code'=> $request->location_code,
+                'stock_date'=> $request->stock_date,
+                'user_id' => Auth::id(),
+            ]);
+
+            return response()->json(['status' => 'success', 'message' => 'Stock saved successfully']);
+
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json(['status' => 'error', 'message' => 'Failed to save stock. Error: ' . $e->getMessage()]);
         }
     }
 }

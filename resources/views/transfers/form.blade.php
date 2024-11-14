@@ -3,7 +3,7 @@
 @section('content')
 <div>
     <h3 class="card-header">
-        Create Transfer
+        Stocks | Transfers
     </h3>
     <form id="transfers-form" class="card-group m-4 text-center" onsubmit="saveTransfer()" action="{{ route('save_transfer') }}">   
         <div class="card p-4">
@@ -94,14 +94,19 @@
             </button>
             
         </div>
-    </form>
+    </form> 
 </div>
 
-<div class="card m-4">
+<hr>
+<button class="btn btn-primary mb-2" data-toggle="collapse" data-target="#entries"><i class="fa fa-plus"></i>
+    Entries
+</button>
+
+<div id="entries" class="card collapse m-4">
     <div class="card-header">
         <h3 class="card-title"> Transfers History</h3>
     </div>
-    <div class="card-body  table-responsive">
+    <div class="card-body table-responsive">
         <table id="example1"  class="table table-bordered table-striped table-hover">
             <thead>
                 <tr>
@@ -277,13 +282,12 @@
                 if (data.success) {
                     toastr.success('Transfer saved successfully');
                     form.reset();
+                    location.reload();
                 } else {
                     console.error(data);
                     toastr.error(data.message);
                 }
             })
-
-            location.reload();
 
         } catch (error) {
             console.error(error);

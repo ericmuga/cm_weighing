@@ -15,7 +15,10 @@
             <!-- Left navbar links -->
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a href="{{ route('transfers_form') }}" class="nav-link">Create Transfer</a>
+                    <a href="{{ route('transfers_form') }}" class="nav-link">Stock Transfers</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('stock_take') }}" class="nav-link">Stock Take</a>
                 </li>
                 <li class="nav-item dropdown">
                     <a id="dropdownSubMenu1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
