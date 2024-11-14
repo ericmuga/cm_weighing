@@ -3,7 +3,7 @@
 @section('content')
 <div>
     <h3 class="card-header">
-        Create Transfer
+        Stocks | Transfers
     </h3>
     <form id="transfers-form" class="card-group m-4 text-center" onsubmit="saveTransfer()" action="{{ route('save_transfer') }}">   
         <div class="card p-4">
