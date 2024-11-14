@@ -17,6 +17,10 @@ class Transfer extends Model
         'transfer_type',
         'narration',
         'manual_weight',
-        'user_id'
+        'user_id',
+        'received_weight',
+        'received_pieces',
+        'received_by',
+        'received_date',
     ];
 }
