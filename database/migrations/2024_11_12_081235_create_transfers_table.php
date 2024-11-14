@@ -26,6 +26,9 @@ class CreateTransfersTable extends Migration
             $table->string('narration', 255)->nullable();
             $table->boolean('manual_weight')->default(0);
             $table->foreignId('user_id')->constrained('users');
+            $table->double('received_weight', 8, 2);
+            $table->integer('received_pieces')->nullable();
+            $table->foreignId('received_by')->constrained('users');
             $table->timestamps();
         });
     }
