@@ -69,7 +69,7 @@
 </h3>
 <div class="card m-4">
     <div class="card-body table-responsive">
-        <table id="example1"  class="table table-bordered table-striped table-hover">
+        <table id="example2"  class="table table-bordered table-striped table-hover">
             <thead>
                 <tr>
                     <th>#</th>
