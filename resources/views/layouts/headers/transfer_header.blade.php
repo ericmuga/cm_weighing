@@ -1,6 +1,6 @@
 <nav class="main-header navbar navbar-expand-md navbar-light navbar-white">
     <div class="container-fluid">
-        <a href="{{ route('transfers_form') }}" class="navbar-brand">
+        <a href="{{ route('stock_transfers_issue') }}" class="navbar-brand">
             <img src="{{ asset('assets/img/choice1.png') }}" alt="CML Calibra Logo"
                 class="brand-image" style="">
             <span class="brand-text font-weight-light"><strong> CML Weight Management System</strong></span>
@@ -14,16 +14,30 @@
         <div class="collapse navbar-collapse order-3" id="navbarCollapse">
             <!-- Left navbar links -->
             <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a href="{{ route('transfers_form') }}" class="nav-link">Stock Transfers</a>
+                <li class="nav-item dropdown">
+                    <a id="dropdownSubMenu1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                        class="nav-link dropdown-toggle">Transfers</a>
+                    <ul aria-labelledby="dropdownSubMenu1" class="dropdown-menu border-0 shadow">
+                        <li>
+                            <a href="{{ route('stock_transfers_issue') }}" class="dropdown-item">
+                                Issue Transfers
+                            </a>
+                        </li>
+                        <hr class="dropdown-divider" />
+                        <li>
+                            <a href="{{ route('stock_transfers_receive') }}" class="dropdown-item">
+                                Receive Transfers
+                            </a>
+                        </li>
+                    </ul>
                 </li>
                 <li class="nav-item">
                     <a href="{{ route('stock_take') }}" class="nav-link">Stock Take</a>
                 </li>
                 <li class="nav-item dropdown">
-                    <a id="dropdownSubMenu1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                    <a id="dropdownSubMenu2" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
                         class="nav-link dropdown-toggle">Settings</a>
-                    <ul aria-labelledby="dropdownSubMenu1" class="dropdown-menu border-0 shadow">
+                    <ul aria-labelledby="dropdownSubMenu2" class="dropdown-menu border-0 shadow">
                         <li>
                             <a href="{{ route('scale_configs', 'transfers') }}" class="dropdown-item">
                                 Scale settings - Transfers

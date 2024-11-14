@@ -19,9 +19,23 @@ class StockController extends Controller
         $this->middleware('auth');
     }
 
-    public function transfers(Helpers $helpers)
+    public function dashboard(Helpers $helpers)
     {
-        $title = 'Transfer';
+        $title = 'Stocks Dashboard';
+
+        $todaysStockEntriesCount = Stock::where('stock_date', now()->toDateString())->count();
+
+        $todaysStockTransferIssuesCount = Transfer::where('created_at', '>=', now()->toDateString())->count();
+
+        $todaysStockTransferReceiptsCount = Transfer::where('received_date', '>=', now()->toDateString())->count();
+
+        return view('stocks.dashboard', compact('title', 'helpers', 'todaysStockEntriesCount', 'todaysStockTransferIssuesCount', 'todaysStockTransferReceiptsCount'));
+        
+    }
+
+    public function transfersIssue(Helpers $helpers)
+    {
+        $title = 'Transfers Issue';
 
         $products = Cache::remember('prod_items', now()->addMinutes(120), function () {
             return Item::where('category', 'cm-prod')->get();
@@ -37,7 +51,29 @@ class StockController extends Controller
 
         $transfers = Transfer::orderBy('created_at', 'desc')->limit(1000)->get();
 
-        return view('transfers.form', compact('title','configs', 'products', 'transfers', 'helpers'));
+        return view('stocks.issue_transfers', compact('title','configs', 'products', 'transfers', 'helpers'));
+        
+    }
+
+    public function transfersReceive(Helpers $helpers)
+    {
+        $title = 'Transfers Receive';
+
+        $transfersDue = Transfer::where('received_date', null)
+            ->where('created_at', '>=', now()->subDays(7))
+            ->where('transfer_type', 'internal')
+            ->orderBy('created_at', 'desc')
+            ->limit(1000)
+            ->get();
+
+
+        $transfersReceived = Transfer::where('received_date', '>=', now()->subDays(7))
+            ->where('transfer_type', 'internal')
+            ->orderBy('received_date', 'desc')
+            ->limit(1000)
+            ->get();
+        
+        return view('stocks.receive_transfers', compact('title', 'transfersDue', 'transfersReceived', 'helpers'));
         
     }
 
@@ -76,6 +112,23 @@ class StockController extends Controller
         }
     }
 
+    public function transferUpdate(Request $request, Helpers $helpers) {
+        try {
+            Transfer::where('id', $request->transfer_id)
+                ->update([
+                    'received_weight' => $request->received_weight,
+                    'received_pieces' => $request->received_pieces,
+                    'received_date' => now(),
+                    'received_by' => Auth::id(),
+                ]);
+            return response()->json(['success' => true, 'message' => 'Transfer received successfully']);
+
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to receive transfer. Error: ' . $e->getMessage()]);
+        }
+    }
+
     public function stockTake(Helpers $helpers)
     {
         $title = 'Stock Take';
@@ -90,7 +143,7 @@ class StockController extends Controller
                 ->limit(1000)
                 ->get();
 
-        return view('transfers.stocks', compact('title', 'products', 'helpers', 'entries'));
+        return view('stocks.records', compact('title', 'products', 'helpers', 'entries'));
         
     }
 

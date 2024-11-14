@@ -62,7 +62,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                                 </div>
                                 <div class="card p-2 bg-warning" style="height: 250px">
                                     <a class="card-body text-center card-block stretched-link text-decoration-none card-link"
-                                        href="{{ route('transfers_form') }}">
+                                        href="{{ route('stocks_dashboard') }}">
                                         <h4 class="card-title">Stocks</h4>
                                         <p class="card-text">Select this option to switch to stocks.
                                         </p>
