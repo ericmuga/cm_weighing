@@ -94,14 +94,19 @@
             </button>
             
         </div>
-    </form>
+    </form> 
 </div>
 
-<div class="card m-4">
+<hr>
+<button class="btn btn-primary mb-2" data-toggle="collapse" data-target="#entries"><i class="fa fa-plus"></i>
+    Entries
+</button>
+
+<div id="entries" class="card collapse m-4">
     <div class="card-header">
         <h3 class="card-title"> Transfers History</h3>
     </div>
-    <div class="card-body  table-responsive">
+    <div class="card-body table-responsive">
         <table id="example1"  class="table table-bordered table-striped table-hover">
             <thead>
                 <tr>
