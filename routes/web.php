@@ -64,8 +64,11 @@ Route::prefix('QA')->group(function () {
 
 /* -------------------------------- Start Stocks ------------------------------------------------ */
 Route::prefix('stock')->group(function () {
-    Route::get('/transfers', [StockController::class, 'transfers'])->name('transfers_form');
+    Route::get('/', [StockController::class, 'dashboard'])->name('stocks_dashboard');
+    Route::get('/transfers/issue', [StockController::class, 'transfersIssue'])->name('stock_transfers_issue');
+    Route::get('/transfers/receive', [StockController::class, 'transfersReceive'])->name('stock_transfers_receive');
     Route::post('/transfer/save', [StockController::class, 'saveTransfer'])->name('save_transfer');
+    Route::post('/transfers/update', [StockController::class, 'transferUpdate'])->name('transfer_update');
     Route::get('/records', [StockController::class, 'stockTake'])->name('stock_take');
     Route::post('/records/save', [StockController::class, 'stockUpdate'])->name('stock_update');
 });
