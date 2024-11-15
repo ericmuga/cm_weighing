@@ -201,6 +201,10 @@
         }
     }
 
+    function getNet() {
+        netInput.value = readingInput.value - tareInput.value;
+    }
+
     function getScaleReading() {
         var comport = $('#comport_value').val();
 
@@ -211,7 +215,7 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]')
                         .attr('content')
                 },
-                url: "{{ url('slaughter/read-scale-api-service') }}",
+                url: "{{ url('slaughter/read-scale') }}",
 
                 data: {
                     'comport': comport,
@@ -221,7 +225,7 @@
                 success: function (data) {
 
                     var obj = JSON.parse(data);
-        
+
                     if (obj.success == true) {
                         var reading = document.getElementById('reading');
                         reading.value = obj.response;
@@ -248,9 +252,7 @@
         }
     }
 
-    function getNet() {
-        netInput.value = readingInput.value - tareInput.value;
-    }
+    
 
     function saveTransfer() {
         event.preventDefault();
