@@ -83,7 +83,7 @@ class SlaughterController extends Controller
 
         $offals_products = Item::where('category', 'cm-offals')->get();
 
-        $configs = Cache::remember('weigh_configs', now()->addMinutes(120), function () {
+        $configs = Cache::remember('offals_scale_configs', now()->addMinutes(120), function () {
             return DB::table('scale_configs')
                 ->where('section', 'offals')
                 ->get();
