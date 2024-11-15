@@ -41,12 +41,10 @@ class StockController extends Controller
             return Item::where('category', 'cm-prod')->get();
         });
 
-        $configs = Cache::remember('weigh_configs', now()->addMinutes(120), function () {
+        $configs = Cache::remember('transfer-scale_configs', now()->addMinutes(120), function () {
             return DB::table('scale_configs')
-                ->where('scale', 'Scale 1')
                 ->where('section', 'transfers')
-                ->select('tareweight', 'comport')
-                ->get()->toArray();
+                ->get();
         });
 
         $transfers = Transfer::orderBy('created_at', 'desc')->limit(1000)->get();
