@@ -83,12 +83,10 @@ class SlaughterController extends Controller
 
         $offals_products = Item::where('category', 'cm-offals')->get();
 
-        $configs = Cache::remember('weigh_configs', now()->addMinutes(120), function () {
+        $configs = Cache::remember('offals_scale_configs', now()->addMinutes(120), function () {
             return DB::table('scale_configs')
-                ->where('scale', 'Scale 1')
                 ->where('section', 'offals')
-                ->select('tareweight', 'comport')
-                ->get()->toArray();
+                ->get();
         });
 
         $entries = Offal::whereDate('offals.created_at', Carbon::today())
@@ -97,7 +95,7 @@ class SlaughterController extends Controller
         ->orderBy('offals.created_at', 'DESC')
         ->get();
 
-        return view('slaughter.weigh_offals', compact('title', 'offals_products', 'entries', 'helpers'));
+        return view('slaughter.weigh_offals', compact('title', 'configs', 'offals_products', 'entries', 'helpers'));
     }
 
     public function weightsTabulate(Helpers $helpers) {

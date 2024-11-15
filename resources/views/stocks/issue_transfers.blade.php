@@ -61,9 +61,24 @@
                 </div>
             </div>
 
-            <button type="button" onclick="getScaleReading()" id="weigh" class="btn btn-primary btn-lg align-self-center">
-                <i class="fas fa-balance-scale"></i> Weigh
-            </button>
+            <div class="mt-4">
+                @if(empty($configs))
+                    <small>No comport conifgured</small>
+                @else
+                <small>
+                    <label>Reading from ComPort:</label>
+                    <strong>
+                    <input 
+                        type="text" style="text-align: center; border:none" id="comport_value" 
+                        value="{{ $configs[0]->comport?? "" }}" disabled
+                        >
+                    </strong>
+                </small>
+                @endif
+                <button type="button" onclick="getScaleReading()" class="btn btn-primary btn-lg">
+                    <i class="fas fa-balance-scale"></i> Weigh
+                </button>
+            </div>
             
         </div>
         <div class="card p-4">
@@ -186,6 +201,10 @@
         }
     }
 
+    function getNet() {
+        netInput.value = readingInput.value - tareInput.value;
+    }
+
     function getScaleReading() {
         var comport = $('#comport_value').val();
 
@@ -196,7 +215,7 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]')
                         .attr('content')
                 },
-                url: "{{ url('slaughter/read-scale-api-service') }}",
+                url: "{{ url('slaughter/read-scale') }}",
 
                 data: {
                     'comport': comport,
@@ -206,7 +225,7 @@
                 success: function (data) {
 
                     var obj = JSON.parse(data);
-        
+
                     if (obj.success == true) {
                         var reading = document.getElementById('reading');
                         reading.value = obj.response;
@@ -233,9 +252,7 @@
         }
     }
 
-    function getNet() {
-        netInput.value = readingInput.value - tareInput.value;
-    }
+    
 
     function saveTransfer() {
         event.preventDefault();
