@@ -116,7 +116,7 @@ function getScaleReading() {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]')
                     .attr('content')
             },
-            url: "{{ url('slaughter/read-scale-api-service') }}",
+            url: "{{ url('slaughter/read-scale') }}",
 
             data: {
                 'comport': comport,
@@ -124,15 +124,13 @@ function getScaleReading() {
             },
             dataType: 'JSON',
             success: function (data) {
-                //console.log(data);
 
                 var obj = JSON.parse(data);
-                //console.log(obj.success);
 
                 if (obj.success == true) {
                     var reading = document.getElementById('reading');
                     reading.value = obj.response;
-                    getNet();
+                    updateNetWeight();
 
                 } else if (obj.success == false) {
                     alert('error occured in response: ' + obj.response);
