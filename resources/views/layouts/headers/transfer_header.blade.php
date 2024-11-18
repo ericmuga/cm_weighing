@@ -16,17 +16,17 @@
             <ul class="navbar-nav">
                 <li class="nav-item dropdown">
                     <a id="dropdownSubMenu1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-                        class="nav-link dropdown-toggle">Transfers</a>
+                        class="nav-link dropdown-toggle">IDT</a>
                     <ul aria-labelledby="dropdownSubMenu1" class="dropdown-menu border-0 shadow">
                         <li>
                             <a href="{{ route('stock_transfers_issue') }}" class="dropdown-item">
-                                Issue Transfers
+                                Create IDT
                             </a>
                         </li>
                         <hr class="dropdown-divider" />
                         <li>
                             <a href="{{ route('stock_transfers_receive') }}" class="dropdown-item">
-                                Receive Transfers
+                                Receive IDT
                             </a>
                         </li>
                     </ul>
