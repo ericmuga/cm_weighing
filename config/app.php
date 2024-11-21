@@ -24,6 +24,20 @@ return [
     'sms_api_key' => env('SMS_API_KEY', ''),
     'sms_client_id' => env('SMS_CLIENT_ID', ''),
     'sms_whatsapp_no' => env('SMS_WHATSAPP_NO', ''),
+
+     /*
+    |--------------------------------------------------------------------------
+    | RabbitMQ Configuration
+    |--------------------------------------------------------------------------
+    */
+
+    'rabbitmq_host' => env('RABBITMQ_HOST', 'localhost'),
+    'rabbitmq_port' => env('RABBITMQ_PORT', ''),
+    'rabbitmq_user' => env('RABBITMQ_USER', ''),
+    'rabbitmq_password' => env('RABBITMQ_PASSWORD', ''),
+    'rabbitmq_exchange_name' => env('EXCHANGE_NAME', ''),
+    'rabbitmq_slaughter_routing_key' => env('SLAUGHTER_LINE_ROUTING_KEY', ''),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

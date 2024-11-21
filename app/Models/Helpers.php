@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use PhpAmqpLib\Connection\AMQPStreamConnection;
+use PhpAmqpLib\Message\AMQPMessage;
 
 class Helpers
 {
@@ -182,4 +184,59 @@ class Helpers
             'user_id' => Auth::id(),
         ]);
     }
+
+    private $rabbitMQConnection = null;
+    private $rabbitMQChannel = null;
+
+    private function getRabbitMQConnection()
+    {
+        if ($this->rabbitMQConnection === null) {
+            try {
+                $this->rabbitMQConnection = new AMQPStreamConnection(
+                    config('app.rabbitmq_host'), // RabbitMQ host
+                    config('app.rabbitmq_port'), // RabbitMQ port (default for AMQP is 5672)
+                    config('app.rabbitmq_user'), // RabbitMQ user
+                    config('app.rabbitmq_password') // RabbitMQ password
+                );
+                Log::info('RabbitMQ connection established successfully.');
+            } catch (\Exception $e) {
+                Log::error('Failed to establish RabbitMQ connection: ' . $e->getMessage());
+                throw $e;
+            }
+        }
+        return $this->rabbitMQConnection;
+    }
+
+    private function getRabbitMQChannel()
+    {
+        if ($this->rabbitMQChannel === null) {
+            $connection = $this->getRabbitMQConnection();
+            $this->rabbitMQChannel = $connection->channel();
+        }
+        return $this->rabbitMQChannel;
+    }
+
+
+    //Rabbit MQ
+    public function publishToQueue($data, $queue_name)
+    {
+        // Add the company name flag to the data
+        $data['company_name'] = 'CM';
+
+        $channel = $this->getRabbitMQChannel();
+
+        try {
+            $channel->exchange_declare('fcl.exchange.direct', 'direct', false, true, false);
+
+            $msg = new AMQPMessage(json_encode($data), [
+                'delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT,
+            ]);
+
+            $channel->basic_publish($msg, 'fcl.exchange.direct', $queue_name);
+            Log::info("Message published to queue: {$queue_name}");
+        } catch (\Exception $e) {
+            Log::error("Failed to publish message to queue {$queue_name}: {$e->getMessage()}");
+        }
+    }
+
 }
