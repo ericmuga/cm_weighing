@@ -1,4 +1,4 @@
-@extends('layouts.transfers_master')
+@extends('layouts.stocks_master')
 
 @section('content')
 <div class="card-header h3 mb-4">

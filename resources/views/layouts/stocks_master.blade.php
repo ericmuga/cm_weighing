@@ -1,5 +1,5 @@
 @extends('layouts.master')
 
 @section('header')
-    @include('layouts.headers.slaughter_header')
+    @include('layouts.headers.stocks_header')
 @endsection

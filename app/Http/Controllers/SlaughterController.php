@@ -436,7 +436,7 @@ class SlaughterController extends Controller
             ->where('section', $section)
             ->get();
 
-        return view('slaughter.scale_configs', compact('title', 'scale_settings', 'helpers'));
+        return view('slaughter.scale_configs', compact('title', 'section', 'scale_settings', 'helpers'));
     }
 
     public function updateScaleConfigs(Request $request, Helpers $helpers)

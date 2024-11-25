@@ -1,4 +1,4 @@
-@extends('layouts.transfers_master')
+@extends('layouts.stocks_master')
 
 @section('content')
 <div>
