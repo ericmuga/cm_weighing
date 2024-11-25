@@ -1,4 +1,4 @@
-@extends('layouts.slaughter_master')
+@extends($section === 'transfers' ? 'layouts.stocks_master' : 'layouts.slaughter_master')
 
 @section('content-header')
 <div class="container">
