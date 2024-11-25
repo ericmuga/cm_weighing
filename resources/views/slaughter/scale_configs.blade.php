@@ -166,7 +166,7 @@
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]')
                     .attr('content')
             },
-            url: "{{ url('slaughter/comport-list') }}",
+            url: "{{ route('comport_list') }}",
             dataType: 'JSON',
             success: function (data) {
                 console.log(data);
