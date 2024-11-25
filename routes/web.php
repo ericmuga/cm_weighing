@@ -38,10 +38,6 @@ Route::prefix('slaughter')->group(function () {
     Route::post('/receipts/import', [SlaughterController::class, 'importReceipts'])->name('receipts_import');
     Route::get('/report/{filter?}', [SlaughterController::class, 'slaughterReport'])->name('slaughter_report');
     Route::post('/report/summary', [SlaughterController::class, 'slaughterSummaryReport'])->name('slaughter_summary_report');
-    Route::get('/configs/{section}', [SlaughterController::class, 'scaleConfigs'])->name('scale_configs');
-    Route::post('/scale/update', [SlaughterController::class, 'updateScaleConfigs'])->name('update_scale_configs');
-    Route::get('/comport-list', [SlaughterController::class, 'comportListApiService']);
-    Route::get('/read-scale', [SlaughterController::class, 'readScaleApiService']);
 
     Route::get('/pending-etims', [SlaughterController::class, 'pendingEtimsData'])->name('pending_etims');
     Route::post('/update-pending-etims', [SlaughterController::class, 'updatePendingEtimsData'])->name('update_pending_etims');
@@ -73,3 +69,12 @@ Route::prefix('stock')->group(function () {
     Route::post('/records/save', [StockController::class, 'stockUpdate'])->name('stock_update');
 });
 /* -------------------------------- End Transfers ------------------------------------------------ */
+
+/* -------------------------------- Scale Configs ------------------------------------------------ */
+Route::prefix('scale')->group(function () {
+    Route::get('/configs/{section}', [SlaughterController::class, 'scaleConfigs'])->name('scale_configs');
+    Route::post('/update', [SlaughterController::class, 'updateScaleConfigs'])->name('update_scale_configs');
+    Route::get('/comport-list', [SlaughterController::class, 'comportListApiService'])->name('comport_list');
+    Route::get('/read', [SlaughterController::class, 'readScaleApiService'])->name('read_scale');
+});
+/* -------------------------------- End Scale Configs ------------------------------------------------ */
