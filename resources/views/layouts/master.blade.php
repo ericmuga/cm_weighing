@@ -169,6 +169,17 @@
         });
 
         $(function () {
+            $("#example2").DataTable({
+                "responsive": false,
+                "autoWidth": false,
+                "lengthChange": true,
+                "lengthMenu": [[3, 5, 10, 25, 50, -1], [3, 5, 10, 25, 50, "All"]],
+                // "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
+                "buttons": ["excel", "pdf", "colvis"]
+            }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+        });
+
+        $(function () {
             //Initialize Select2 Elements
             $('.select2').select2()
         });
