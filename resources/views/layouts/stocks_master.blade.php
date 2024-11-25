@@ -60,7 +60,7 @@
     <div class="wrapper">
 
         <!-- Navbar -->
-        @include('layouts.headers.transfer_header')
+        @include('layouts.headers.stocks_header')
         <!-- /.navbar -->
 
         <!-- Content Wrapper. Contains page content -->
