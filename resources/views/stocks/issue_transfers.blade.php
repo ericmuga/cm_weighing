@@ -100,7 +100,7 @@
                     <option value="B1020">Slaughter</option>
                     <option value="B1570">Butchery</option>
                     <option value="B3535">Despatch</option>
-                    <option value="B3535">FCL</option>
+                    <option value="FCL">FCL</option>
                 </select>
             </div>
 
