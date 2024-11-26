@@ -615,7 +615,7 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]')
                         .attr('content')
                 },
-                url: "{{ url('slaughter/read-scale') }}",
+                url: "{{ route('read_scale') }}",
 
                 data: {
                     'comport': comport,
@@ -663,7 +663,7 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]')
                         .attr('content')
                 },
-                url: "{{ url('slaughter/read-scale') }}",
+                url: "{{ route('read_scale') }}",
 
                 data: {
                     'comport': comport,
