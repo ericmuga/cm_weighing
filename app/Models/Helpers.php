@@ -239,4 +239,67 @@ class Helpers
         }
     }
 
+    public function declareQueue($queue_name)
+    {
+        $channel = $this->getRabbitMQChannel();
+
+        try {
+            $channel->queue_declare(
+                $queue_name,
+                false,
+                true,
+                false,
+                false,
+                false,
+                new \PhpAmqpLib\Wire\AMQPTable([
+                    'x-dead-letter-exchange' => 'fcl.exchange.dlx',
+                    'x-dead-letter-routing-key' => $queue_name,
+                ])
+            );
+            Log::info("Queue declared: {$queue_name}");
+        } catch (\Exception $e) {
+            Log::error("Failed to declare queue {$queue_name}: {$e->getMessage()}");
+        }
+    }
+
+    public function consumeFromQueue()
+    {
+        $channel = $this->getRabbitMQChannel();
+
+        // List of queues to declare and consume from
+        $queues = [
+            // 'list of queue names to consume from'
+        ];
+
+        // Declare each queue
+        foreach ($queues as $queue) {
+            $this->declareQueue($queue);
+        }
+
+        // Define callback functions for each queue with queue-specific handling logic
+        $callbacks = [
+            // 'queue_name' => function ($msg) {
+            //     // Queue-specific handling logic
+            //     Log::info("Message received from queue: {$msg->delivery_info['routing_key']}");
+            //     Log::info("Message body: {$msg->body}");
+            // },
+
+        ];
+
+        // Start consuming messages from each queue
+        foreach ($queues as $queue) {
+            $channel->basic_consume($queue, '', false, false, false, false, $callbacks[$queue]);
+        }
+
+        while (true) {
+            try {
+                while (count($channel->callbacks)) {
+                    $channel->wait(null, false, 5); // Timeout of 5 seconds
+                }
+            } catch (\Exception $e) {
+                Log::error('Error in message consumption: ' . $e->getMessage());
+            }
+        }
+    }
+
 }
