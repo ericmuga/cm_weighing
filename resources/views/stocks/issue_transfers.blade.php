@@ -262,6 +262,8 @@
         const saveBtn = document.getElementById('save-btn');
         saveBtn.disabled = true;
         saveBtn.classList.add('disabled');
+        saveBtn.originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
         try {
 
@@ -317,6 +319,7 @@
         } finally {
             saveBtn.disabled = false;
             saveBtn.classList.remove('disabled');
+            saveBtn.innerHTML = saveBtn.originalText;
             return;
         }
     }
