@@ -83,6 +83,10 @@ class StockController extends Controller
 
         if ($request->to_location_code == "FCL") {
             $transfer_type = "external";
+            $data = $request->all();
+            $data['issuer'] = Auth::id();
+            $data['manual_weight'] = $manual_weight;
+            $helpers->publishToQueue($data, 'intercompany_transfers.wms');
         } else {
             $transfer_type = "internal";
         }
