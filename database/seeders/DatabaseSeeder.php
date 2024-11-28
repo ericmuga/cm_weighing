@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             UsersSeeder::class,
             ScaleConfigsSeeder::class,
             CarcassTypeSeeder::class,
+            ItemSeeder::class,
         ]);
     }
 }

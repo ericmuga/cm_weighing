@@ -30,7 +30,7 @@
                                 <th>Vendor No</th>
                                 <th>Settlement</th>
                                 <th>QA Classification</th>
-                                <th>Classification Code</th>
+                                <th>Weight Classification</th>
                                 <th>Grading Status</th>
                                 <th>Slaughter Date</th>
                             </tr>
@@ -44,7 +44,7 @@
                                 <th>Vendor No</th>
                                 <th>Settlement</th>
                                 <th>QA Classification</th>
-                                <th>Classification Code</th>
+                                <th>Weight Classification</th>
                                 <th>Grading Status</th>
                                 <th>Slaughter Date</th>
                             </tr>
