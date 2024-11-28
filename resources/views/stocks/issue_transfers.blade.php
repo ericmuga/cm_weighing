@@ -9,13 +9,14 @@
         <div class="card p-4">
             <div class="form-group">
                 <label for="item_code">Product</label>
-                <select class="form-control select2" name="item_code" id="item_code" required>
+                <select class="form-control select2" name="item_code" id="item_code" onchange="updateDescription()" required>
                     <option value="">Select Product</option>
                     @foreach ($products as $product)
                         <option value="{{ $product->code }}">{{ $product->code }} {{ $product->description }}</option>
                     @endforeach
                 </select>
             </div>
+            <input type="hidden" name="description" id="description" value="">
 
             <div class="form-group">
                 <label for="batch_no">Batch No.</label>
@@ -252,8 +253,6 @@
         }
     }
 
-    
-
     function saveTransfer() {
         event.preventDefault();
         const form = event.target;
@@ -322,6 +321,12 @@
             saveBtn.innerHTML = saveBtn.originalText;
             return;
         }
+    }
+
+    function updateDescription(event) {
+        const itemCode = document.getElementById('item_code').value;
+        const description = document.getElementById('description');
+        description.value = itemCode;
     }
 </script>
 @endsection
