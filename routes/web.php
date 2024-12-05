@@ -4,6 +4,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\QAController;
 use App\Http\Controllers\SlaughterController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\CustomerController;
 use Illuminate\Support\Facades\Route;
 use Rap2hpoutre\LaravelLogViewer\LogViewerController;
 
@@ -78,3 +79,10 @@ Route::prefix('scale')->group(function () {
     Route::get('/read', [SlaughterController::class, 'readScaleApiService'])->name('read_scale');
 });
 /* -------------------------------- End Scale Configs ------------------------------------------------ */
+
+/* -------------------------------- Start Customers ------------------------------------------------ */
+Route::prefix('customers')->group(function () {
+    Route::get('/', [CustomerController::class, 'listCustomers'])->name('customers');
+    Route::post('/create', [CustomerController::class, 'createCustomer'])->name('create_customer');
+});
+/* -------------------------------- End Customers ------------------------------------------------ */
