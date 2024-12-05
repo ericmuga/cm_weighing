@@ -126,7 +126,7 @@ class SlaughterController extends Controller
 
         } catch (\Exception $e) {
             Log::error($e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Failed to save offal weight. Error: ' . $e->getMessage()]);
+            return response()->json(['error' => false, 'message' => 'Failed to save offal weight. Error: ' . $e->getMessage()]);
         }
     }
 
