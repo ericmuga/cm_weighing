@@ -13,19 +13,8 @@
 
         <div class="collapse navbar-collapse order-3" id="navbarCollapse">
 
-        <!-- Right navbar links -->
-        <ul class="order-1 order-md-3 navbar-nav navbar-no-expand ml-auto">
-            <li class="nav-item dropdown no-arrow">
-                <a class="nav-link dropdown-toggle" style="color:black" href="#" id="userDropdown" role="button"
-                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="fas fa-user-circle"></i> {{ auth()->user()->username }}
-                </a>
-                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
-                    <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal"><i
-                            class="fas fa-sign-out-alt"></i> Logout</a>
-                </div>
-            </li>
-        </ul>
+          <!-- Right navbar links -->
+        @include('partials.rightnav')
     </div>
 </nav>
 
