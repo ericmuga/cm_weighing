@@ -2,98 +2,165 @@
 
 @section('content')
 
-<!-- weigh -->
-
-<div class="card m-3">
-    <h2 class="card-header">Weigh Offals</h2>
-    <div class="card-body">
-        <form id="form-weigh-offals" onsubmit="saveWeight()">
-            <div class="row text-center">
-                <div class="col-md-6">
-                    <div class="form-group mb-3">
-                        <label for="product_code">Product Name</label>
-                        <select  class="form-control select2" id="product_code" name="product_code" required>
-                            <option value="">Choose...</option>
-                            @foreach ($offals_products as $product)
-                            <option value="{{ $product->code }}">{{ $product->code }} {{ $product->description }}</option>                                
-                            @endforeach
-                        </select>    
+<div class="container">
+    <div class="card">
+        <h2 class="card-header">Weigh Offals</h2>
+        <div class="card-body">
+            <form id="form-weigh-offals" action="{{ route('save_offals_weights') }}" class="form-prevent-multiple-submits" method="POST">
+                @csrf
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="customer">Customer</label>
+                            <select class="form-control select2" id="customer_id" name="customer_id" required>
+                                <option disabled value="">Select Customer</option>
+                                @foreach ($customers as $customer)
+                                <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
-
-                    <div class="row">
-                        <div class="col-12">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="customer">Product</label>
+                            <select class="form-control select2" id="product_code" name="product_code" required>
+                                <option value="">Select... </option>
+                                @foreach ($offals_products as $product)
+                                <option value="{{ $product->code }}">{{ $product->code }} {{ $product->description }}</option>                                
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="reading">Scale Reading</label>
+                            <input type="number" step="0.01" class="form-control" id="reading" name="reading" value=""
+                                oninput="updateNetWeight()" placeholder="" readonly required>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="manual_weight" name="manual_weight" onchange="toggleManualWeight()">
+                            <label class="form-check-label" for="manual_weight">Enter Manual weight</label>
+                        </div>
+                        <div>
                             @if(empty($configs))
-                                <small>No comport conifgured</small>
+                                <small class="d-block">No comport conifgured</small>
                             @else
-                            <small>
+                            <small class="d-block mt-2">
                                 <label>Reading from ComPort:</label>
-                                <strong>
-                                <input 
-                                    type="text" style="text-align: center; border:none" id="comport_value" 
-                                    value="{{ $configs[0]->comport?? "" }}" disabled
-                                    >
-                                </strong>
+                                <span id="comport_value" disabled >{{ $configs[0]->comport?? "" }}</span>
                             </small>
                             @endif
-                        </div>
-                        <div class="col-12">
                             <button type="button" onclick="getScaleReading()" class="btn btn-primary btn-lg">
-                                <i class="fas fa-balance-scale"></i> Weigh</button>
+                                <i class="fas fa-balance-scale"></i> Weigh
+                            </button>
                         </div>
                     </div>
-                    
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="reading">Reading</label>
-                        <input type="number" step="0.01" class="form-control" id="reading" name="reading" value=""
-                            oninput="updateNetWeight()" placeholder="" readonly required>
-                    </div>
-
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="manual_weight" name="manual_weight" onchange="toggleManualWeight()">
-                        <label class="form-check-label" for="manual_weight">Enter Manual weight</label>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-6">
-                            <div class="form-group">
+                    <div class="col-md-4">
+                        <div class="form-group">
                             <label for="tare_weight">Tare-Weight</label>
-                                @if(empty($configs))
-                                <input type="number" class="form-control" id="tare_weight" name="tare_weight" value="0.00" readonly required>
-                                @else
-                                <input type="number" class="form-control" id="tare_weight" name="tare_weight"
-                                    value="{{ number_format($configs[0]->tareweight, 2)?? "" }}" readonly required>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="form-group">
-                                <label for="net_weight">Net-Weight</label>
-                                <input type="number" class="form-control" id="net_weight" name="net_weight"
-                                    value="" readonly required>
-                            </div>
+                            @if(empty($configs))
+                            <input type="number" class="form-control" id="tare_weight" name="tare_weight" value="0.00" readonly required>
+                            @else
+                            <input type="number" class="form-control" id="tare_weight" name="tare_weight"
+                                value="{{ number_format($configs[0]->tareweight, 2)?? "" }}" readonly required>
+                            @endif
                         </div>
                     </div>
-
-                    <button type="submit" id="btn_save" class="btn btn-primary btn-lg btn-prevent-multiple-submits mt-3">
-                        <i class="fa fa-paper-plane" aria-hidden="true"></i>
-                        Save
-                    </button>
-
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="net_weight">Net-Weight</label>
+                            <input type="number" class="form-control" id="net_weight" name="net_weight"
+                                value="" readonly required>
+                        </div>
+                        <button type="submit" id="btn_save" class="btn btn-primary btn-lg btn-prevent-multiple-submits mt-3">
+                            <i class="fa fa-paper-plane" aria-hidden="true"></i>
+                            Save
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </form>
-    </div>
-    
-</div>      
+            </form>
+        </div>
+        
+    </div>   
+</div>   
+
+<hr class="my-4">
 
 <!--End weigh -->
 
-<!-- Container for the table of entries -->
-<div id="offals_entries">
-    @include('partials.table', ['entries' => $entries]) <!-- Initial list rendering -->
+
+
+<div class="div">
+    <button class="btn btn-primary " data-toggle="collapse" data-target="#entries"><i class="fa fa-plus"></i>
+        Entries
+    </button>
 </div>
+
+<!-- Table of saved entries -->
+<div id="entries" class="collapse my-4">
+    <!-- offals data Table-->
+    <div class="card">
+        <!-- /.card-header -->
+        <div class="card-header">
+            <h3 class="card-title"> Weighed Entries | <span id="subtext-h1-title"><small> view weighed ordered
+                        by latest</small> </span></h3>
+        </div>
+        <!-- /.card-body -->
+        <div class="card-body table-responsive">
+            <table id="example1" class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Product Code</th>
+                        <th>Net Weight (kgs)</th>
+                        <th>Scale Reading (kgs)</th>
+                        <th>Manually Recorded</th>
+                        <th>Customer</th>
+                        <th>Recorded by</th>
+                        <th>Recorded Date Time</th>
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <th>#</th>
+                        <th>Product Code</th>
+                        <th>Net Weight (kgs)</th>
+                        <th>Scale Reading (kgs)</th>
+                        <th>Manually Recorded</th>
+                        <th>Customer</th>
+                        <th>Recorded by</th>
+                        <th>Recorded Date Time</th>
+                    </tr>
+                </tfoot>
+                <tbody>
+                    @foreach($entries as $entry)
+                    <tr>
+                        <td>{{ $loop->iteration }}</td>
+                        <td>{{ $entry->product_code }}</td>
+                        <td>{{ number_format($entry->net_weight, 2) }}</td>
+                        <td>{{ number_format($entry->scale_reading, 2) }}</td>
+                        @if($entry->is_manual == 0)
+                            <td>
+                                <span class="badge badge-success">No</span>
+                            </td>
+                        @else
+                            <td>
+                                <span class="badge badge-danger">Yes</span>
+                            </td>
+                        @endif
+                        <td>{{ $entry->customer_name }}</td>
+                        <td>{{ $entry->username }}</td>
+                        <td>{{  $helpers->dateToHumanFormat($entry->created_at) }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+        
 
 @endsection
 
@@ -166,64 +233,11 @@ function toggleManualWeight() {
     }
 }
 
-async function saveWeight() {
-    event.preventDefault();
-    console.log('saving weight');
-    var btn_save = document.getElementById('btn_save');
-    btn_save.disabled = true;
-    btn_save.innerHTML = 'Saving...';
-
-    scaleInput = document.getElementById('reading');
-    if (scaleInput.value == '' || scaleInput.value == 0) {
-        toastr.error('Please add offal weight');
-        btn_save.disabled = false;
-        btn_save.innerHTML = 'Save';
-        return;
-    }
-
-    var form = document.getElementById('form-weigh-offals');
-    const formData = new FormData(form);
-    console.log(formData.get('manual_weight'));
-
-    await fetch("{{ route('slaughter_save_offals_weights') }}", {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]')
-                .attr('content'),
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            manual_weight: formData.get('manual_weight'),
-            product_code: formData.get('product_code'),
-            net_weight: formData.get('net_weight'),
-            scale_reading: formData.get('reading'),
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            toastr.success(data.message);
-            form.reset();
-            btn_save.disabled = false;
-            btn_save.innerHTML = 'Save';
-            refreshTable();
-        } else {
-            throw new Error(data.message);
-        }
-    })
-    .catch((error) => {
-        console.error('Error:', error);
-        toastr.error(error.message);
-        btn_save.disabled = false;
-        btn_save.innerHTML = 'Save';
+$(document).ready(function () {
+    $('.form-prevent-multiple-submits').on('submit', function(){
+        $(".btn-prevent-multiple-submits").attr('disabled', true);
     });
+});
 
-}
-
-async function refreshTable() {
-    const entriesResponse = await fetch("{{ route('weights.tabulate') }}");
-    const entriesHtml = await entriesResponse.text();
-    document.getElementById("offals_entries").innerHTML = entriesHtml;
-}
 </script>
 @endsection
