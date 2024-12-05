@@ -84,5 +84,6 @@ Route::prefix('scale')->group(function () {
 Route::prefix('customers')->group(function () {
     Route::get('/', [CustomerController::class, 'listCustomers'])->name('customers');
     Route::post('/create', [CustomerController::class, 'createCustomer'])->name('create_customer');
+    Route::post('/update/{id}', [CustomerController::class, 'updateCustomer'])->name('update_customer');
 });
 /* -------------------------------- End Customers ------------------------------------------------ */

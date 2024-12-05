@@ -39,4 +39,30 @@ class CustomerController extends Controller
             return redirect()->back();
         }
     }
+
+    public function updateCustomer(Request $request, $id = null) {
+        try {
+            // Get the customer
+            $customer = Customer::find($request->id);
+
+            // Update the model with new data
+            $customer->fill($request->except(['_token', 'id']));
+
+            // Get only the changed fields
+            if ($customer->isDirty()) {
+                // Save only the changed attributes to the database
+                $customer->save();
+                Toastr::success('Customer updated successfully', 'Success');
+                return redirect()->back();
+            } else {
+                Toastr::info('No changes made', 'Info');
+                return redirect()->back();
+            }
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            Toastr::error($e->getMessage(), 'Error!');
+            return redirect()->back();
+        }
+        
+    }
 }

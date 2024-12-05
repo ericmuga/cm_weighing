@@ -9,7 +9,7 @@
     <div class="card">
         <div class="card-header d-flex align-items-center justify-content-between">
             <h3 class="card-title"> {{ $title }} | <small> ordered by last created</small></h3>
-            <button class="btn btn-primary ml-auto" data-toggle="modal" data-target="#customerModal" ><i class="fa fa-plus"></i> Add Customer</button>
+            <button class="btn btn-primary ml-auto" data-toggle="modal" data-target="#customerModal" onclick="setModalToCreate(event)"><i class="fa fa-plus"></i> Add Customer</button>
         </div>
 
         <div class="card-body">
@@ -22,6 +22,7 @@
                         <th>KRA PIN</th>
                         <th>Location</th>
                         <th>Last Updated</th>
+                        <th scope="col" class="no-export">Edit</th>
                     </tr>
                 </thead>
                 <tfoot>
@@ -32,6 +33,7 @@
                         <th>KRA PIN</th>
                         <th>Location</th>
                         <th>Last Updated</th>
+                        <th scope="col" class="no-export">Edit</th>
                     </tr>
                 </tfoot>
                 <tbody>
@@ -43,6 +45,21 @@
                         <td>{{ $entry->kra_pin }}</td>
                         <td>{{ $entry->location }}</td>>
                         <td>{{ $helpers->dateToHumanFormat($entry->updated_at) }}</td>
+                        <td>
+                            <button
+                                class="btn btn-primary btn-sm"
+                                data-id="{{ $entry->id }}"
+                                data-name="{{ $entry->name }}"
+                                data-phone-number="{{ $entry->phone_number }}"
+                                data-kra-pin="{{ $entry->kra_pin }}"
+                                data-location="{{ $entry->location }}"
+                                data-toggle="modal"
+                                data-target="#customerModal"
+                                onclick="setModalToUpdate(event)"
+                            >
+                                <i class="fa fa-pencil-alt"></i>
+                            </button>
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -53,12 +70,12 @@
     <!-- Add Customer Modal -->
     <div class="modal fade" id="customerModal" tabindex="-1" role="dialog" aria-labelledby="customerModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
-        <form class="modal-content" action={{ route('create_customer') }} method="POST">
+        <form id="customer-form" class="modal-content" action={{ route('create_customer') }} method="POST">
             @csrf
             <div class="modal-header">
-            <h5 class="modal-title" id="customerModalLabel">Add Customer</h5>
+            <h5 id="customerModalTitle" class="modal-title" id="customerModalLabel">Customer Form</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
+                <span>&times;</span>
             </button>
             </div>
             <div class="modal-body">
@@ -68,7 +85,7 @@
                 </div>
                 <div class="form-group">
                     <label for="phone">Phone Number</label>
-                    <input type="text" class="form-control" id="phone_input" name="phone_number" required />
+                    <input type="text" class="form-control" id="phone_number" name="phone_number" required />
                 </div>
                 <div class="form-group">
                     <label for="location">Location</label>
@@ -95,5 +112,29 @@
     $('#customerModal').on('hidden.bs.modal', function () {
         $(this).find('form')[0].reset();
     });
+
+    function setModalToCreate(event) {
+        var button = event.currentTarget;
+        document.getElementById('customerModalTitle').textContent = 'Create Customer';
+        document.getElementById('customer-form').setAttribute('action', 'customer/create/');
+    }
+
+    function setModalToUpdate(event) {
+        var button = event.currentTarget;
+        var id = button.getAttribute('data-id');
+        var name = button.getAttribute('data-name');
+        var phoneNumber = button.getAttribute('data-phone-number');
+        var kraPin = button.getAttribute('data-kra-pin');
+        var location = button.getAttribute('data-location');
+
+        document.getElementById('customerModalTitle').textContent = 'Update Customer';
+        document.getElementById('customer-form').setAttribute('action', 'customers/update/' + id);
+        document.getElementById('name').value = name;
+        document.getElementById('phone_number').value = phoneNumber;
+        document.getElementById('kra_pin').value = kraPin;
+        document.getElementById('location').value = location;
+    }
+
+    
 </script>
 @endsection
