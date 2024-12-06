@@ -15,9 +15,9 @@ class AddCustomersToOffals extends Migration
     {
         Schema::table('offals', function (Blueprint $table) {
             $table->unsignedBigInteger('customer_id')->nullable();
-
-            // Add the foreign key constraint
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('set null');
+            $table->boolean('archived')->default(false);
+            $table->unsignedBigInteger('updated_by')->nullable();
         });
     }
 
@@ -31,6 +31,8 @@ class AddCustomersToOffals extends Migration
         Schema::table('offals', function (Blueprint $table) {
             $table->dropForeign(['customer_id']);
             $table->dropColumn('customer_id');
+            $table->dropColumn('archived');
+            $table->dropColumn('updated_by');
         });
     }
 }

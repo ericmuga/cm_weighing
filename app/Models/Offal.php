@@ -13,5 +13,7 @@ class Offal extends Model
         'is_manual',
         'user_id',
         'customer_id',
+        'archived',
+        'updated_by',
     ];
 }
