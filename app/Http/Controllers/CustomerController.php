@@ -28,7 +28,6 @@ class CustomerController extends Controller
             $data = array_filter($request->except('_token'), function ($value) {
                 return !is_null($value);
             });
-            Log::info($data);
             Customer::create($data);
             Toastr::success('Customer created successfully', 'Success');
             return redirect()->back();

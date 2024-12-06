@@ -116,7 +116,7 @@
     function setModalToCreate(event) {
         var button = event.currentTarget;
         document.getElementById('customerModalTitle').textContent = 'Create Customer';
-        document.getElementById('customer-form').setAttribute('action', 'customer/create/');
+        document.getElementById('customer-form').setAttribute('action', 'customers/create/');
     }
 
     function setModalToUpdate(event) {

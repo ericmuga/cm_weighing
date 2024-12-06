@@ -19,6 +19,7 @@ class CreateCustomersTable extends Migration
             $table->string('phone_number', 10);
             $table->string('location', 50)->nullable();
             $table->string('kra_pin', 11)->nullable();
+            $table->boolean('active')->default(true);
             $table->timestamps();
         });
     }
