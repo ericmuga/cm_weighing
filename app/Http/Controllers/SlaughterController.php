@@ -91,7 +91,9 @@ class SlaughterController extends Controller
         $entries = Offal::whereDate('offals.created_at', Carbon::today())
         ->leftJoin('users', 'offals.user_id', '=', 'users.id')
         ->leftJoin('customers', 'offals.customer_id', '=', 'customers.id')
-        ->select('offals.*', 'users.username', 'customers.name AS customer_name')
+        ->join('items', 'offals.product_code', '=', 'items.code')
+        ->where('offals.archived', 0)
+        ->select('offals.*', 'users.username', 'customers.name AS customer_name', 'items.description AS product_name')
         ->orderBy('offals.created_at', 'DESC')
         ->when($customer, function ($query, $customer) {
             return $query->where('offals.customer_id', $customer);
@@ -120,6 +122,34 @@ class SlaughterController extends Controller
             Toastr::success('Offal weight saved successfully', 'Success');
             return redirect()->back();
 
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            Toastr::error($e->getMessage(), 'Error!');
+            return redirect()->back();
+        }
+    }
+
+    public function updateOffals(Request $request) {
+        try {
+            Offal::where('id', $request->id)->update([
+                'customer_id' => $request->customer_id,
+                'updated_by' => Auth::id(),
+            ]);
+
+            Toastr::success('Offal weight updated successfully', 'Success');
+            return redirect()->back();
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            Toastr::error($e->getMessage(), 'Error!');
+            return redirect()->back();
+        }
+    }
+
+    public function archiveOffals(Request $request) {
+        try {
+            Offal::where('id', $request->id)->update(['archived' => 1]);
+            Toastr::success('Offal weight deleted successfully', 'Success');
+            return redirect()->back();
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             Toastr::error($e->getMessage(), 'Error!');
