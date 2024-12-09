@@ -151,6 +151,10 @@ class SlaughterController extends Controller
 
     public function archiveOffals(Request $request) {
         try {
+            if (Offal::where('id', $request->id)->where('published', 1)->exists()) {
+                Toastr::error('Cannot delete published offal weight', 'Error!');
+                return redirect()->back();
+            }
             Offal::where('id', $request->id)->update(['archived' => 1]);
             Toastr::success('Offal weight deleted successfully', 'Success');
             return redirect()->back();
