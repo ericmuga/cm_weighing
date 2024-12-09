@@ -26,11 +26,7 @@
                         </li>
                         <hr class="dropdown-divider"/>
                         <li>
-                            <a href="{{ route('slaughter_weigh_offals', 'red') }}" class="dropdown-item">Red Offals</a>
-                        </li>
-                        <hr class="dropdown-divider"/>
-                        <li>
-                            <a href="{{ route('slaughter_weigh_offals', 'green') }}" class="dropdown-item">Green Offals</a>
+                            <a href="{{ route('slaughter_weigh_offals') }}" class="dropdown-item">Offals</a>
                         </li>
                     </ul>
                 </li>

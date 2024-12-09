@@ -52,6 +52,8 @@
 
     <!-- toastr -->
     <link rel="stylesheet" href="{{ asset('assets/toastr.min.css') }}">
+
+    @yield('styles')
 </head>
 
 <body class="hold-transition layout-top-nav">
@@ -159,6 +161,9 @@
     <script>
          $(function () {
             $("#example1").DataTable({
+                "columnDefs": [
+                    { "orderable": false, "targets": 'no-sort' } // Disable sorting for columns with the 'no-sort' class
+                ],
                 "responsive": false,
                 "autoWidth": false,
                 "lengthChange": true,                

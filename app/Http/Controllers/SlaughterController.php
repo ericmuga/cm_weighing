@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\ReceiptsUploadCompleted;
 use App\Exports\SlaughterSummaryExport;
+use App\Models\Customer;
 use App\Models\Helpers;
 use App\Models\Item;
 use App\Models\Offal;
@@ -78,34 +79,29 @@ class SlaughterController extends Controller
         return view('slaughter.weigh', compact('title', 'configs', 'receipts', 'helpers', 'slaughter_data'));
     }
 
-    public function weighOffals(Helpers $helpers, $type = null) {
-        $title = "Weigh {{$type}} Offals";
+    public function weighOffals(Helpers $helpers, $customer = null) {
+        $title = "Offals";
 
         $offals_products = Item::where('category', 'cm-offals')->get();
 
-        $configs = Cache::remember('offals_scale_configs', now()->addMinutes(120), function () {
-            return DB::table('scale_configs')
-                ->where('section', 'offals')
-                ->get();
-        });
+        $customers = Customer::where('active', 1)->get();
+
+        $configs = DB::table('scale_configs')->where('section', 'offals')->get();
 
         $entries = Offal::whereDate('offals.created_at', Carbon::today())
-        ->join('users', 'offals.user_id', '=', 'users.id')
-        ->select('offals.*', 'users.username')
+        ->leftJoin('users', 'offals.user_id', '=', 'users.id')
+        ->leftJoin('customers', 'offals.customer_id', '=', 'customers.id')
+        ->join('items', 'offals.product_code', '=', 'items.code')
+        ->where('offals.archived', 0)
+        ->where('offals.created_at', '>=', now()->subDays(2))
+        ->select('offals.*', 'users.username', 'customers.name AS customer_name', 'items.description AS product_name')
         ->orderBy('offals.created_at', 'DESC')
+        ->when($customer, function ($query, $customer) {
+            return $query->where('offals.customer_id', $customer);
+        })
         ->get();
 
-        return view('slaughter.weigh_offals', compact('title', 'configs', 'offals_products', 'entries', 'helpers'));
-    }
-
-    public function weightsTabulate(Helpers $helpers) {
-        $entries = Offal::whereDate('offals.created_at', Carbon::today())
-        ->join('users', 'offals.user_id', '=', 'users.id')
-        ->select('offals.*', 'users.username')
-        ->orderBy('offals.created_at', 'DESC')
-        ->get();
-        
-        return view('partials.table', compact('entries', 'helpers'));
+        return view('slaughter.weigh_offals', compact('title', 'customers', 'configs', 'offals_products', 'entries', 'helpers'));
     }
 
     public function saveOffalsWeights(Request $request, Helpers $helpers) {
@@ -115,18 +111,85 @@ class SlaughterController extends Controller
         }
         try {
             Offal::create([
+                'customer_id' => $request->customer_id,
                 'product_code'=> $request->product_code,
-                'scale_reading'=> $request->scale_reading,
+                'scale_reading'=> $request->reading,
                 'net_weight'=> $request->net_weight,
                 'is_manual'=> $manual_weight,
                 'user_id' => Auth::id(),
             ]);
 
-            return response()->json(['success' => true, 'message' => 'Offal weight saved successfully']);
+            Toastr::success('Offal weight saved successfully', 'Success');
+            return redirect()->back();
 
         } catch (\Exception $e) {
             Log::error($e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Failed to save offal weight. Error: ' . $e->getMessage()]);
+            Toastr::error($e->getMessage(), 'Error!');
+            return redirect()->back();
+        }
+    }
+
+    public function updateOffals(Request $request) {
+        try {
+            Offal::where('id', $request->id)->update([
+                'customer_id' => $request->customer_id,
+                'updated_by' => Auth::id(),
+            ]);
+
+            Toastr::success('Offal weight updated successfully', 'Success');
+            return redirect()->back();
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            Toastr::error($e->getMessage(), 'Error!');
+            return redirect()->back();
+        }
+    }
+
+    public function archiveOffals(Request $request) {
+        try {
+            Offal::where('id', $request->id)->update(['archived' => 1]);
+            Toastr::success('Offal weight deleted successfully', 'Success');
+            return redirect()->back();
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            Toastr::error($e->getMessage(), 'Error!');
+            return redirect()->back();
+        }
+    }
+
+    public function publishOffals(Request $request, Helpers $helpers) {
+        try {
+            $weights = [];
+            foreach ($request->entries as $entry) {
+                $decodedEntry = json_decode($entry);
+                if (Offal::where('id', $decodedEntry->id)->where('published', 0)->exists()) {
+                    $weight = [
+                        'id' => $decodedEntry->id,
+                        'customer_id' => $decodedEntry->customer_id,
+                        'customer_name' => $decodedEntry->customer_name,
+                        'product_code' => $decodedEntry->product_code,
+                        'product_name' => $decodedEntry->product_name,
+                        'scale_reading' => $decodedEntry->scale_reading,
+                        'net_weight' => $decodedEntry->net_weight,
+                        'is_manual' => $decodedEntry->is_manual,
+                        'user_id' => $decodedEntry->user_id,
+                    ];
+                    $weights[] = $weight;
+                }
+            }
+            Log::info('Publishing offals weights:', $weights);
+            $data = [
+                'customer_name' => json_decode($request->entries[0])->customer_name,
+                'customer_id' => json_decode($request->entries[0])->customer_id,
+                'weights' => $weights,
+            ];
+            $helpers->publishToQueue($data, 'offals.bc');
+            Offal::whereIn('id', array_column($weights, 'id'))->update(['published' => 1]);
+            return response()->json(['success' => true, 'message' => 'Offals published successfully']);
+            return redirect()->back();
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to publish offals. Error: ' . $e->getMessage()]);
         }
     }
 
