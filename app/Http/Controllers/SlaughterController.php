@@ -162,7 +162,7 @@ class SlaughterController extends Controller
             $weights = [];
             foreach ($request->entries as $entry) {
                 $decodedEntry = json_decode($entry);
-                if (Offal::where('id', $decodedEntry->id)->where('published', 0)->exists()) {
+                if (Offal::where('id', $decodedEntry->id)->where('published', 0)->where('archived', 0)->exists()) {
                     $weight = [
                         'id' => $decodedEntry->id,
                         'customer_id' => $decodedEntry->customer_id,
