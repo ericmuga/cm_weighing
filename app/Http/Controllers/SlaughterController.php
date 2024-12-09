@@ -185,7 +185,6 @@ class SlaughterController extends Controller
                     $weights[] = $weight;
                 }
             }
-            Log::info('Publishing offals weights:', $weights);
             $data = [
                 'customer_name' => json_decode($request->entries[0])->customer_name,
                 'customer_id' => json_decode($request->entries[0])->customer_id,
