@@ -131,6 +131,10 @@ class SlaughterController extends Controller
 
     public function updateOffals(Request $request) {
         try {
+            if (Offal::where('id', $request->id)->where('published', 1)->exists()) {
+                Toastr::error('Cannot update published offal weight', 'Error!');
+                return redirect()->back();
+            }
             Offal::where('id', $request->id)->update([
                 'customer_id' => $request->customer_id,
                 'updated_by' => Auth::id(),
