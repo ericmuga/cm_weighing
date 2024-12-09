@@ -18,6 +18,7 @@ class AddCustomersToOffals extends Migration
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('set null');
             $table->boolean('archived')->default(false);
             $table->unsignedBigInteger('updated_by')->nullable();
+            $table->boolean('published')->default(false);
         });
     }
 
@@ -33,6 +34,7 @@ class AddCustomersToOffals extends Migration
             $table->dropColumn('customer_id');
             $table->dropColumn('archived');
             $table->dropColumn('updated_by');
+            $table->dropColumn('published');
         });
     }
 }
