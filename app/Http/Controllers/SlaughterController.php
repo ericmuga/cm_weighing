@@ -131,6 +131,10 @@ class SlaughterController extends Controller
 
     public function updateOffals(Request $request) {
         try {
+            if (Offal::where('id', $request->id)->where('published', 1)->exists()) {
+                Toastr::error('Cannot update published offal weight', 'Error!');
+                return redirect()->back();
+            }
             Offal::where('id', $request->id)->update([
                 'customer_id' => $request->customer_id,
                 'updated_by' => Auth::id(),
@@ -147,6 +151,10 @@ class SlaughterController extends Controller
 
     public function archiveOffals(Request $request) {
         try {
+            if (Offal::where('id', $request->id)->where('published', 1)->exists()) {
+                Toastr::error('Cannot delete published offal weight', 'Error!');
+                return redirect()->back();
+            }
             Offal::where('id', $request->id)->update(['archived' => 1]);
             Toastr::success('Offal weight deleted successfully', 'Success');
             return redirect()->back();
@@ -162,7 +170,7 @@ class SlaughterController extends Controller
             $weights = [];
             foreach ($request->entries as $entry) {
                 $decodedEntry = json_decode($entry);
-                if (Offal::where('id', $decodedEntry->id)->where('published', 0)->exists()) {
+                if (Offal::where('id', $decodedEntry->id)->where('published', 0)->where('archived', 0)->exists()) {
                     $weight = [
                         'id' => $decodedEntry->id,
                         'customer_id' => $decodedEntry->customer_id,
@@ -177,7 +185,6 @@ class SlaughterController extends Controller
                     $weights[] = $weight;
                 }
             }
-            Log::info('Publishing offals weights:', $weights);
             $data = [
                 'customer_name' => json_decode($request->entries[0])->customer_name,
                 'customer_id' => json_decode($request->entries[0])->customer_id,
