@@ -29,9 +29,10 @@ Route::prefix('slaughter')->group(function () {
     Route::get('/dashboard', [SlaughterController::class, 'index'])->name('slaughter_dashboard');
     Route::get('/weigh', [SlaughterController::class, 'weigh'])->name('slaughter_weigh');
     Route::get('/offals', [SlaughterController::class, 'weighOffals'])->name('slaughter_weigh_offals');
-    Route::post('/offals/save', [SlaughterController::class, 'saveOffalsWeights'])->name('save_offals');
-    Route::post('/offals/update', [SlaughterController::class, 'updateOffals'])->name('update_offals');
-    Route::post('/offals/archive', [SlaughterController::class, 'archiveOffals'])->name('archive_offals');
+    Route::post('/offals/save', [SlaughterController::class, 'saveOffalsWeights'])->name('offals_save');
+    Route::post('/offals/update', [SlaughterController::class, 'updateOffals'])->name('offals_update');
+    Route::post('/offals/archive', [SlaughterController::class, 'archiveOffals'])->name('offals_archive');
+    Route::post('/offals/publish', [SlaughterController::class, 'publishOffals'])->name('offals_publish');
     Route::get('/table', [SlaughterController::class, 'weightsTabulate'])->name('weights.tabulate');
     Route::post('/edit', [SlaughterController::class, 'edit'])->name('slaughter_edit');
     Route::get('/weigh-data-ajax', [SlaughterController::class, 'loadWeighDataAjax']);
