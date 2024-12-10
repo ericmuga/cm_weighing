@@ -114,7 +114,7 @@ class QAController extends Controller
             ->select('receipt_no', 'agg_no', 'classification')
             ->get();
 
-        if ($qa_graded->isNotEmpty()) {
+        // if ($qa_graded->isNotEmpty()) {
             // Combine receipt_no and agg_no into pairs
             $combined_pairs = $qa_graded->map(function ($item) {
                 return $item->receipt_no . '_' . $item->agg_no;
@@ -142,7 +142,7 @@ class QAController extends Controller
             if ($slaughter_data->isEmpty()) {
                 // Handle case where no slaughter data found
             }
-        }
+        // }
 
         return 1;
     }
