@@ -4,6 +4,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\QAController;
 use App\Http\Controllers\SlaughterController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\CustomerController;
 use Illuminate\Support\Facades\Route;
 use Rap2hpoutre\LaravelLogViewer\LogViewerController;
 
@@ -27,9 +28,12 @@ Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::prefix('slaughter')->group(function () {
     Route::get('/dashboard', [SlaughterController::class, 'index'])->name('slaughter_dashboard');
     Route::get('/weigh', [SlaughterController::class, 'weigh'])->name('slaughter_weigh');
-    Route::get('/offals/{type}', [SlaughterController::class, 'weighOffals'])->name('slaughter_weigh_offals');
+    Route::get('/offals', [SlaughterController::class, 'weighOffals'])->name('slaughter_weigh_offals');
+    Route::post('/offals/save', [SlaughterController::class, 'saveOffalsWeights'])->name('offals_save');
+    Route::post('/offals/update', [SlaughterController::class, 'updateOffals'])->name('offals_update');
+    Route::post('/offals/archive', [SlaughterController::class, 'archiveOffals'])->name('offals_archive');
+    Route::post('/offals/publish', [SlaughterController::class, 'publishOffals'])->name('offals_publish');
     Route::get('/table', [SlaughterController::class, 'weightsTabulate'])->name('weights.tabulate');
-    Route::post('/save-offals-weights', [SlaughterController::class, 'saveOffalsWeights'])->name('slaughter_save_offals_weights');
     Route::post('/edit', [SlaughterController::class, 'edit'])->name('slaughter_edit');
     Route::get('/weigh-data-ajax', [SlaughterController::class, 'loadWeighDataAjax']);
     Route::get('/next-receipt-ajax', [SlaughterController::class, 'nextReceiptAjax']);
@@ -78,3 +82,11 @@ Route::prefix('scale')->group(function () {
     Route::get('/read', [SlaughterController::class, 'readScaleApiService'])->name('read_scale');
 });
 /* -------------------------------- End Scale Configs ------------------------------------------------ */
+
+/* -------------------------------- Start Customers ------------------------------------------------ */
+Route::prefix('customers')->group(function () {
+    Route::get('/', [CustomerController::class, 'listCustomers'])->name('customers');
+    Route::post('/create', [CustomerController::class, 'createCustomer'])->name('create_customer');
+    Route::post('/update/{id}', [CustomerController::class, 'updateCustomer'])->name('update_customer');
+});
+/* -------------------------------- End Customers ------------------------------------------------ */

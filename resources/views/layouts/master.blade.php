@@ -52,6 +52,8 @@
 
     <!-- toastr -->
     <link rel="stylesheet" href="{{ asset('assets/toastr.min.css') }}">
+
+    @yield('styles')
 </head>
 
 <body class="hold-transition layout-top-nav">
@@ -157,14 +159,40 @@
     {!! Toastr::message() !!}
 
     <script>
-        $(function () {
+         $(function () {
             $("#example1").DataTable({
+                "columnDefs": [
+                    { "orderable": false, "targets": 'no-sort' } // Disable sorting for columns with the 'no-sort' class
+                ],
                 "responsive": false,
                 "autoWidth": false,
-                "lengthChange": true,
-                "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
-                // "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
-                "buttons": ["excel", "pdf", "colvis"]
+                "lengthChange": true,                
+                "order": [],
+                "lengthMenu": [
+                    [5, 10, 25, 50, -1],
+                    [5, 10, 25, 50, "All"]
+                ],
+                "buttons": [
+                    {
+                        extend: 'excelHtml5',
+                        exportOptions: {
+                            columns: ':not(.no-export)' // Exclude columns with 'no-export' class
+                        }
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        exportOptions: {
+                            columns: ':not(.no-export)' // Exclude columns with 'no-export' class
+                        }
+                    },
+                    {
+                        extend: 'csvHtml5',
+                        exportOptions: {
+                            columns: ':not(.no-export)' // Exclude columns with 'no-export' class
+                        }
+                    },
+                    "colvis"
+                ],
             }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
         });
 
@@ -172,11 +200,15 @@
             $("#example2").DataTable({
                 "responsive": false,
                 "autoWidth": false,
-                "lengthChange": true,
-                "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
-                // "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
-                "buttons": ["excel", "pdf", "colvis"]
-            }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+                "lengthChange": true,                
+                "order": [],
+                "lengthMenu": [
+                    [5, 10, 25, 50, -1],
+                    [5, 10, 25, 50, "All"]
+                ],
+                // "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
+                "buttons": ["excel", "csv", "pdf", "colvis"]
+            }).buttons().container().appendTo('#example2_wrapper .col-md-6:eq(0)');
         });
 
         $(function () {

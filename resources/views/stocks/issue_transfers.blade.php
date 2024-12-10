@@ -182,7 +182,7 @@
     function updateTare() {
         const totalCrates = document.getElementById('total_crates').value;
         const blackCrates = document.getElementById('black_crates').value;
-        tareInput.value = (totalCrates * 1.8) + ( blackCrates * 0.2);
+        tareInput.value = ((totalCrates * 1.8) + (blackCrates * 0.2)).toFixed(2);
         if (readingInput.value) {
             getNet();
         }
