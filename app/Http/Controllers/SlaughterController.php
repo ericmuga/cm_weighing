@@ -88,12 +88,11 @@ class SlaughterController extends Controller
 
         $configs = DB::table('scale_configs')->where('section', 'offals')->get();
 
-        $entries = Offal::whereDate('offals.created_at', Carbon::today())
+        $entries = Offal::whereDate('offals.created_at', '>=', today()->subDays(2))
         ->leftJoin('users', 'offals.user_id', '=', 'users.id')
         ->leftJoin('customers', 'offals.customer_id', '=', 'customers.id')
         ->join('items', 'offals.product_code', '=', 'items.code')
         ->where('offals.archived', 0)
-        ->where('offals.created_at', '>=', now()->subDays(2))
         ->select('offals.*', 'users.username', 'customers.name AS customer_name', 'items.description AS product_name')
         ->orderBy('offals.created_at', 'DESC')
         ->when($customer, function ($query, $customer) {
@@ -101,7 +100,9 @@ class SlaughterController extends Controller
         })
         ->get();
 
-        return view('slaughter.weigh_offals', compact('title', 'customers', 'configs', 'offals_products', 'entries', 'helpers'));
+        $entryCustomers = $entries->pluck('customer_id', 'customer_name')->unique();
+
+        return view('slaughter.weigh_offals', compact('title', 'customers', 'entryCustomers', 'configs', 'offals_products', 'entries', 'helpers'));
     }
 
     public function saveOffalsWeights(Request $request, Helpers $helpers) {
@@ -169,31 +170,27 @@ class SlaughterController extends Controller
         try {
             $weights = [];
             foreach ($request->entries as $entry) {
-                $decodedEntry = json_decode($entry);
-                if (Offal::where('id', $decodedEntry->id)->where('published', 0)->where('archived', 0)->exists()) {
+                if (Offal::where('id', $entry['id'])->where('published', 0)->where('archived', 0)->exists()) {
                     $weight = [
-                        'id' => $decodedEntry->id,
-                        'customer_id' => $decodedEntry->customer_id,
-                        'customer_name' => $decodedEntry->customer_name,
-                        'product_code' => $decodedEntry->product_code,
-                        'product_name' => $decodedEntry->product_name,
-                        'scale_reading' => $decodedEntry->scale_reading,
-                        'net_weight' => $decodedEntry->net_weight,
-                        'is_manual' => $decodedEntry->is_manual,
-                        'user_id' => $decodedEntry->user_id,
+                        'entry_id' => $entry['id'],
+                        'product_code' => $entry['product_code'],
+                        'product_name' => $entry['product_name'],
+                        'scale_reading' => $entry['scale_reading'],
+                        'net_weight' => $entry['net_weight'],
+                        'is_manual' => $entry['is_manual'],
+                        'user_id' => $entry['user_id'],
                     ];
                     $weights[] = $weight;
                 }
             }
             $data = [
-                'customer_name' => json_decode($request->entries[0])->customer_name,
-                'customer_id' => json_decode($request->entries[0])->customer_id,
+                'customer_name'=> $request->entries[0]['customer_name'],
+                'customer_id'=> $request->entries[0]['customer_id'],
                 'weights' => $weights,
             ];
             $helpers->publishToQueue($data, 'offals.bc');
             Offal::whereIn('id', array_column($weights, 'id'))->update(['published' => 1]);
             return response()->json(['success' => true, 'message' => 'Offals published successfully']);
-            return redirect()->back();
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             return response()->json(['success' => false, 'message' => 'Failed to publish offals. Error: ' . $e->getMessage()]);

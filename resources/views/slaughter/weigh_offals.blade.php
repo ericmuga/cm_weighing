@@ -56,7 +56,7 @@
                             <label class="form-check-label" for="manual_weight">Enter Manual weight</label>
                         </div>
                         <div>
-                            @if(empty($configs))
+                            @if(count($configs) == 0)
                                 <small class="d-block">No comport conifgured</small>
                             @else
                             <small class="d-block mt-2">
@@ -72,11 +72,11 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="tare_weight">Tare-Weight</label>
-                            @if(empty($configs))
+                            @if(count($configs) == 0)
                             <input type="number" class="form-control" id="tare_weight" name="tare_weight" value="0.00" readonly required>
                             @else
                             <input type="number" class="form-control" id="tare_weight" name="tare_weight"
-                                value="{{ number_format($configs[0]->tareweight, 2)?? "" }}" readonly required>
+                                value="{{ number_format($configs[0]->tareweight ?? 0, 2) }}" readonly required>
                             @endif
                         </div>
                     </div>
@@ -110,6 +110,7 @@
 
 <!-- Table of saved entries -->
 <div id="entries" class="collapse my-4">
+
     <!-- offals data Table-->
     <div class="card">
         <!-- /.card-header -->
@@ -118,12 +119,17 @@
                         by latest</small> </span></h3>
         </div>
         <!-- /.card-body -->
-        <form id="form-publish-offals" class="card-body table-responsive" action={{ route('offals_publish') }} method="POST" onsubmit="submitPublishOffals(event)">
-            <button id="publishSubmit" type="submit" class="btn btn-primary mb-2">Push For Invoicing</button>
+        <div class="card-body table-responsive">
+
+            @if(count($entryCustomers) > 0)
+            <button type="button" id="publishBtn" class="btn btn-primary mb-2" data-toggle="modal" data-target="#confirmPublishModal">
+                Push For Invoicing
+            </button>
+            @endif
+
             <table id="example1" class="table table-striped table-bordered table-hover">
                 <thead>
                     <tr>
-                        <th class="no-export no-sort"></th>
                         <th>#</th>
                         <th>Product Code</th>
                         <th>Product Name</th>
@@ -138,7 +144,6 @@
                 </thead>
                 <tfoot>
                     <tr>
-                        <th class="no-export no-sort"></th>
                         <th>#</th>
                         <th>Product Code</th>
                         <th>Product Name</th>
@@ -154,11 +159,6 @@
                 <tbody>
                     @foreach($entries as $entry)
                     <tr>
-                        <td class="no-export no-sort">
-                            @if($entry->published == 0)
-                            <input class="publish-check" type="checkbox" name="offals" value="{{ $entry }}">
-                            @endif
-                        </td>
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $entry->product_code }}</td>
                         <td>{{ $entry->product_name }}</td>
@@ -299,10 +299,10 @@
     </div>
 </div>
 
-<!-- Modal for confirming push for invoicing -->
+<!-- Modal for publishing offals to queue -->
 <div class="modal fade" id="confirmPublishModal" tabindex="-1" role="dialog" aria-labelledby="confirmPublishModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
+        <form action="{{ route('offals_publish') }}" class="modal-content" method="POST" onsubmit="publishOffals(event)">
             <div class="modal-header">
                 <h4 class="modal-title" id="confirmPublishModalLabel">Confirm Push for Invoicing</h4>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -310,11 +310,17 @@
                 </button>
             </div>
             <div class="modal-body p-3">
-               <h5>Selected Entries</h5>
-                <div class="form-group">
-                    Customer: <input type="text" id="selectedCustomer" class="no-input" readonly>
+               <div class="form-group">
+                    <label for="customer">Customer</label>
+                    <select class="form-control" id="publish_customer" name="customer_id" onchange="showCustomerEntries(event)" required>
+                        <option disabled selected value="">Select Customer</option>
+                        @foreach ($customers as $customer)
+                        <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
-                <table class="table table-striped table-bordered">
+
+                <table class="table table-bordered table-hover overflow-auto">
                     <thead>
                         <tr>
                             <th>#</th>
@@ -324,15 +330,14 @@
                         </tr>
                     </thead>
                     <tbody id="selectedEntriesTableBody">
-                        <!-- Rows will be dynamically added here -->
                     </tbody>
                 </table>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="confirmPublishButton">Confirm</button>
+                <button type="submit" class="btn btn-primary" id="confirmPublishButton" disabled>Confirm</button>
             </div>
-        </div>
+        </form>
     </div>
 </div>
 
@@ -432,39 +437,44 @@ function updateArchiveId(event) {
     document.getElementById('archive_id').value = id;
 }
 
-function submitPublishOffals(event) {
-    event.preventDefault();
-    const form = document.getElementById('form-publish-offals');
-    const formData = new FormData(form);
-    const offals = formData.getAll('offals');
-    const customerIds = offals.map(offal => JSON.parse(offal).customer_id);
-    const allSameCustomer = customerIds.every(id => id === customerIds[0]);
+function showCustomerEntries(event) {
+    const input = event.currentTarget;
+    customerId = input.value
 
-    if (!allSameCustomer) {
-        alert('All selected entries must belong to the same customer.');
-        return;
-    }
-
-    const selectedCustomer = document.getElementById('selectedCustomer');
-    selectedCustomer.value = JSON.parse(offals[0]).customer_name;
+    var offals = @json($entries)
+    .filter((entry) => entry.customer_id == customerId)
+    .filter((entry) => entry.published == 0);
 
     const tableBody = document.getElementById('selectedEntriesTableBody');
+    while (tableBody.firstChild) {
+        tableBody.removeChild(tableBody.firstChild);
+    }
 
-    offals.forEach((offal, index) => {
-        console.log('creating row');
-        const entry = JSON.parse(offal);
+    const confirmButton = document.getElementById('confirmPublishButton');
+
+    if (offals.length == 0) {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${entry.product_code}</td>
-            <td>${entry.product_name}</td>
-            <td>${Number(entry.net_weight).toFixed(2)}</td>
+            <td colspan="4" class="text-center">No entries for this customer not pushed for invoicing</td>
         `;
         tableBody.appendChild(row);
-    });
 
-    $('#confirmPublishModal').modal('show');
-    return;
+        confirmButton.disabled = true;
+    } else {
+        offals.forEach((entry, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${entry.product_code}</td>
+                <td>${entry.product_name}</td>
+                <td>${Number(entry.net_weight).toFixed(2)}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        confirmButton.disabled = false;
+    }
+
 }
 
 
@@ -475,17 +485,23 @@ $('#confirmPublishModal').on('hidden.bs.modal', function () {
     }
 });
 
-function publishOffals() {
-    // Get form data
-    const form = document.getElementById('form-publish-offals');
-    const formData = new FormData(form);
-    const url = form.action;
-    const offals = formData.getAll('offals');
+function publishOffals(event) {
+    event.preventDefault();
+    // Hide Confirm Publish Modal
+    $('#confirmPublishModal').modal('hide');
 
     // Show loading modal
     const loadingText = document.getElementById('loading-text');
     loadingText.textContent = 'Pushing for invoicing...';
     $('#loadingModal').modal('show');
+
+
+    // Get form data
+    const form = event.target;
+    const formData = new FormData(form);
+    const customerId = formData.get('customer_id');
+    const url = form.action;
+    const offals = @json($entries).filter((entry) => entry.customer_id == customerId);
 
     try {
         // Send request to server
@@ -497,22 +513,23 @@ function publishOffals() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                entries: formData.getAll('offals')
+                entries: offals
             })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 toastr.success('Offal weights pushed for invoicing');
-                form.reset();
                 location.reload();
             } else {
                 console.error(data);
+                console.log("message error")
                 toastr.error(data.message);
             }
         })
 
     } catch (error) {
+        console.log("catch error");
         console.error(error);
 
         if (error.message) {
@@ -521,36 +538,16 @@ function publishOffals() {
             toastr.error('Failed to push for invoicing');
         }
     } finally {
+        console.log("finally");
         $('#loadingModal').modal('hide');
         return;
     }
 }
 
-document.getElementById('confirmPublishButton').addEventListener('click', function() {
-    $('#confirmPublishModal').modal('hide');
-    publishOffals();
-});
-
 $(document).ready(function () {
     $('.form-prevent-multiple-submits').on('submit', function(){
         $(".btn-prevent-multiple-submits").attr('disabled', true);
     });
-
-    // Check initially if any checkboxes are checked to enable the button
-    checkIfAnyChecked();
-
-    // Listen for changes on the checkboxes
-    $('.publish-check').on('change', function() {
-        checkIfAnyChecked();
-    });
-
-    function checkIfAnyChecked() {
-        if ($('.publish-check:checked').length > 0) {
-            $('#publishSubmit').prop('disabled', false); // Enable the button
-        } else {
-            $('#publishSubmit').prop('disabled', true);  // Disable the button
-        }
-    }
 });
 
 </script>
