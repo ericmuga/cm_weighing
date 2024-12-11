@@ -201,7 +201,7 @@
                             >
                                 <i class="fa fa-trash"></i> Delete</button>
                             @else
-                            <span class="badge badge-warning">no action</span>
+                            <span class="badge badge-warning">published</span>
                             @endif
                         </td>
                     </tr>
