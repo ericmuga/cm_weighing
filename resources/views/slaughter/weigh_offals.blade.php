@@ -57,12 +57,14 @@
                         </div>
                         <div>
                             @if(empty($configs))
-                                <small class="d-block">No comport conifgured</small>
+                                <small class="d-block">No comport configured</small>
                             @else
+                            @if(isset($configs[0]))
                             <small class="d-block mt-2">
                                 <label>Reading from ComPort:</label>
-                                <span id="comport_value" disabled >{{ $configs[0]->comport?? "" }}</span>
+                                <span id="comport_value" disabled >{{ $configs[0]->comport }}</span>
                             </small>
+                            @endif
                             @endif
                             <button type="button" onclick="getScaleReading()" class="btn btn-primary btn-lg">
                                 <i class="fas fa-balance-scale"></i> Weigh
