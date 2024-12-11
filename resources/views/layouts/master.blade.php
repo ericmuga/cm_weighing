@@ -225,9 +225,9 @@
 
     </script>
 
-    @if (app()->environment('production'))
+    <!-- @if (app()->environment('production'))
         @include('prevent-inspection')
-    @endif
+    @endif -->
     
     @yield('scripts')
 

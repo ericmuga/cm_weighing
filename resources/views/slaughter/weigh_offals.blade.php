@@ -78,7 +78,7 @@
                             <input type="number" class="form-control" id="tare_weight" name="tare_weight" value="0.00" readonly required>
                             @else
                             <input type="number" class="form-control" id="tare_weight" name="tare_weight"
-                                value="{{ number_format($configs[0]->tareweight, 2)?? "" }}" readonly required>
+                                value="{{ number_format($configs[0]->tareweight, 2)? '' }}" readonly required>
                             @endif
                         </div>
                     </div>
