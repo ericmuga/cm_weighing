@@ -56,7 +56,7 @@
                             <label class="form-check-label" for="manual_weight">Enter Manual weight</label>
                         </div>
                         <div>
-                            @if(empty($configs))
+                            @if(count($configs) == 0)
                                 <small class="d-block">No comport configured</small>
                             @else
                             @if(isset($configs[0]))
@@ -74,7 +74,7 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="tare_weight">Tare-Weight</label>
-                            @if(empty($configs))
+                            @if(count($configs) == 0)
                             <input type="number" class="form-control" id="tare_weight" name="tare_weight" value="0.00" readonly required>
                             @else
                             <input type="number" class="form-control" id="tare_weight" name="tare_weight"
