@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Helpers;
 use Brian2694\Toastr\Facades\Toastr;
+use Hamcrest\Type\IsString;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -110,7 +111,6 @@ class QAController extends Controller
     {
         $qa_graded = DB::table('qa_grading')
             ->whereDate('slaughter_date', today())
-            ->whereNotNull('classification')
             ->select('receipt_no', 'agg_no', 'classification')
             ->get();
 
@@ -123,17 +123,18 @@ class QAController extends Controller
             $slaughter_data = DB::table('slaughter_data as a')
                 ->whereDate('a.created_at', today())
                 ->whereIn(DB::raw("CONCAT(a.receipt_no, '_', a.agg_no)"), $combined_pairs)
-                ->select('a.settlement_weight', 'a.receipt_no', 'a.agg_no', 'b.classification', 'a.item_code')
                 ->join('qa_grading as b', function ($join) {
                     $join->on('b.receipt_no', '=', 'a.receipt_no')
                         ->on('b.agg_no', '=', 'a.agg_no');
                 })
+                ->leftJoin('receipts', 'a.receipt_no', '=', 'receipts.receipt_no')
+                ->select('a.settlement_weight', 'a.receipt_no', 'a.agg_no', 'b.classification', 'receipts.description as receipt_description', 'a.item_code')
                 ->get();
 
             foreach ($slaughter_data as $d) {
-                # code...
+                $classification = $d->classification ?? $d->receipt_description;
                 
-                $class_type = $this->getClassificationCode($d->classification, $d->settlement_weight, $d->item_code);
+                $class_type = $this->getClassificationCode($classification, $d->settlement_weight, $d->item_code);
 
                 $this->updateClassificationCode($d->receipt_no, $d->agg_no, $class_type);
             }
@@ -277,6 +278,7 @@ class QAController extends Controller
         }
 
         switch ($class_type) {
+            case is_string($class_type) && str_contains($class_type, 'High Grade'):
             case 2: // High Grade
                 if ($settlement_weight < 120) {
                     return 'STDB-119';
@@ -291,6 +293,7 @@ class QAController extends Controller
                 }
                 break;
 
+            case is_string($class_type) && str_contains($class_type, 'Comm'):
             case 3: // Comm-Beef
                 if ($settlement_weight < 120) {
                     return 'CG-120';
