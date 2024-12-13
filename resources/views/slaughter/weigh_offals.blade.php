@@ -74,12 +74,13 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="tare_weight">Tare-Weight</label>
-                            @if(count($configs) == 0)
-                            <input type="number" class="form-control" id="tare_weight" name="tare_weight" value="0.00" readonly required>
-                            @else
-                            <input type="number" class="form-control" id="tare_weight" name="tare_weight"
-                                value="{{ number_format($configs[0]->tareweight, 2)? '' }}" readonly required>
-                            @endif
+                            <select name="tare_weight" id="tare_weight" class="form-control">
+                                <option selected value="0">None</option>
+                                <option value="2">Crate 2kg</option>
+                                <option value="1.8">Crate 1.8kg</option>
+                                <option value="0.1">Hook 100 grams</option>
+                                <option value="1.8">Bucket 1.8 kg</option>
+                            </select>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -247,7 +248,7 @@
                         <input type="number" step="0.01" class="form-control" id="edit_reading" name="reading" readonly>
                     </div>
                     <div class="form-group">
-                        <label for="tare_weight">Net-Weight</label>
+                        <label for="edit_net_weight">Net-Weight</label>
                         <input type="number" class="form-control" id="edit_net_weight" name="edit_net_weight" readonly>
                     </div>
                 </div>
