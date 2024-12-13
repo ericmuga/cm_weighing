@@ -474,6 +474,13 @@ function showCustomerEntries(event) {
             `;
             tableBody.appendChild(row);
         });
+        const totalWeight = offals.reduce((total, entry) => total + Number(entry.net_weight), 0);
+        const totalRow = document.createElement('tr');
+        totalRow.innerHTML = `
+            <td colspan="3" class="text-right font-weight-bold">Total Weight</td>
+            <td class="font-weight-bold">${totalWeight.toFixed(2)}</td>
+        `;
+        tableBody.appendChild(totalRow);
 
         confirmButton.disabled = false;
     }
