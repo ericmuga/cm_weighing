@@ -23,11 +23,11 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="customer">Customer</label>
-                            <select class="form-control select2" id="customer_id" name="customer_id" required>
-                                <option selected disabled value="">Select Customer</option>
+                            <label for="customer_id">Customer</label>
+                            <select class="form-control" id="customer_id" name="customer_id" required>
+                                <option {{ old('customer_id') ? '' : 'selected' }} disabled value="">Select Customer</option>
                                 @foreach ($customers as $customer)
-                                <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                                <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }}>{{ $customer->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -75,11 +75,11 @@
                         <div class="form-group">
                             <label for="tare_weight">Tare-Weight</label>
                             <select name="tare_weight" id="tare_weight" class="form-control" onchange="updateNetWeight()">
-                                <option selected disabled value="0">Select Tare-Weight</option>
-                                <option value="2">Crate 2kg</option>
-                                <option value="1.8">Crate 1.8kg</option>
-                                <option value="0.1">Hook 100 grams</option>
-                                <option value="1.8">Bucket 1.8 kg</option>
+                                <option disabled value="0" {{ old('tare_weight') ? '' : 'selected' }} >Select Tare-Weight</option>
+                                <option value="2" {{ old('tare_weight') == '2' ? 'selected' : '' }}>Crate 2kg</option>
+                                <option value="1.8" {{ old('tare_weight') == '1.8' ? 'selected' : '' }}>Crate 1.8kg</option>
+                                <option value="0.1" {{ old('tare_weight') == '0.1' ? 'selected' : '' }}>Hook 100 grams</option>
+                                <option value="1.8" {{ old('tare_weight') == '1.8' ? 'selected' : '' }}>Bucket 1.8 kg</option>
                             </select>
                         </div>
                     </div>
