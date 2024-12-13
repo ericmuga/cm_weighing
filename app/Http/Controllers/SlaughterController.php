@@ -121,7 +121,7 @@ class SlaughterController extends Controller
             ]);
 
             Toastr::success('Offal weight saved successfully', 'Success');
-            return redirect()->back();
+            return redirect()->back()->withInput();
 
         } catch (\Exception $e) {
             Log::error($e->getMessage());
