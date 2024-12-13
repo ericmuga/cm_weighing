@@ -74,7 +74,7 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="tare_weight">Tare-Weight</label>
-                            <select name="tare_weight" id="tare_weight" class="form-control">
+                            <select name="tare_weight" id="tare_weight" class="form-control" onchange="updateNetWeight()">
                                 <option selected value="0">None</option>
                                 <option value="2">Crate 2kg</option>
                                 <option value="1.8">Crate 1.8kg</option>
