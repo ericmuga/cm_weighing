@@ -47,7 +47,12 @@ class StockController extends Controller
                 ->get();
         });
 
-        $transfers = Transfer::orderBy('created_at', 'desc')->limit(1000)->get();
+        $transfers = DB::table('transfers')
+        ->whereDate('transfers.created_at', '>=', today()->subDays(2))
+        ->leftJoin('items', 'transfers.item_code', '=', 'items.code')
+        ->select('transfers.*', 'items.description as item_description')
+        ->orderBy('transfers.created_at', 'desc')
+        ->get();
 
         return view('stocks.issue_transfers', compact('title','configs', 'products', 'transfers', 'helpers'));
         

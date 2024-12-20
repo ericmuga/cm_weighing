@@ -127,7 +127,8 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Product</th>
+                    <th>Product Code</th>
+                    <th>Product Description</th>
                     <th>Batch No.</th>
                     <th>Scale Reading</th>
                     <th>Net Weight</th>
@@ -143,6 +144,7 @@
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $transfer->item_code }}</td>
+                        <td>{{ $transfer->item_description }}</td>
                         <td>{{ $transfer->batch_no }}</td>
                         <td>{{ number_format($transfer->scale_reading, 2) }}</td>
                         <td>{{ number_format($transfer->net_weight, 2) }}</td>
@@ -157,7 +159,8 @@
             <tfoot>
                 <tr>
                     <th>#</th>
-                    <th>Product</th>
+                    <th>Product Code</th>
+                    <th>Product Description</th>
                     <th>Batch No.</th>
                     <th>Scale Reading</th>
                     <th>Net Weight</th>
