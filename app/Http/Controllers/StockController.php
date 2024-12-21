@@ -6,6 +6,7 @@ use App\Models\Helpers;
 use App\Models\Transfer;
 use App\Models\Item;
 use App\Models\Stock;
+use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -100,7 +101,7 @@ class StockController extends Controller
             Transfer::create([
                 'item_code'=> $request->item_code,
                 'batch_no'=> $request->batch_no,
-                'scale_reading'=> $request->scale_reading,
+                'scale_reading'=> $request->reading,
                 'net_weight'=> $request->net_weight,
                 'no_of_pieces'=> $request->no_of_pieces,
                 'from_location_code'=> $request->from_location_code,
@@ -111,11 +112,14 @@ class StockController extends Controller
                 'user_id' => Auth::id(),
             ]);
 
-            return response()->json(['success' => true, 'message' => 'Transfer saved successfully']);
+            // return response()->json(['success' => true, 'message' => 'Transfer saved successfully']);
+            Toastr::success("Transfer saved successfully", 'Success');
+            return redirect()->back()->withInput();
 
         } catch (\Exception $e) {
             Log::error($e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Failed to save transfer. Error: ' . $e->getMessage()]);
+            Toastr::error($e->getMessage(), 'Error!');
+            return back()->withInput();
         }
     }
 
