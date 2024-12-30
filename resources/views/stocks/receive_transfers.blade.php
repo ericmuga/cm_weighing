@@ -120,7 +120,7 @@
 
 <div id="transferReceiptModal" class="modal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
-      <form class="modal-content" action="{{ route('transfer_update') }}" onsubmit="receiveTransfer()">
+      <form class="modal-content form-prevent-multiple-submits" action="{{ route('transfer_update') }}" onsubmit="receiveTransfer()">
         <div class="modal-header">
           <h5 class="modal-title">Receive Transfer</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -161,6 +161,9 @@
 
 @section('scripts')
 <script>
+    $('.form-prevent-multiple-submits').on('submit', function(){
+        $(".btn-prevent-multiple-submits").attr('disabled', true);
+    });
     editingProductName = document.getElementById('product-name');
     editingBatchNo = document.getElementById('batch-no');
     transferIdInput = document.getElementById('transfer_id');
