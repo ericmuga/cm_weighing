@@ -207,7 +207,7 @@
     }
 
     function getNet() {
-        netInput.value = readingInput.value - tareInput.value;
+        netInput.value = (readingInput.value - tareInput.value).toFixed(2);
     }
 
     function getScaleReading() {
