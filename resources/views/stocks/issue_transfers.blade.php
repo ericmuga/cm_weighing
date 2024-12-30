@@ -5,7 +5,8 @@
     <h3 class="card-header">
         Stocks | Issue Transfers
     </h3>
-    <form id="transfers-form" class="card-group m-4 text-center" onsubmit="saveTransfer()" action="{{ route('save_transfer') }}">   
+    <form id="transfers-form" class="card-group m-4 text-center form-prevent-multiple-submits" onsubmit="saveTransfer()" action="{{ route('save_transfer') }}" method="POST">   
+        @csrf
         <div class="card p-4">
             <div class="form-group">
                 <label for="item_code">Product</label>
@@ -26,11 +27,11 @@
             <div class="form-row">
                 <div class="form-group col-6">
                     <label for="total_crates">Total Crates</label>
-                    <input type="number" class="form-control" id="total_crates" name="total_crates" min="0" oninput="updateTare()" required/>
+                    <input type="number" class="form-control" id="total_crates" name="total_crates" min="0" value="5" max="8" oninput="updateTare()" required/>
                 </div>
                 <div class="form-group col-6">
                     <label for="black_crates">Black Crates</label>
-                    <input type="number" class="form-control" id="black_crates" name="black_crates" min="0" oninput="updateTare()" required/>
+                    <input type="number" class="form-control" id="black_crates" name="black_crates" min="0" value="0" max="5" oninput="updateTare()" required/>
                 </div>
             </div>
 
@@ -54,7 +55,7 @@
             <div class="form-row">
                 <div class="form-group col-6">
                     <label for="tare_weight">Tare Weight</label>
-                    <input type="number" class="form-control" id="tare_weight" name="tare_weight" placeholder="0.00" step='0.01' readonly required/>
+                    <input type="number" class="form-control" id="tare_weight" name="tare_weight" value="9.00" placeholder="0.00" step='0.01' readonly required/>
                 </div>
                 <div class="form-group col-6">
                     <label for="net_weight">Net Weight</label>
@@ -86,26 +87,26 @@
 
             <div class="form-group">
                 <label for="from_location_code">From Location</label>
-                <select class="form-control select2" name="from_location_code" id="from_location_code" required>
-                    <option value="">Select Transfer from Location</option>
-                    <option value="B1020">Slaughter</option>
-                    <option value="B1570">Butchery</option>
-                    <option value="B3535">Despatch</option>
+                <select name="from_location_code" id="from_location_code" class="form-control select2" required>
+                    <option disabled value="" {{ old('from_location_code') ? '' : 'selected' }} >Select Transfer from Location</option>
+                    <option value="B1020" {{ old('from_location_code') == 'B1020' ? 'selected' : '' }}>Slaughter</option>
+                    <option value="B1570" {{ old('from_location_code') == 'B1570' ? 'selected' : '' }}>Butchery</option>
+                    <option value="B3535" {{ old('from_location_code') == 'B3535' ? 'selected' : '' }}>Despatch</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label for="to_location_code">To Location</label>
                 <select class="form-control select2" name="to_location_code" id="to_location_code" required>
-                    <option value="">Select Transfer to Location</option>
-                    <option value="B1020">Slaughter</option>
-                    <option value="B1570">Butchery</option>
-                    <option value="B3535">Despatch</option>
-                    <option value="FCL">FCL</option>
+                    <option value="" {{ old('to_location_code') ? '' : 'selected' }} >Select Transfer to Location</option>
+                    <option value="B1020" {{ old('to_location_code') == 'B1020' ? 'selected' : '' }}>Slaughter</option>
+                    <option value="B1570" {{ old('to_location_code') == 'B1570' ? 'selected' : '' }}>Butchery</option>
+                    <option value="B3535" {{ old('to_location_code') == 'B3535' ? 'selected' : '' }}>Despatch</option>
+                    <option value="FCL" {{ old('to_location_code') == 'FCL' ? 'selected' : '' }}>FCL</option>
                 </select>
             </div>
 
-            <button type="submit" id="save-btn" class="btn btn-primary btn-lg align-self-center">
+            <button type="submit" id="save-btn" class="btn btn-primary btn-lg align-self-center btn-prevent-multiple-submits">
                 <i class="fas fa-paper-plane"></i> Save
             </button>
             
@@ -257,72 +258,14 @@
     }
 
     function saveTransfer() {
-        event.preventDefault();
-        const form = event.target;
-        const formData = new FormData(form);
-        const url = form.action;
-        const saveBtn = document.getElementById('save-btn');
-        saveBtn.disabled = true;
-        saveBtn.classList.add('disabled');
-        saveBtn.originalText = saveBtn.innerHTML;
-        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        // ensure weight is entered
+        if (!formData.get('reading') || !formData.get('net_weight')) {
+            throw new Error('Please enter weight');
+        }
 
-        try {
-
-            // ensure weight is entered
-            if (!formData.get('reading') || !formData.get('net_weight')) {
-                throw new Error('Please enter weight');
-            }
-
-            // ensure from and to locations are not the same
-            if (formData.get('from_location_code') == formData.get('to_location_code')) {
-                throw new Error('From and To locations cannot be the same');
-            }
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]')
-                        .attr('content'),
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    item_code: formData.get('item_code'),
-                    batch_no: formData.get('batch_no'),
-                    scale_reading: formData.get('reading'),
-                    net_weight: formData.get('net_weight'),
-                    from_location_code: formData.get('from_location_code'),
-                    to_location_code: formData.get('to_location_code'),
-                    transfer_type: formData.get('transfer_type'),
-                    narration: formData.get('narration'),
-                    manual_weight: formData.get('manual_weight'),
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    toastr.success('Transfer saved successfully');
-                    form.reset();
-                    location.reload();
-                } else {
-                    console.error(data);
-                    toastr.error(data.message);
-                }
-            })
-
-        } catch (error) {
-            console.error(error);
-
-            if (error.message) {
-                toastr.error(error.message);
-            } else {
-                toastr.error('Failed to save transfer');
-            }
-        } finally {
-            saveBtn.disabled = false;
-            saveBtn.classList.remove('disabled');
-            saveBtn.innerHTML = saveBtn.originalText;
-            return;
+        // ensure from and to locations are not the same
+        if (formData.get('from_location_code') == formData.get('to_location_code')) {
+            throw new Error('From and To locations cannot be the same');
         }
     }
 
