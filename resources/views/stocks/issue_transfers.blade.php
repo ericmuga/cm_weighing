@@ -128,6 +128,7 @@
             <thead>
                 <tr>
                     <th>#</th>
+                    <th>IDT No</th>
                     <th>Product Code</th>
                     <th>Product Description</th>
                     <th>Batch No.</th>
@@ -144,6 +145,7 @@
                 @foreach ($transfers as $transfer)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
+                        <td>{{ $transfer->id }}</td>
                         <td>{{ $transfer->item_code }}</td>
                         <td>{{ $transfer->item_description }}</td>
                         <td>{{ $transfer->batch_no }}</td>
@@ -160,6 +162,7 @@
             <tfoot>
                 <tr>
                     <th>#</th>
+                    <th>IDT No</th>
                     <th>Product Code</th>
                     <th>Product Description</th>
                     <th>Batch No.</th>
@@ -186,7 +189,7 @@
 
         updateTare();
     });
-
+    
     const tareInput = document.getElementById('tare_weight');
     const readingInput = document.getElementById('reading');
     const netInput = document.getElementById('net_weight');
@@ -215,7 +218,7 @@
     }
 
     function getNet() {
-        netInput.value = readingInput.value - tareInput.value;
+        netInput.value = (readingInput.value - tareInput.value).toFixed(2);
     }
 
     function getScaleReading() {
@@ -228,7 +231,7 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]')
                         .attr('content')
                 },
-                url: "{{ url('slaughter/read-scale') }}",
+                url: "{{ route('read_scale') }}",
 
                 data: {
                     'comport': comport,

@@ -926,7 +926,7 @@
         }
 
         var net = total_gross - tareweight;
-        $('#total_net').val(net);
+        $('#total_net').val((Math.round(net * 100) / 100).toFixed(2));
 
         return net;
     }
