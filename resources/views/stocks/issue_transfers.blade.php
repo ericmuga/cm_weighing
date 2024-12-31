@@ -179,6 +179,14 @@
 
 @section('scripts')
 <script>
+     $(document).ready(function () {
+        $('.form-prevent-multiple-submits').on('submit', function(){
+            $(".btn-prevent-multiple-submits").attr('disabled', true);
+        });
+
+        updateTare();
+    });
+
     const tareInput = document.getElementById('tare_weight');
     const readingInput = document.getElementById('reading');
     const netInput = document.getElementById('net_weight');
