@@ -85,6 +85,13 @@
                                             data-vendor="{{ $data->vendor_no }}"><a href="#"
                                                 class="text-warning">pending</a>
                                         </td>
+                                    @elseif($data->classification == null)
+                                        <td class="gradingShow" data-agg_no="{{ $data->agg_no }}"
+                                            data-item_code="{{ $data->item_code }}" data-id="{{ $data->id }}" data-settlement_weight="{{ $data->settlement_weight }}"
+                                            data-item_name="{{ $data->description }}"
+                                            data-vendor="{{ $data->vendor_no }}"><a href="#"
+                                                class="text-info">pending QA</a>
+                                        </td>
                                     @else
                                         <td class="gradingShow" data-agg_no="{{ $data->agg_no }}"
                                             data-item_code="{{ $data->item_code }}" data-id="{{ $data->id }}" data-settlement_weight="{{ $data->settlement_weight }}"
