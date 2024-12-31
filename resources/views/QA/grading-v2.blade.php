@@ -29,9 +29,9 @@
                                 <th>Item Name</th>
                                 <th>Vendor No</th>
                                 <th>Settlement</th>
-                                <th>QA Classification</th>
                                 <th>Weight Classification</th>
                                 <th>Grading Status</th>
+                                <th>QA Classification</th>
                                 <th>Slaughter Date</th>
                             </tr>
                         </thead>
@@ -43,9 +43,9 @@
                                 <th>Item Name</th>
                                 <th>Vendor No</th>
                                 <th>Settlement</th>
-                                <th>QA Classification</th>
                                 <th>Weight Classification</th>
                                 <th>Grading Status</th>
+                                <th>QA Classification</th>
                                 <th>Slaughter Date</th>
                             </tr>
                         </tfoot>
@@ -57,24 +57,7 @@
                                     <td>{{ $data->receipt_no }}</td>
                                     <td>{{ $data->description }}</td>
                                     <td>{{ $data->vendor_no }}</td>
-                                    <td>{{ number_format($data->settlement_weight, 2) }}</td>
-                                    @if($data->classification == 1)
-                                        <td>Premium</td>
-                                    @elseif($data->classification == 2)
-                                        <td>High Grade</td>
-                                    @elseif($data->classification == 3)
-                                        <td>Commercial</td>
-                                    @elseif($data->classification == 4)
-                                        <td>Poor C</td>
-                                    @elseif($data->classification == 5)
-                                        <td>1st grade</td>
-                                    @elseif($data->classification == 6)
-                                        <td>2nd grade</td>
-                                    @elseif($data->classification == 7)
-                                        <td>Class R</td>
-                                    @else
-                                        <td><span class="text-danger">Pending QA Class</span></td>
-                                    @endif
+                                    <td>{{ number_format($data->settlement_weight, 2) }}</td>                                  
 
                                     <td>{{ $data->classification_code }}</td>
 
@@ -99,6 +82,24 @@
                                             data-vendor="{{ $data->vendor_no }}"><a href="#"
                                                 class="text-success">graded</a>
                                         </td>
+                                    @endif
+
+                                    @if($data->classification == 1)
+                                        <td>Premium</td>
+                                    @elseif($data->classification == 2)
+                                        <td>High Grade</td>
+                                    @elseif($data->classification == 3)
+                                        <td>Commercial</td>
+                                    @elseif($data->classification == 4)
+                                        <td>Poor C</td>
+                                    @elseif($data->classification == 5)
+                                        <td>1st grade</td>
+                                    @elseif($data->classification == 6)
+                                        <td>2nd grade</td>
+                                    @elseif($data->classification == 7)
+                                        <td>Class R</td>
+                                    @else
+                                        <td><span class="text-danger">Pending QA Class</span></td>
                                     @endif
                                     <td>{{ $helpers->shortDateTime($data->updated_at) }}</td>
                                 </tr>
