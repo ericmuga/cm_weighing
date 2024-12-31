@@ -51,7 +51,8 @@ class StockController extends Controller
         $transfers = DB::table('transfers')
         ->whereDate('transfers.created_at', '>=', today()->subDays(2))
         ->leftJoin('items', 'transfers.item_code', '=', 'items.code')
-        ->select('transfers.*', 'items.description as item_description')
+        ->leftJoin('users', 'transfers.user_id', '=', 'users.id')
+        ->select('transfers.*', 'items.description as item_description', 'users.username as issuer')
         ->orderBy('transfers.created_at', 'desc')
         ->get();
 
