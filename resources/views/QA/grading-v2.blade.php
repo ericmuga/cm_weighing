@@ -185,6 +185,7 @@
                             <label for="email" class="col-form-label">Bruising</label>
                             <select class="form-control select2 params" name="bruising" id="bruising">
                                 <option disabled selected> select an option </option>
+                                <option value="0">No Bruises </option>
                                 <option value="1">Mild Bruises </option>
                                 <option value="2">Extensive bruises </option>
                                 <option value="3">Severely bruised </option>
@@ -207,10 +208,13 @@
                         <select class="form-control select2 params" name="fat_group" id="fat_group" required>
                             {{-- @if ()
                                 <option disabled selected> select an option </option>
-                                <option value="1"> Premium</option>
-                                <option value="2" selected="selected"> High Grade</option>
+                                <option value="1"> Premium >170kg</option>
+                                <option value="2" selected="selected"> High Grade >170kg</option>
                                 <option value="3"> Commercial</option>
                                 <option value="4"> Poor C</option>
+                                <option value="5"> FAQ >150kg </option>
+                                <option value="6"> Standard >120Kg </option>
+                                <option value="7"> Standard below 120kg </option>
                             @else
                                <option value="5"> Lamb 1st grade</option>                             
                                <option value="6"> Lamb 2nd grade</option>                             
@@ -286,6 +290,9 @@
                 $('#fat_group').append('<option value="2">High Grade</option>');
                 $('#fat_group').append('<option value="3">Commercial</option>');
                 $('#fat_group').append('<option value="4">Poor C</option>');
+                $('#fat_group').append('<option value="5">FAQ >150kg </option>');
+                $('#fat_group').append('<option value="5">Standard >120kg </option>');
+                $('#fat_group').append('<option value="5">Standard <120kg </option>');
             } else {
                 $('#fat_group').append('<option value="5">Lamb 1st grade</option>');
                 $('#fat_group').append('<option value="6">Lamb 2nd grade</option>');
