@@ -218,11 +218,11 @@
                                 <option disabled selected> select an option </option>
                                 <option value="1"> Premium >170kg</option>
                                 <option value="2" selected="selected"> High Grade >170kg</option>
-                                <option value="3"> Commercial</option>
-                                <option value="4"> Poor C</option>
                                 <option value="5"> FAQ >150kg </option>
                                 <option value="6"> Standard >120Kg </option>
                                 <option value="7"> Standard below 120kg </option>
+                                <option value="3"> Commercial</option>
+                                <option value="4"> Poor Commercial</option>
                             @else
                                <option value="5"> Lamb 1st grade</option>                             
                                <option value="6"> Lamb 2nd grade</option>                             
