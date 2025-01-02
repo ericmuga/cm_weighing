@@ -305,6 +305,16 @@ class StockController extends Controller
             $title .= ' for item ' . $request->item_code;
         }
 
+        if ($request->from_idt_no) {
+            $q->where('transfers.id', '>=', $request->from_idt_no);
+            $title .= ' from IDT No. ' . $request->from_idt_no;
+        }
+
+        if ($request->to_idt_no) {
+            $q->where('transfers.id', '<=', $request->to_idt_no);
+            $title .= ' to IDT No. ' . $request->to_idt_no;
+        }
+
         if ($request->user_id) {
             $q->where('transfers.user_id', $request->user_id);
             $username = DB::table('users')->where('id', $request->user_id)->first()->username;
@@ -390,8 +400,6 @@ class StockController extends Controller
         return view('stocks.idt_summary_report', compact('title', 'helpers', 'summary', 'locations', 'issuers', 'products'));
     }
 
-   
-
     public function idtSummaryReportExport(Request $request, Helpers $helpers)
     {
         $title = 'IDT Summary Report';
@@ -432,6 +440,16 @@ class StockController extends Controller
         if ($request->item_code) {
             $q->where('transfers.item_code', $request->item_code);
             $title .= ' for item ' . $request->item_code;
+        }
+
+        if ($request->from_idt_no) {
+            $q->where('transfers.id', '>=', $request->from_idt_no);
+            $title .= ' from IDT No. ' . $request->from_idt_no;
+        }
+
+        if ($request->to_idt_no) {
+            $q->where('transfers.id', '<=', $request->to_idt_no);
+            $title .= ' to IDT No. ' . $request->to_idt_no;
         }
 
         if ($request->user_id) {
