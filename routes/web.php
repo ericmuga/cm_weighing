@@ -71,6 +71,10 @@ Route::prefix('stock')->group(function () {
     Route::post('/transfers/update', [StockController::class, 'transferUpdate'])->name('transfer_update');
     Route::get('/records', [StockController::class, 'stockTake'])->name('stock_take');
     Route::post('/records/save', [StockController::class, 'stockUpdate'])->name('stock_update');
+    Route::get('/idt/report', [StockController::class, 'idtLinesReport'])->name('idt_lines_report');
+    Route::post('/idt/report/export', [StockController::class, 'idtLinesReportExport'])->name('idt_report_export');
+    Route::get('/idt/report_summary', [StockController::class, 'idtSummaryReport'])->name('idt_summary_report');
+    Route::post('/idt/report_summary/export', [StockController::class, 'idtSummaryReportExport'])->name('idt_summary_report_export');
 });
 /* -------------------------------- End Transfers ------------------------------------------------ */
 

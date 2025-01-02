@@ -138,6 +138,7 @@
                     <th>To Location</th>
                     <th>Transfer Type</th>
                     <th>Narration</th>
+                    <th>Issued By</th>
                     <th>Created At</th>
                 </tr>
             </thead>
@@ -155,7 +156,8 @@
                         <td>{{ $transfer->to_location_code }}</td>
                         <td>{{ $transfer->transfer_type }}</td>
                         <td>{{ $transfer->narration }}</td>
-                        <td>{{ $helpers->dateToHumanFormat($transfer->created_at) }}</td>
+                        <td>{{ $transfer->issuer }}</td>
+                        <td>{{ \Carbon\Carbon::parse($transfer->created_at)->format('d/m/Y H:i') }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -172,6 +174,7 @@
                     <th>To Location</th>
                     <th>Transfer Type</th>
                     <th>Narration</th>
+                    <th>Issued By</th>
                     <th>Created At</th>
                 </tr>
             </tfoot>
@@ -182,9 +185,14 @@
 
 @section('scripts')
 <script>
-    $('.form-prevent-multiple-submits').on('submit', function(){
-        $(".btn-prevent-multiple-submits").attr('disabled', true);
+     $(document).ready(function () {
+        $('.form-prevent-multiple-submits').on('submit', function(){
+            $(".btn-prevent-multiple-submits").attr('disabled', true);
+        });
+
+        updateTare();
     });
+
     const tareInput = document.getElementById('tare_weight');
     const readingInput = document.getElementById('reading');
     const netInput = document.getElementById('net_weight');
