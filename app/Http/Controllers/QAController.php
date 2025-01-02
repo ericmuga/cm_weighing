@@ -75,6 +75,7 @@ class QAController extends Controller
                     ->whereDate('c.created_at', '=', today());
             })            
             ->where('a.slaughter_date', today())
+            ->orderBy('a.created_at', 'asc')
             ->get();
 
         return view('QA.grading-v2', compact('title', 'helpers', 'grading_data'));
