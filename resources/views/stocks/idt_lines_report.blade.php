@@ -92,19 +92,19 @@
                 <div class="modal-body">
                     <div class="row">
                         <div class="form-group col-md-6">
-                            <label for="stemplate_date_created_from_flagged">From Date:</label>
+                            <label for="from_date">From Date:</label>
                             <input type="date" class="form-control" name="from_date"
-                                id="stemplate_date_created_from_flagged" autofocus required>
+                                id="stemplate_date_created_from_flagged" required>
                         </div>
                         <div class="form-group col-md-6">
-                            <label for="stemplate_date_created_from_flagged">To Date:</label>
+                            <label for="to_date">To Date:</label>
                             <input type="date" class="form-control" name="to_date"
-                                id="stemplate_date_created_from_flagged" autofocus required>
+                                id="stemplate_date_created_from_flagged" required>
                         </div>
                     </div>
                     <div class="row">
                         <div class="form-group col-md-6">
-                            <label for="stemplate_date_created_from_flagged">From Location:</label>
+                            <label for="from_location">From Location:</label>
                             <select class="form-control" name="from_location" id="from_location">
                                 <option value="">Select From Location</option>
                                 @foreach($locations as $code => $description)
@@ -113,13 +113,23 @@
                             </select>
                         </div>
                         <div class="form-group col-md-6">
-                            <label for="stemplate_date_created_from_flagged">To Location:</label>
+                            <label for="to_location">To Location:</label>
                             <select class="form-control" name="to_location" id="to_location">
                                 <option value="">Select To Location</option>
                                 @foreach($locations as $code => $description)
                                 <option value="{{ $code }}">{{ $description }}</option>
                                 @endforeach
                             </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label for="from_idt_no">From IDT No:</label>
+                            <input type="number" class="form-control" name="from_idt_no" id="from_idt_no" onchange="validateToIDTNo()">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="to_idt_no">To IDT No:</label>
+                            <input type="number" class="form-control" name="to_idt_no" id="to_idt_no" onchange="validateToIDTNo()">
                         </div>
                     </div>
                     <div class="row">
@@ -153,4 +163,18 @@
     </form>
 </div>
 <!-- End Export combined Modal -->
+@endsection
+
+@section('scripts')
+<script>
+    function validateToIDTNo() {
+        var from_idt_no = document.getElementById('from_idt_no').value;
+        var to_idt_no = document.getElementById('to_idt_no').value;
+
+        if (from_idt_no && to_idt_no && (from_idt_no > to_idt_no)) {
+            alert('To IDT No. must be greater than From IDT No.');
+            document.getElementById('to_idt_no').value = '';
+        }
+    }
+</script>
 @endsection
