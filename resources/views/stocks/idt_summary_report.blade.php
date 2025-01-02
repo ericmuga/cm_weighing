@@ -67,7 +67,7 @@
 
 <!-- Start Export combined Modal -->
 <div class="modal fade" id="export_data" tabindex="-1" role="dialog" aria-hidden="true">
-    <form id="form-orders-export" action="{{ route('idt_summary_report_export') }}" method="POST">
+    <form id="form-orders-export" action="{{ route('idt_summary_report_export') }}" method="POST" class="form-prevent-multiple-submits">
         @csrf
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
@@ -143,7 +143,7 @@
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary float-left" type="button" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success btn-lg  float-right"><i class="fa fa-send"></i>
+                    <button type="submit" class="btn btn-success btn-lg  float-right  btn-prevent-multiple-submits"><i class="fa fa-send"></i>
                         Export</button>
                 </div>
             </div>
