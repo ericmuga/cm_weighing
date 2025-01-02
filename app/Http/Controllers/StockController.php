@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\IDTLinesExport;
+use App\Exports\IDTSummaryExport;
 use App\Models\Helpers;
 use App\Models\Transfer;
 use App\Models\Item;
@@ -12,6 +14,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Session;
 
 class StockController extends Controller
 {
@@ -177,5 +181,273 @@ class StockController extends Controller
             Log::error($e->getMessage());
             return response()->json(['status' => 'error', 'message' => 'Failed to save stock. Error: ' . $e->getMessage()]);
         }
+    }
+
+    public function idtLinesReport(Request $request, Helpers $helpers, $filter = null)
+    {
+        $title = "IDT Report";
+
+        $q = DB::table('transfers')
+            ->leftJoin('users', 'transfers.user_id', '=', 'users.id')
+            ->leftJoin('items', 'transfers.item_code', '=', 'items.code')
+            ->select(
+                'transfers.id',
+                'transfers.item_code',
+                'items.description as item_description',
+                'transfers.net_weight',
+                'transfers.no_of_pieces',
+                'transfers.batch_no',
+                'transfers.from_location_code',
+                'transfers.to_location_code',
+                'users.username as issuer',
+                'transfers.narration',
+                'transfers.created_at'
+                )
+            ->orderBy('transfers.created_at', 'DESC');
+       
+        if ($request->from_location) {
+            $q->where('transfers.from_location_code', $request->from_location);
+        }
+
+        if ($request->to_location) {
+            $q->where('transfers.to_location_code', $request->to_location);
+        }
+
+        if ($request->from_date) {
+            $q->whereDate('transfers.created_at', '>=', $request->from_date);
+        }
+
+        if ($request->to_date) {
+            $q->whereDate('transfers.created_at', '<=', $request->to_date);
+        }
+
+        if ($request->item_code) {
+            $q->where('transfers.item_code', $request->item_code);
+        }
+
+        if ($request->user_id) {
+            $q->where('transfers.user_id', $request->user_id);
+        }
+
+        if ($request->item_code) {
+            $q->where('transfers.item_code', $request->item_code);
+        }
+
+        if (!$request->from_date && !$request->to_date && !$request->from_location && !$request->to_location && !$request->item_code && !$request->user_id && !$request->item_code) {
+            $q->whereDate('transfers.created_at', '>=', now()->subDays(30));
+        }
+
+        $issuers = DB::table('transfers')
+            ->leftJoin('users', 'transfers.user_id', '=', 'users.id')
+            ->whereDate('transfers.created_at', '>=', now()->subDays(30))
+            ->select('users.username', 'users.id')
+            ->distinct()
+            ->get();
+
+        $entries = $q->get();
+
+        $locations = [
+            'B1020' => 'Slaughter',
+            'B1570' => 'Butchery',
+            'B3535' => 'Despatch',
+            'FCL' => 'FCL',
+        ];
+
+        $products = Cache::remember('cm_items', now()->addMinutes(120), function () {
+            return Item::all();
+        });
+
+        return view('stocks.idt_lines_report', compact('title', 'helpers', 'entries', 'locations', 'issuers', 'products'));
+    }
+
+    public function idtLinesReportExport(Request $request, Helpers $helpers)
+    {
+        $title = 'IDT Lines Report';
+        $q = DB::table('transfers')
+            ->leftJoin('users', 'transfers.user_id', '=', 'users.id')
+            ->leftJoin('items', 'transfers.item_code', '=', 'items.code')
+            ->select(
+                'transfers.id',
+                'transfers.item_code',
+                'items.description as item_description',
+                'transfers.net_weight',
+                'transfers.no_of_pieces',
+                'transfers.from_location_code',
+                'transfers.to_location_code',
+                'users.username as issuer',
+                'transfers.narration',
+                'transfers.created_at'
+                )
+            ->orderBy('transfers.created_at', 'DESC');
+       
+        if ($request->from_location) {
+            $q->where('transfers.from_location_code', $request->from_location);
+            $title .= ' from location ' . $request->from_location;
+        }
+
+        if ($request->to_location) {
+            $q->where('transfers.to_location_code', $request->to_location);
+            $title .= ' to location ' . $request->from_location;
+        }
+
+        if ($request->from_date) {
+            $q->whereDate('transfers.created_at', '>=', $request->from_date);
+            $title .= ' from ' . $request->from_date;
+        }
+
+        if ($request->to_date) {
+            $q->whereDate('transfers.created_at', '<=', $request->to_date);
+            $title .= ' to ' . $request->to_date;
+        }
+
+        if ($request->item_code) {
+            $q->where('transfers.item_code', $request->item_code);
+            $title .= ' for item ' . $request->item_code;
+        }
+
+        if ($request->user_id) {
+            $q->where('transfers.user_id', $request->user_id);
+            $username = DB::table('users')->where('id', $request->user_id)->first()->username;
+            $title .= ' issued by ' . $username;
+        }
+
+        if (!$request->from_date && !$request->to_date && !$request->from_location && !$request->to_location && !$request->item_code && !$request->user_id) {
+            $q->whereDate('transfers.created_at', '>=', now()->subDays(30));
+        }
+
+        $data = $q->get();
+
+        $exports = Session::put('session_export_data', $data);
+
+        return Excel::download(new IDTLinesExport,  $title . '.xlsx');
+    }
+
+    public function idtSummaryReport(Request $request, Helpers $helpers, $filter = null)
+    {
+        $title = "IDT Report";
+
+        $q = DB::table('transfers')
+        ->leftJoin('users', 'transfers.user_id', '=', 'users.id')
+        ->leftJoin('items', 'transfers.item_code', '=', 'items.code')
+        ->select(
+            'transfers.item_code',
+            'items.description as item_description',
+            \DB::raw('SUM(net_weight) as total_weight'),
+            \DB::raw('SUM(no_of_pieces) as total_pieces'),
+            'transfers.from_location_code',
+            'transfers.to_location_code',
+            )
+        ->groupBy('item_code', 'items.description', 'from_location_code', 'to_location_code');
+       
+        if ($request->from_location) {
+            $q->where('transfers.from_location_code', $request->from_location);
+        }
+
+        if ($request->to_location) {
+            $q->where('transfers.to_location_code', $request->to_location);
+        }
+
+        if ($request->from_date) {
+            $q->whereDate('transfers.created_at', '>=', $request->from_date);
+        }
+
+        if ($request->to_date) {
+            $q->whereDate('transfers.created_at', '<=', $request->to_date);
+        }
+
+        if ($request->item_code) {
+            $q->where('transfers.item_code', $request->item_code);
+        }
+
+        if ($request->user_id) {
+            $q->where('transfers.user_id', $request->user_id);
+        }
+
+        if (!$request->from_date && !$request->to_date && !$request->from_location && !$request->to_location && !$request->item_code && !$request->user_id) {
+            $q->whereDate('transfers.created_at', '>=', now()->subDays(30));
+        }
+
+        $issuers = DB::table('transfers')
+            ->leftJoin('users', 'transfers.user_id', '=', 'users.id')
+            ->whereDate('transfers.created_at', '>=', now()->subDays(30))
+            ->select('users.username', 'users.id')
+            ->distinct()
+            ->get();
+
+        $summary = $q->get();
+
+        $locations = [
+            'B1020' => 'Slaughter',
+            'B1570' => 'Butchery',
+            'B3535' => 'Despatch',
+            'FCL' => 'FCL',
+        ];
+
+        $products = Cache::remember('cm_items', now()->addMinutes(120), function () {
+            return Item::all();
+        });
+
+        return view('stocks.idt_summary_report', compact('title', 'helpers', 'summary', 'locations', 'issuers', 'products'));
+    }
+
+   
+
+    public function idtSummaryReportExport(Request $request, Helpers $helpers)
+    {
+        $title = 'IDT Summary Report';
+
+        $q = DB::table('transfers')
+            ->leftJoin('users', 'transfers.user_id', '=', 'users.id')
+            ->leftJoin('items', 'transfers.item_code', '=', 'items.code')
+            ->select(
+                'transfers.item_code',
+                'items.description as item_description',
+                \DB::raw('SUM(net_weight) as total_weight'),
+                \DB::raw('SUM(no_of_pieces) as total_pieces'),
+                'transfers.from_location_code',
+                'transfers.to_location_code',
+                )
+            ->groupBy('item_code', 'items.description', 'from_location_code', 'to_location_code');
+       
+        if ($request->from_location) {
+            $q->where('transfers.from_location_code', $request->from_location);
+            $title .= ' from location ' . $request->from_location;
+        }
+
+        if ($request->to_location) {
+            $q->where('transfers.to_location_code', $request->to_location);
+            $title .= ' to location ' . $request->from_location;
+        }
+
+        if ($request->from_date) {
+            $q->whereDate('transfers.created_at', '>=', $request->from_date);
+            $title .= ' from ' . $request->from_date;
+        }
+
+        if ($request->to_date) {
+            $q->whereDate('transfers.created_at', '<=', $request->to_date);
+            $title .= ' to ' . $request->to_date;
+        }
+
+        if ($request->item_code) {
+            $q->where('transfers.item_code', $request->item_code);
+            $title .= ' for item ' . $request->item_code;
+        }
+
+        if ($request->user_id) {
+            $q->where('transfers.user_id', $request->user_id);
+            $username = DB::table('users')->where('id', $request->user_id)->first()->username;
+            $title .= ' issued by ' . $username;
+        }
+
+        if (!$request->from_date && !$request->to_date && !$request->from_location && !$request->to_location && !$request->item_code && !$request->user_id) {
+            $q->whereDate('transfers.created_at', '>=', now()->subDays(30));
+        }
+
+        $data = $q->get();
+
+        $exports = Session::put('session_export_data', $data);
+
+        return Excel::download(new IDTSummaryExport, $title . '.xlsx');
     }
 }

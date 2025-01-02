@@ -45,6 +45,19 @@
                         </li>
                     </ul>
                 </li>
+                <li class="nav-item dropdown">
+                    <a id="dropdownSubMenu3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                        class="nav-link dropdown-toggle">Data management</a>
+                    <ul aria-labelledby="dropdownSubMenu3" class="dropdown-menu border-0 shadow">
+                        <li>
+                            <a href="{{ route('idt_lines_report') }}" class="dropdown-item">IDT Lines report</a>
+                        </li>
+                        <hr class="dropdown-divider" />
+                        <li>
+                            <a href="{{ route('idt_summary_report') }}" class="dropdown-item">IDT Summary report</a>
+                        </li>
+                    </ul>
+                </li>
             </ul>
 
             <!-- SEARCH FORM -->
