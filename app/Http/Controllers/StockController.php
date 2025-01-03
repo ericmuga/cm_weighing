@@ -114,6 +114,7 @@ class StockController extends Controller
                 'transfer_type'=> $transfer_type,
                 'narration'=> $request->narration,
                 'manual_weight'=> $manual_weight,
+                'vehicle_no'=> $request->vehicle_no,
                 'user_id' => Auth::id(),
             ]);
 

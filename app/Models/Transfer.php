@@ -22,5 +22,6 @@ class Transfer extends Model
         'received_pieces',
         'received_by',
         'received_date',
+        'vehicle_no',
     ];
 }
