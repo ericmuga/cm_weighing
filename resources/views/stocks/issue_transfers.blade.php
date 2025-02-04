@@ -97,12 +97,21 @@
 
             <div class="form-group">
                 <label for="to_location_code">To Location</label>
-                <select class="form-control select2" name="to_location_code" id="to_location_code" required>
+                <select class="form-control select2" name="to_location_code" id="to_location_code" required onchange="toggleVehicleInput()">
                     <option value="" {{ old('to_location_code') ? '' : 'selected' }} >Select Transfer to Location</option>
                     <option value="B1020" {{ old('to_location_code') == 'B1020' ? 'selected' : '' }}>Slaughter</option>
                     <option value="B1570" {{ old('to_location_code') == 'B1570' ? 'selected' : '' }}>Butchery</option>
                     <option value="B3535" {{ old('to_location_code') == 'B3535' ? 'selected' : '' }}>Despatch</option>
                     <option value="FCL" {{ old('to_location_code') == 'FCL' ? 'selected' : '' }}>FCL</option>
+                </select>
+            </div>
+
+            <div id="vehicle-form-group" class="form-group" hidden>
+                <label for="vehicle_no">Vehichle No.</label>
+                <select class="form-control select2" name="vehicle_no" id="vehicle_no">
+                    <option value="" {{ old('vehicle_no') ? '' : 'selected' }} disabled >Select Vehicle</option>
+                    <option value="KAQ714R" {{ old('vehicle_no') ? 'KAQ714R' : 'selected' }} >KAQ 714R</option>
+                    <option value="KAS004G" {{ old('vehicle_no') == 'KAS004G' ? 'selected' : '' }}>KAS 004G</option>
                 </select>
             </div>
 
@@ -137,6 +146,7 @@
                     <th>From Location</th>
                     <th>To Location</th>
                     <th>Transfer Type</th>
+                    <th>Vehichle No.</th>
                     <th>Narration</th>
                     <th>Issued By</th>
                     <th>Created At</th>
@@ -155,6 +165,7 @@
                         <td>{{ $transfer->from_location_code }}</td>
                         <td>{{ $transfer->to_location_code }}</td>
                         <td>{{ $transfer->transfer_type }}</td>
+                        <td>{{ $transfer->vehicle_no ?? 'N/A' }}</td>
                         <td>{{ $transfer->narration }}</td>
                         <td>{{ $transfer->issuer }}</td>
                         <td>{{ \Carbon\Carbon::parse($transfer->created_at)->format('d/m/Y H:i') }}</td>
@@ -173,6 +184,7 @@
                     <th>From Location</th>
                     <th>To Location</th>
                     <th>Transfer Type</th>
+                    <th>Vehichle No.</th>
                     <th>Narration</th>
                     <th>Issued By</th>
                     <th>Created At</th>
@@ -191,6 +203,8 @@
         });
 
         updateTare();
+
+        toggleVehicleInput();
     });
 
     const tareInput = document.getElementById('tare_weight');
@@ -217,6 +231,19 @@
             readingInput.readOnly = true;
             readingInput.value = '';
             netInput.value = '';
+        }
+    }
+
+    function toggleVehicleInput() {
+        const vehichleFormGroup = document.getElementById('vehicle-form-group');
+        const vehichleInput = document.getElementById('vehichle_no');
+        const sendLocation = document.getElementById('to_location_code').value;
+        if (sendLocation == 'FCL') {
+            vehichleFormGroup.removeAttribute('hidden');
+            vehichleInput.setAttribute('required', true);
+        } else {
+            vehichleFormGroup.setAttribute('hidden', true);
+            vehichleInput.removeAttribute('required');
         }
     }
 
