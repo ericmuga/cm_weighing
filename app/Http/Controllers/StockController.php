@@ -17,6 +17,17 @@ use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Session;
 
+if (!defined('SOCKET_EAGAIN')) {
+    define('SOCKET_EAGAIN', 11);
+}
+
+if (!defined('SOCKET_EWOULDBLOCK')) {
+    define('SOCKET_EWOULDBLOCK', 11);
+}
+
+if (!defined('SOCKET_EINTR')) {
+    define('SOCKET_EINTR', 4);
+}
 class StockController extends Controller
 {
     public function __construct()
