@@ -98,7 +98,7 @@
             <div class="form-group">
                 <label for="to_location_code">To Location</label>
                 <select class="form-control select2" name="to_location_code" id="to_location_code" required onchange="toggleVehicleInput()">
-                    <option value="" {{ old('to_location_code') ? '' : 'selected' }} >Select Transfer to Location</option>
+                    <option value="" {{ old('to_location_code') == '' ? 'selected' : '' }} >Select Transfer to Location</option>
                     <option value="B1020" {{ old('to_location_code') == 'B1020' ? 'selected' : '' }}>Slaughter</option>
                     <option value="B1570" {{ old('to_location_code') == 'B1570' ? 'selected' : '' }}>Butchery</option>
                     <option value="B3535" {{ old('to_location_code') == 'B3535' ? 'selected' : '' }}>Despatch</option>
@@ -107,11 +107,13 @@
             </div>
 
             <div id="vehicle-form-group" class="form-group" hidden>
-                <label for="vehicle_no">Vehichle No.</label>
+                <label for="vehicle_no">Vehicle No.</label>
                 <select class="form-control select2" name="vehicle_no" id="vehicle_no">
                     <option value="" {{ old('vehicle_no') ? '' : 'selected' }} disabled >Select Vehicle</option>
                     <option value="KAQ714R" {{ old('vehicle_no') ? 'KAQ714R' : 'selected' }} >KAQ 714R</option>
                     <option value="KAS004G" {{ old('vehicle_no') == 'KAS004G' ? 'selected' : '' }}>KAS 004G</option>
+                    <option value="KCE015W" {{ old('vehicle_no') == 'KCE015W' ? 'selected' : '' }}>KCE 015W</option>
+                    <option value="KAX793L" {{ old('vehicle_no') == 'KAX793L' ? 'selected' : '' }}>KAX 793L</option>
                 </select>
             </div>
 
@@ -204,7 +206,7 @@
 
         updateTare();
 
-        toggleVehicleInput();
+        // toggleVehicleInput();
     });
 
     const tareInput = document.getElementById('tare_weight');
@@ -236,7 +238,7 @@
 
     function toggleVehicleInput() {
         const vehichleFormGroup = document.getElementById('vehicle-form-group');
-        const vehichleInput = document.getElementById('vehichle_no');
+        const vehichleInput = document.getElementById('vehicle_no');
         const sendLocation = document.getElementById('to_location_code').value;
         if (sendLocation == 'FCL') {
             vehichleFormGroup.removeAttribute('hidden');
