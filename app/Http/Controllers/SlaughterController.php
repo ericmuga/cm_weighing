@@ -248,7 +248,7 @@ class SlaughterController extends Controller
         try {
             if (!($request->item_code == 'BG1101') && !($request->item_code == 'BG1201')) {
                 # insert for beef
-                DB::table('slaughter_data')->insert([
+                $data = [
                     'agg_no' => $request->agg_no,
                     'receipt_no' => $request->receipt_no,
                     'item_code' => $helpers->transformToCarcassCode($request->item_code),
@@ -262,10 +262,11 @@ class SlaughterController extends Controller
                     'settlement_weight' => $request->settlement_weight,
                     'classification_code' => $request->classification_code,
                     'user_id' => Auth::id(),
-                ]);
+                ];
+                DB::table('slaughter_data')->insert($data);
             } else {
                 # insert for lamb/goat
-                DB::table('slaughter_data')->insert([
+                $data = [
                     'agg_no' => $request->agg_no,
                     'receipt_no' => $request->receipt_no,
                     'item_code' => $helpers->transformToCarcassCode($request->item_code),
@@ -277,8 +278,11 @@ class SlaughterController extends Controller
                     'settlement_weight' => $request->settlement_weight,
                     'classification_code' => $request->classification_code,
                     'user_id' => Auth::id(),
-                ]);
+                ];
+                DB::table('slaughter_data')->insert($data);
             }
+
+            // $helpers->publishToQueue($data, 'cm_slaughter.bc');
 
             Toastr::success('record added successfully', 'Success');
             return redirect()
