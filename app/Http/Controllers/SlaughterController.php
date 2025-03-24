@@ -282,7 +282,7 @@ class SlaughterController extends Controller
                 DB::table('slaughter_data')->insert($data);
             }
 
-            $helpers->publishToQueue($data, 'cm_slaughter.bc');
+            //$helpers->publishToQueue($data, 'cm_slaughter.bc');
 
             Toastr::success('record added successfully', 'Success');
             return redirect()
