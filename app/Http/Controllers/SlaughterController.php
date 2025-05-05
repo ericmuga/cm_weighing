@@ -359,11 +359,9 @@ class SlaughterController extends Controller
         $validator = Validator::make($request->all(), [
             'file' => 'required|mimes:csv,txt',
             'slaughter_date' => 'required',
-
         ]);
 
         if ($validator->fails()) {
-            # failed validation
             $messages = $validator->errors();
             foreach ($messages->all() as $message) {
                 Toastr::error($message, 'Error!');
@@ -371,56 +369,57 @@ class SlaughterController extends Controller
             return back();
         }
 
-        // upload
         $database_date = Carbon::parse($request->slaughter_date);
 
-        // forgetCache data
         $helpers->forgetCache('lined_up');
         $helpers->forgetCache('weigh_receipts');
         $helpers->forgetCache('imported_receipts');
 
         try {
-            //code...
             DB::transaction(function () use ($request, $helpers, $database_date) {
-
-                //delete existing records of same slaughter date
                 DB::table('receipts')->where('slaughter_date', $database_date)->delete();
 
                 $fileD = fopen($request->file, "r");
-                // $column = fgetcsv($fileD); // skips first row as header
-
+                $rowData = [];
                 while (!feof($fileD)) {
                     $rowData[] = fgetcsv($fileD);
                 }
 
                 foreach ($rowData as $key => $row) {
+                    if (empty($row) || count($row) < 8) {
+                        Log::warning('Skipping invalid row: ', $row);
+                        continue;
+                    }
 
-                    DB::table('receipts')->insert(
-                        [
+                    try {
+                        // Sanitize the vendor_name to remove invalid characters
+                        $row[3] = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $row[3]);
+
+                        DB::table('receipts')->insert([
                             'receipt_no' => $row[0],
                             'vendor_no' => $row[2],
-                            'vendor_name' => $row[3],
-                            'receipt_date' => $row[4],
+                            'vendor_name' => $row[3], // Sanitized name
+                            'receipt_date' => Carbon::createFromFormat('d/m/y', $row[4])->format('Y-m-d'),
                             'item_code' => $row[5],
                             'description' => $row[6],
                             'received_qty' => $row[7],
                             'user_id' => Auth::id(),
                             'slaughter_date' => $database_date,
-                        ]
-                    );
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error('Error inserting row: ' . json_encode($row) . ' - ' . $e->getMessage());
+                    }
                 }
             });
 
-            // info($database_date);
-
             event(new ReceiptsUploadCompleted($database_date));
 
-            Toastr::success('receipts uploaded successfully', 'Success');
+            Toastr::success('Receipts uploaded successfully', 'Success');
             return redirect()->back();
         } catch (\Exception $e) {
-            Toastr::error($e->getMessage(), 'Error Occurred. Wrong Data format!. Records not saved!');
-            return back()
-                ->withInput();
+            Log::error('Error in importReceipts: ' . $e->getMessage());
+            Toastr::error('Error occurred. Wrong data format! Records not saved!');
+            return back()->withInput();
         }
     }
 
