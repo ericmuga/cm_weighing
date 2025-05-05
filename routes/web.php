@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ButcheryController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\QAController;
 use App\Http\Controllers\SlaughterController;
@@ -92,5 +93,15 @@ Route::prefix('customers')->group(function () {
     Route::get('/', [CustomerController::class, 'listCustomers'])->name('customers');
     Route::post('/create', [CustomerController::class, 'createCustomer'])->name('create_customer');
     Route::post('/update/{id}', [CustomerController::class, 'updateCustomer'])->name('update_customer');
+});
+/* -------------------------------- End Customers ------------------------------------------------ */
+
+/* -------------------------------- Start Butchery ------------------------------------------------ */
+Route::prefix('butchery')->group(function () {
+    Route::get('/dashboard', [ButcheryController::class, 'dashboard'])->name('butchery_dashboard');
+    Route::get('/scale2', [ButcheryController::class, 'scale2'])->name('butchery_scale2');
+    Route::post('/scale2/save', [ButcheryController::class, 'scale2Save'])->name('butchery_scale2_save');
+    Route::get('/scale3', [ButcheryController::class, 'scale3'])->name('butchery_scale_3');
+    
 });
 /* -------------------------------- End Customers ------------------------------------------------ */

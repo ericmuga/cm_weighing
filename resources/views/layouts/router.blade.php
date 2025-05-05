@@ -33,7 +33,7 @@
             </div>
             <div class="card p-2 bg-danger" style="height: 250px">
                 <a class="card-body text-center card-block stretched-link text-decoration-none"
-                    href="#">
+                    href="{{ route('butchery_dashboard') }}">
                     <h4 class="card-title">Butchery</h4>
                     <p class="card-text">This Inteface is in development
                     </p>
