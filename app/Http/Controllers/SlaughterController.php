@@ -395,14 +395,26 @@ class SlaughterController extends Controller
                         // Sanitize the vendor_name to remove invalid characters
                         $row[3] = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $row[3]);
 
+                        // Parse the receipt_date with the correct format (mm/dd/yy)
+                        try {
+                            // Sanitize the date string
+                            $cleanDate = str_replace('\\', '', trim($row[5]));
+                            $receiptDate = Carbon::createFromFormat('m/d/y', $cleanDate)->format('d/m/Y');
+
+                            info('Parsed db date: ' . $receiptDate);
+                        } catch (\Exception $e) {
+                            Log::error('Invalid date format for row: ' . json_encode($row) . ' - ' . $e->getMessage());
+                            continue; // Skip this row
+                        }
+
                         DB::table('receipts')->insert([
                             'receipt_no' => $row[0],
-                            'vendor_no' => $row[2],
-                            'vendor_name' => $row[3], // Sanitized name
-                            'receipt_date' => Carbon::createFromFormat('d/m/y', $row[4])->format('Y-m-d'),
-                            'item_code' => $row[5],
-                            'description' => $row[6],
-                            'received_qty' => $row[7],
+                            'vendor_no' => $row[3],
+                            'vendor_name' => $row[4], // Sanitized name
+                            'receipt_date' => $receiptDate,
+                            'item_code' => $row[6],
+                            'description' => $row[7],
+                            'received_qty' => $row[8],
                             'user_id' => Auth::id(),
                             'slaughter_date' => $database_date,
                         ]);
