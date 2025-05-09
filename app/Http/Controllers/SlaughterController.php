@@ -398,7 +398,7 @@ class SlaughterController extends Controller
                         // Parse the receipt_date with the correct format (mm/dd/yy)
                         try {
                             // Sanitize the date string
-                            $cleanDate = str_replace('\\', '', trim($row[5]));
+                            $cleanDate = str_replace('\\', '', trim($row[4]));
                             $receiptDate = Carbon::createFromFormat('m/d/y', $cleanDate)->format('d/m/Y');
 
                             info('Parsed db date: ' . $receiptDate);
@@ -409,12 +409,12 @@ class SlaughterController extends Controller
 
                         DB::table('receipts')->insert([
                             'receipt_no' => $row[0],
-                            'vendor_no' => $row[3],
-                            'vendor_name' => $row[4], // Sanitized name
+                            'vendor_no' => $row[2],
+                            'vendor_name' => $row[3], // Sanitized name
                             'receipt_date' => $receiptDate,
-                            'item_code' => $row[6],
-                            'description' => $row[7],
-                            'received_qty' => $row[8],
+                            'item_code' => $row[5],
+                            'description' => $row[6],
+                            'received_qty' => $row[7],
                             'user_id' => Auth::id(),
                             'slaughter_date' => $database_date,
                         ]);
