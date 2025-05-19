@@ -15,7 +15,7 @@ class CreateButcherySidesTable extends Migration
     {
         Schema::create('butchery_sides', function (Blueprint $table) {
             $table->id();
-            $table->string('product_code', 50)->unique();
+            $table->string('product_code', 50);
             $table->integer('carcass_count')->nullable();
             $table->double('scale_reading', 8, 2);
             $table->double('tareweight', 8, 2);

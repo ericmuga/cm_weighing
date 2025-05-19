@@ -24,7 +24,7 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="customer_id">Customer</label>
-                            <select class="form-control" id="customer_id" name="customer_id" required>
+                            <select class="form-control select2" id="customer_id" name="customer_id" required>
                                 <option {{ old('customer_id') ? '' : 'selected' }} disabled value="">Select Customer</option>
                                 @foreach ($customers as $customer)
                                 <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }}>{{ $customer->name }}</option>
