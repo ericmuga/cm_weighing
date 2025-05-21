@@ -147,7 +147,7 @@
                         <th>Manually Recorded</th>
                         <th>Recorded by</th>
                         <th>Recorded DateTime</th>
-                        <th class="no-export no-sort">Action</th>
+                        <!-- <th class="no-export no-sort">Action</th> -->
                     </tr>
                 </thead>
                 <tfoot>
@@ -160,7 +160,7 @@
                         <th>Net Weight (kgs)</th>
                         <th>Manually Scale?</th>
                         <th>DateTime</th>
-                        <th class="no-export no-sort">Action</th>
+                        <!-- <th class="no-export no-sort">Action</th> -->
                     </tr>
                 </tfoot>
                 <tbody>
@@ -178,7 +178,7 @@
                             <td><span class="badge badge-success">No</span></td>                            
                         @endif
                         <td>{{ $helpers->shortDateTime($d->created_at) }}</td>
-                        <td></td>
+                        <!-- <td></td> -->
                     @endforeach
                 </tbody>
             </table>

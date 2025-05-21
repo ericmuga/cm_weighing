@@ -1050,13 +1050,13 @@
                     case (item_code == 'BG1101'):
                         // lamb
                         if (s_weight > 25) {
-                            $('#classification_code').val('LAMB-STD');
+                            $('#classification_code').val('LAMB-STX');
 
                         } else if (s_weight >= 14 && s_weight < 25) {
-                            $('#classification_code').val('LAMB-PRM');
+                            $('#classification_code').val('LAMB-PMX');
 
                         } else if (s_weight >= 11 && s_weight < 14) {
-                            $('#classification_code').val('LAMB-STD');
+                            $('#classification_code').val('LAMB-RTX');
                         }
                         break;
 
