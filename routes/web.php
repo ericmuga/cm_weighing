@@ -102,6 +102,7 @@ Route::prefix('butchery')->group(function () {
     Route::get('/scale2', [ButcheryController::class, 'scale2'])->name('butchery_scale2');
     Route::post('/scale2/save', [ButcheryController::class, 'scale2Save'])->name('butchery_scale2_save');
     Route::get('/scale3', [ButcheryController::class, 'scale3'])->name('butchery_scale_3');
-    
+    Route::post('/scale3/save', [ButcheryController::class, 'scale3Save'])->name('butchery_scale3_save');
+    Route::post('/scale3/update', [ButcheryController::class, 'scale3Update'])->name('butchery_scale3_update');
 });
 /* -------------------------------- End Customers ------------------------------------------------ */
