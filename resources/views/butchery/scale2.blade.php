@@ -61,18 +61,15 @@
                                 <option disabled value="0"
                                     {{ old('tare_weight') ? '' : 'selected' }}>
                                     Select Tare-Weight</option>
-                                <option value="2"
-                                    {{ old('tare_weight') == '2' ? 'selected' : '' }}>
-                                    Crate 2kg</option>
-                                <option value="1.8"
-                                    {{ old('tare_weight') == '1.8' ? 'selected' : '' }}>
-                                    Crate 1.8kg</option>
-                                <option value="0.1"
-                                    {{ old('tare_weight') == '0.1' ? 'selected' : '' }}>
-                                    Hook 100 grams</option>
-                                <option value="1.8"
-                                    {{ old('tare_weight') == '1.8' ? 'selected' : '' }}>
-                                    Bucket 1.8 kg</option>
+                                <option value="1.5"
+                                    {{ old('tare_weight') == '1.5' ? 'selected' : '' }}>
+                                    Hook 1.5kg</option>
+                                <option value="1.7"
+                                    {{ old('tare_weight') == '1.7' ? 'selected' : '' }}>
+                                    Hook 1.7kg</option>
+                                <option value="2.1"
+                                    {{ old('tare_weight') == '2.1' ? 'selected' : '' }}>
+                                    Hook 2.1kgs</option>
                             </select>
                         </div>
                     </div>
@@ -158,31 +155,32 @@
                         <th>No. of Sides</th>
                         <th>Scale Reading (kgs)</th>
                         <th>Net Weight (kgs)</th>
-                        <th>Manually Scale?</th>
-                        <th>DateTime</th>
+                        <th>Manually Recorded</th>
+                        <th>Recorded by</th>
+                        <th>Recorded DateTime</th>
                         <!-- <th class="no-export no-sort">Action</th> -->
                     </tr>
                 </tfoot>
                 <tbody>
                     @foreach ($data as $d)
-                        <td>{{ $loop->iteration }}</td>
-                        <td>{{ $d->product_code }}</td>
-                        <td>Steer - High Grade Carcass</td>
-                        <td>{{ $d->carcass_count }}</td>
-                        <td>{{ number_format($d->scale_reading, 2) }}</td>
-                        <td>{{ number_format($d->tareweight, 2) }}</td>
-                        <td>{{ number_format($d->netweight, 2) }}</td>
-                        @if ($d->is_manual == 1)
-                            <td><span class="badge badge-warning">Yes</span></td>                            
-                        @else
-                            <td><span class="badge badge-success">No</span></td>                            
-                        @endif
-                        <td>{{ $helpers->shortDateTime($d->created_at) }}</td>
-                        <!-- <td></td> -->
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ $d->product_code }}</td>
+                            <td>Steer - High Grade Carcass</td>
+                            <td>{{ $d->carcass_count }}</td>
+                            <td>{{ number_format($d->scale_reading, 2) }}</td>
+                            <td>{{ number_format($d->tareweight, 2) }}</td>
+                            <td>{{ number_format($d->netweight, 2) }}</td>
+                            @if ($d->is_manual == 1)
+                                <td><span class="badge badge-warning">Yes</span></td>
+                            @else
+                                <td><span class="badge badge-success">No</span></td>
+                            @endif
+                            <td>{{ $helpers->shortDateTime($d->created_at) }}</td>
+                        </tr>
                     @endforeach
                 </tbody>
             </table>
-            </form>
         </div>
     </div>
 </div>

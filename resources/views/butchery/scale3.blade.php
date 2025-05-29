@@ -98,7 +98,7 @@
                 <div class="form-group">
                     <div class="row">
                         <div class="col-md-6">
-                            <label for="no_of_crates">Total Crates</label>
+                            <label for="no_of_crates">Total Crates(inc. Black)</label>
                             <input type="number" class="form-control" onClick="this.select();" id="no_of_crates" oninput="updateBlackCratesMax()"
                                 value="4" name="no_of_crates" placeholder="" required>
                         </div>
