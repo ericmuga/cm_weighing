@@ -25,13 +25,20 @@
             </div>
 
             <div class="form-row">
-                <div class="form-group col-6">
-                    <label for="total_crates">Total Crates</label>
-                    <input type="number" class="form-control" id="total_crates" name="total_crates" min="0" value="5" max="8" oninput="updateTare()" required/>
+                <div class="form-group col-4">
+                    <label for="crate_tareweight">Crate Type</label>
+                    <select class="form-control crate-tareweight" onchange="updateTare()" name="crate_tareweight[]">
+                        <option selected value="1.8">Std Crate (1.8kg)</option>
+                        <option value="1.3">Small Crate (1.3kg)</option>
+                    </select>
                 </div>
-                <div class="form-group col-6">
+                <div class="form-group col-4">
+                    <label for="total_crates">Total Crates</label>
+                    <input type="number" class="form-control" id="total_crates" name="total_crates" min="2" value="5" max="8" oninput="updateTare()" required/>
+                </div>
+                <div class="form-group col-4">
                     <label for="black_crates">Black Crates</label>
-                    <input type="number" class="form-control" id="black_crates" name="black_crates" min="0" value="0" max="5" oninput="updateTare()" required/>
+                    <input type="number" class="form-control" id="black_crates" name="black_crates" min="0" value="1" max="5" oninput="updateTare()" required/>
                 </div>
             </div>
 
@@ -88,20 +95,30 @@
             <div class="form-group">
                 <label for="from_location_code">From Location</label>
                 <select name="from_location_code" id="from_location_code" class="form-control select2" required>
-                    <option disabled value="" {{ old('from_location_code') ? '' : 'selected' }} >Select Transfer from Location</option>
-                    <option value="B1020" {{ old('from_location_code') == 'B1020' ? 'selected' : '' }}>Slaughter</option>
-                    <option value="B1570" {{ old('from_location_code') == 'B1570' ? 'selected' : '' }}>Butchery</option>
-                    <option value="B3535" {{ old('from_location_code') == 'B3535' ? 'selected' : '' }}>Despatch</option>
+                    <option disabled value="" {{ old('from_location_code') ? '' : 'selected' }}>Select Transfer from Location</option>
+                    @foreach ($transfer_locations as $location)
+                        <option value="{{ $location->location_code }}" {{ old('from_location_code') == $location->location_code ? 'selected' : '' }}>
+                            {{ $location->name ?? $location->location_code }}
+                        </option>
+                    @endforeach
                 </select>
             </div>
 
             <div class="form-group">
                 <label for="to_location_code">To Location</label>
                 <select class="form-control select2" name="to_location_code" id="to_location_code" required onchange="toggleVehicleInput()">
-                    <option value="" {{ old('to_location_code') == '' ? 'selected' : '' }} >Select Transfer to Location</option>
+                    <!-- <option value="" {{ old('to_location_code') == '' ? 'selected' : '' }} >Select Transfer to Location</option>
                     <option value="B1020" {{ old('to_location_code') == 'B1020' ? 'selected' : '' }}>Slaughter</option>
                     <option value="B1570" {{ old('to_location_code') == 'B1570' ? 'selected' : '' }}>Butchery</option>
                     <option value="B3535" {{ old('to_location_code') == 'B3535' ? 'selected' : '' }}>Despatch</option>
+                    <option value="FCL" {{ old('to_location_code') == 'FCL' ? 'selected' : '' }}>FCL</option> -->
+
+                    <option disabled value="" {{ old('to_location_code') == '' ? 'selected' : '' }}>Select Transfer to Location</option>
+                    @foreach ($transfer_locations as $location)
+                        <option value="{{ $location->location_code }}" {{ old('to_location_code') == $location->location_code ? 'selected' : '' }}>
+                            {{ $location->name ?? $location->location_code }}
+                        </option>
+                    @endforeach
                     <option value="FCL" {{ old('to_location_code') == 'FCL' ? 'selected' : '' }}>FCL</option>
                 </select>
             </div>
@@ -214,9 +231,19 @@
     const netInput = document.getElementById('net_weight');
 
     function updateTare() {
-        const totalCrates = document.getElementById('total_crates').value;
+        const totalCratesInput = document.getElementById('total_crates');
         const blackCrates = document.getElementById('black_crates').value;
-        tareInput.value = ((totalCrates * 1.8) + (blackCrates * 0.2)).toFixed(2);
+        const crateTareweight = document.querySelector('.crate-tareweight').value;
+        let totalCrates = parseInt(totalCratesInput.value, 10);
+
+        if (totalCrates < 2) {
+            alert('Total Crates cannot be less than 2.');
+            // Prevent change: reset to previous valid value or minimum allowed
+            totalCratesInput.value = 2;
+            totalCrates = 2;
+        }
+
+        tareInput.value = ((totalCrates * crateTareweight) + (blackCrates * 0.2)).toFixed(2);
         if (readingInput.value) {
             getNet();
         }

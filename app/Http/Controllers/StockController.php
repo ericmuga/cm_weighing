@@ -63,6 +63,13 @@ class StockController extends Controller
                 ->get();
         });
 
+        $transfer_locations = Cache::remember('transfer_locations', now()->addHours(12), function () {
+            return DB::table('transfer_locations')
+                ->select('name', 'location_code')
+                ->orderBy('location_code', 'asc')
+                ->get();
+        });
+
         $transfers = DB::table('transfers')
         ->whereDate('transfers.created_at', '>=', today()->subDays(2))
         ->leftJoin('items', 'transfers.item_code', '=', 'items.code')
@@ -71,7 +78,7 @@ class StockController extends Controller
         ->orderBy('transfers.created_at', 'desc')
         ->get();
 
-        return view('stocks.issue_transfers', compact('title','configs', 'products', 'transfers', 'helpers'));
+        return view('stocks.issue_transfers', compact('title','configs', 'transfer_locations', 'products', 'transfers', 'helpers'));
         
     }
 
