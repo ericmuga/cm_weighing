@@ -70,6 +70,13 @@ class StockController extends Controller
                 ->get();
         });
 
+        $vessels = Cache::remember('vessels', now()->addHours(12), function () {
+            return DB::table('transfer_vessels')
+                ->select('name', 'tare_weight')
+                ->orderBy('id', 'asc')
+                ->get();
+        });
+
         $transfers = DB::table('transfers')
         ->whereDate('transfers.created_at', '>=', today()->subDays(2))
         ->leftJoin('items', 'transfers.item_code', '=', 'items.code')
@@ -78,7 +85,7 @@ class StockController extends Controller
         ->orderBy('transfers.created_at', 'desc')
         ->get();
 
-        return view('stocks.issue_transfers', compact('title','configs', 'transfer_locations', 'products', 'transfers', 'helpers'));
+        return view('stocks.issue_transfers', compact('title','configs', 'transfer_locations', 'products', 'transfers', 'helpers', 'vessels'));
         
     }
 

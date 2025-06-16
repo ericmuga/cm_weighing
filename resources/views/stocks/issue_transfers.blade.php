@@ -26,11 +26,55 @@
 
             <div class="form-row">
                 <div class="form-group col-4">
-                    <label for="crate_tareweight">Crate Type</label>
-                    <select class="form-control crate-tareweight" onchange="updateTare()" name="crate_tareweight[]">
-                        <option selected value="1.8">Std Crate (1.8kg)</option>
-                        <option value="1.3">Small Crate (1.3kg)</option>
+                    <label for="crate_tareweight">Vessel Type</label>
+                    <select class="form-control crate-tareweight" onchange="handleVesselTypeChange()" name="crate_tareweight[]">
+                        @foreach ($vessels as $vessel)
+                            <option 
+                                value="{{ $vessel->tare_weight }}" 
+                                data-type="{{ stripos($vessel->name, 'van') !== false ? 'van' : 'crate' }}"
+                                {{ $loop->first ? 'selected' : '' }}
+                            >
+                                {{ $vessel->name }}
+                            </option>
+                        @endforeach
                     </select>
+                    <script>
+                    function handleVesselTypeChange() {
+                        const vesselSelect = document.querySelector('.crate-tareweight');
+                        const selectedOption = vesselSelect.options[vesselSelect.selectedIndex];
+                        const vesselType = selectedOption.getAttribute('data-type');
+                        const totalCratesDiv = document.getElementById('total_crates').closest('.form-group');
+                        const blackCratesDiv = document.getElementById('black_crates').closest('.form-group');
+                        const totalCratesInput = document.getElementById('total_crates');
+                        const blackCratesInput = document.getElementById('black_crates');
+
+                        if (vesselType === 'van') {
+                            // Hide or disable crate fields
+                            totalCratesDiv.style.display = 'none';
+                            blackCratesDiv.style.display = 'none';
+                            totalCratesInput.disabled = true;
+                            blackCratesInput.disabled = true;
+
+                            // Set tare weight directly from van value
+                            document.getElementById('tare_weight').value = parseFloat(vesselSelect.value).toFixed(2);
+                            if (document.getElementById('reading').value) {
+                                getNet();
+                            }
+                        } else {
+                            // Show and enable crate fields
+                            totalCratesDiv.style.display = '';
+                            blackCratesDiv.style.display = '';
+                            totalCratesInput.disabled = false;
+                            blackCratesInput.disabled = false;
+                            updateTare();
+                        }
+                    }
+
+                    // Ensure this runs on page load in case of old value
+                    document.addEventListener('DOMContentLoaded', function() {
+                        handleVesselTypeChange();
+                    });
+                    </script>
                 </div>
                 <div class="form-group col-4">
                     <label for="total_crates">Total Crates</label>
