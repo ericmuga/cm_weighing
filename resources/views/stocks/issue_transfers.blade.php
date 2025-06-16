@@ -25,7 +25,7 @@
             </div>
 
             <div class="form-row">
-                <div class="form-group col-4">
+                <div class="form-group col-6">
                     <label for="crate_tareweight">Vessel Type</label>
                     <select class="form-control crate-tareweight" onchange="handleVesselTypeChange()" name="crate_tareweight[]">
                         @foreach ($vessels as $vessel)
@@ -76,11 +76,11 @@
                     });
                     </script>
                 </div>
-                <div class="form-group col-4">
+                <div class="form-group col-3">
                     <label for="total_crates">Total Crates</label>
                     <input type="number" class="form-control" id="total_crates" name="total_crates" min="2" value="5" max="8" oninput="updateTare()" required/>
                 </div>
-                <div class="form-group col-4">
+                <div class="form-group col-3">
                     <label for="black_crates">Black Crates</label>
                     <input type="number" class="form-control" id="black_crates" name="black_crates" min="0" value="1" max="5" oninput="updateTare()" required/>
                 </div>
