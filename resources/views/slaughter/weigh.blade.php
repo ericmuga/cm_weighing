@@ -1056,6 +1056,8 @@
                             $('#classification_code').val('LAMB-PMX');
 
                         } else if (s_weight >= 11 && s_weight < 14) {
+                            $('#classification_code').val('LAMB-STX');
+                        } else if (s_weight < 11 ) {
                             $('#classification_code').val('LAMB-RTX');
                         }
                         break;
