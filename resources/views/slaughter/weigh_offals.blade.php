@@ -329,7 +329,7 @@
                             <th>#</th>
                             <th>Product Code</th>
                             <th>Product Name</th>
-                            <th>Net Weight (kgs)</th>
+                            <th>Cummulative Net Weight (kgs)</th>
                         </tr>
                     </thead>
                     <tbody id="selectedEntriesTableBody">
@@ -444,9 +444,28 @@ function showCustomerEntries(event) {
     const input = event.currentTarget;
     customerId = input.value
 
-    var offals = @json($entries)
-    .filter((entry) => entry.customer_id == customerId)
-    .filter((entry) => entry.published == 0);
+    // Group entries by product_code and sum net_weight per product_code for the selected customer and unpublished entries
+    var rawOffals = @json($entries)
+        .filter((entry) => entry.customer_id == customerId)
+        .filter((entry) => entry.published == 0);
+
+    // Aggregate by product_code
+    var offalsMap = {};
+    rawOffals.forEach(function(entry) {
+        if (!offalsMap[entry.product_code]) {
+            offalsMap[entry.product_code] = {
+                product_code: entry.product_code,
+                product_name: entry.product_name,
+                net_weight: 0
+            };
+        }
+        offalsMap[entry.product_code].net_weight += Number(entry.net_weight);
+    });
+
+    // Convert map to array
+    var offals = Object.values(offalsMap);
+
+    console.log(offals);
 
     const tableBody = document.getElementById('selectedEntriesTableBody');
     while (tableBody.firstChild) {

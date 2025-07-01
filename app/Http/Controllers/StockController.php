@@ -54,7 +54,7 @@ class StockController extends Controller
         $title = 'Transfers Issue';
 
         $products = Cache::remember('prod_items', now()->addMinutes(120), function () {
-            return Item::where('category', 'cm-prod')->get();
+            return Item::get();
         });
 
         $configs = Cache::remember('transfer-scale_configs', now()->addMinutes(120), function () {
