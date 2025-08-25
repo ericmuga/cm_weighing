@@ -27,7 +27,8 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="customer_id">Customer</label>
-                            <select class="form-control select2" onchange="getWeighedCount()" id="weigh_customer_id" name="weigh_customer_id" required>
+                            <select class="form-control select2" onchange="getWeighedCount()" id="weigh_customer_id"
+                                name="weigh_customer_id" required>
                                 <option
                                     {{ old('weigh_customer_id') ? '' : 'selected' }}
                                     disabled value="">Select Customer</option>
@@ -42,7 +43,8 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="customer">Product</label>
-                            <select class="form-control select2" onchange="getWeighedCount()" id="weigh_product_code" name="weigh_product_code" required>
+                            <select class="form-control select2" onchange="getWeighedCount()" id="weigh_product_code"
+                                name="weigh_product_code" required>
                                 <option selected disabled value="">Select... </option>
                                 @foreach($offals_products as $product)
                                     <option value="{{ $product->code }}"
@@ -379,7 +381,6 @@
 
     @section('scripts')
     <script>
-
         const getWeighedCount = () => {
             let totalCounts = 0;
             let entries = document.querySelectorAll('#weighedEntries tr');
@@ -390,12 +391,10 @@
             entries.forEach(entry => {
                 // Get product_code and customer_id from data attributes on the row
                 // Get product_code and customer_id from the table cells
-                let entryProductCode = entry.children[1]?.innerText?.trim();
-                let entryCustomerName = entry.children[6]?.innerText?.trim();
-                // console.log(entryCustomerName);
+                let entryProductCode = entry.children[1] ? .innerText ? .trim();
+                let entryCustomerName = entry.children[6] ? .innerText ? .trim();
 
                 if (entryProductCode == productCode && entryCustomerName == customerName) {
-                    console.log('here')
                     totalCounts += 1;
                 }
             });
@@ -562,6 +561,11 @@
             while (tableBody.firstChild) {
                 tableBody.removeChild(tableBody.firstChild);
             }
+        });
+
+        $('#confirmPublishModal').on('hide.bs.modal', function () {
+            // Move focus to a safe element outside the modal
+            document.activeElement.blur();
         });
 
         function publishOffals(event) {
