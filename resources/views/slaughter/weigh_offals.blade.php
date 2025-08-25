@@ -407,10 +407,17 @@
         });
 
         function updateNetWeight() {
-            var reading = document.getElementById('reading').value;
-            var tareweight = document.getElementById('tare_weight').value;
+            var reading = parseFloat(document.getElementById('reading').value);
+            var tareweight = parseFloat(document.getElementById('tare_weight').value);
             var netWeightInput = document.getElementById('net_weight');
-            netWeightInput.value = parseFloat(reading) - parseFloat(tareweight);
+
+            if (!isNaN(reading) && !isNaN(tareweight) && tareweight > 0) {
+                netWeightInput.value = (reading - tareweight).toFixed(2);
+            } else {
+                netWeightInput.value = '';
+            }
+            // Manually trigger the input event
+            $('#net_weight').trigger('input');
         }
 
         function getScaleReading() {
@@ -628,8 +635,28 @@
 
         $(document).ready(function () {
             $('.form-prevent-multiple-submits').on('submit', function () {
-                $(".btn-prevent-multiple-submits").attr('disabled', true);
+            $(".btn-prevent-multiple-submits").attr('disabled', true);
             });
+
+            // Enable the submit button if net_weight > 0
+            $('#net_weight').on('input change', function () {
+            var netWeight = parseFloat($(this).val());
+            if (!isNaN(netWeight) && netWeight > 0) {
+                $(".btn-prevent-multiple-submits").attr('disabled', false);
+            } else {
+                $(".btn-prevent-multiple-submits").attr('disabled', true);
+            }
+            });
+        });
+
+        $('#form-weigh-offals').on('submit', function(e) {
+            var netWeight = parseFloat($('#net_weight').val());
+            if (isNaN(netWeight) || netWeight <= 0) {
+                e.preventDefault();
+                alert('Please enter a valid Net-Weight greater than zero.');
+                $('#net_weight').focus();
+                return false;
+            }
         });
 
     </script>
