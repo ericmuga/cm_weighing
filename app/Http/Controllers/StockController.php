@@ -122,7 +122,14 @@ class StockController extends Controller
             $data = $request->all();
             $data['issuer'] = Auth::id();
             $data['manual_weight'] = $manual_weight;
-            // $helpers->publishToQueue($data, 'intercompany_transfers.wms');
+
+            //write to queue
+            try {
+            $helpers->publishToQueue($data, 'intercompany_transfers.wms');
+            } catch (\Exception $e) {
+            // Log the error but do not throw or fail the request
+            Log::warning('Failed to publish to queue: ' . $e->getMessage());
+            }
         } else {
             $transfer_type = "internal";
         }
