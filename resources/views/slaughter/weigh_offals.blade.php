@@ -27,7 +27,7 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="customer_id">Customer</label>
-                            <select class="form-control select2" onchange="getWeighedCount()" id="weigh_customer_id" name="weigh_customer_id" required>
+                            <select class="form-control select2" onchange="getWeighedCount()" id="weigh_customer_id" name="customer_id" required>
                                 <option
                                     {{ old('weigh_customer_id') ? '' : 'selected' }}
                                     disabled value="">Select Customer</option>
@@ -42,7 +42,7 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="customer">Product</label>
-                            <select class="form-control select2" onchange="getWeighedCount()" id="weigh_product_code" name="weigh_product_code" required>
+                            <select class="form-control select2" onchange="getWeighedCount()" id="weigh_product_code" name="product_code" required>
                                 <option selected disabled value="">Select... </option>
                                 @foreach($offals_products as $product)
                                     <option value="{{ $product->code }}"
