@@ -340,7 +340,7 @@
                 <div class="modal-body p-3">
                     <div class="form-group">
                         <label for="customer">Customer</label>
-                        <select class="form-control" id="publish_customer" name="customer_id"
+                        <select class="form-control select2" id="publish_customer" name="customer_id"
                             onchange="showCustomerEntries(event)" required>
                             <option disabled selected value="">Select Customer</option>
                             @foreach($customers as $customer)
