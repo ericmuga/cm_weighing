@@ -112,8 +112,8 @@ class SlaughterController extends Controller
         }
         try {
             Offal::create([
-                'customer_id' => $request->customer_id,
-                'product_code'=> $request->product_code,
+                'customer_id' => $request->weigh_customer_id,
+                'product_code'=> $request->weigh_product_code,
                 'scale_reading'=> $request->reading,
                 'net_weight'=> $request->net_weight,
                 'is_manual'=> $manual_weight,
