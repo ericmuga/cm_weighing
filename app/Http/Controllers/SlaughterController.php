@@ -105,6 +105,15 @@ class SlaughterController extends Controller
         return view('slaughter.weigh_offals', compact('title', 'customers', 'entryCustomers', 'configs', 'offals_products', 'entries', 'helpers'));
     }
 
+    public function getWeighedOffalsCounts(Request $request, Helpers $helpers) {
+        $weights = Offal::where('customer_id', $request->customer_id)
+            ->where('product_code', $request->product_code)
+            ->where('archived', 0)
+            ->get();
+
+        return response()->json($weights);
+    }
+
     public function saveOffalsWeights(Request $request, Helpers $helpers) {
         $manual_weight = 0;
         if ($request->manual_weight == 'on') {
@@ -126,7 +135,7 @@ class SlaughterController extends Controller
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             Toastr::error($e->getMessage(), 'Error!');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 
