@@ -382,10 +382,14 @@
 
         const getWeighedCount = () => {
             let totalCounts = 0;
-            let entries = document.querySelectorAll('#weighedEntries tr');
+
+            let table = $('#example1').DataTable();
+            let entries = table.rows().nodes().toArray(); // Convert to array
 
             let productCode = $('#weigh_product_code').val();
             let customerName = $('#weigh_customer_id option:selected').text().trim();
+
+            // console.log(entries.length);
 
             entries.forEach(entry => {
                 // Get product_code and customer_id from data attributes on the row
