@@ -122,7 +122,7 @@ class StockController extends Controller
             $data = $request->all();
             $data['issuer'] = Auth::id();
             $data['manual_weight'] = $manual_weight;
-            $helpers->publishToQueue($data, 'intercompany_transfers.wms');
+            // $helpers->publishToQueue($data, 'intercompany_transfers.wms');
         } else {
             $transfer_type = "internal";
         }
