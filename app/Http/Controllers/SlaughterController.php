@@ -180,6 +180,7 @@ class SlaughterController extends Controller
                         'scale_reading' => $entry['scale_reading'],
                         'net_weight' => $entry['net_weight'],
                         'is_manual' => $entry['is_manual'],
+                        'grade' => $entry['grade'],
                         'user_id' => $entry['user_id'],
                     ];
                     $weights[] = $weight;
