@@ -15,5 +15,6 @@ class Offal extends Model
         'customer_id',
         'archived',
         'updated_by',
+        'grade',
     ];
 }

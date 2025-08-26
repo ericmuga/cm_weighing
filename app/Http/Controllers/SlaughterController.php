@@ -110,6 +110,7 @@ class SlaughterController extends Controller
         if ($request->manual_weight == 'on') {
             $manual_weight = 1;
         }
+        // dd($request->all());
         try {
             Offal::create([
                 'customer_id' => $request->weigh_customer_id,
@@ -117,6 +118,7 @@ class SlaughterController extends Controller
                 'scale_reading'=> $request->reading,
                 'net_weight'=> $request->net_weight,
                 'is_manual'=> $manual_weight,
+                'grade' => $request->grade,
                 'user_id' => Auth::id(),
             ]);
 

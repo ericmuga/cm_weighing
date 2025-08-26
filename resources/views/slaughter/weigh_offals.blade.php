@@ -42,7 +42,7 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="customer">Product</label>
-                            <select class="form-control select2" onchange="getWeighedCount()" id="weigh_product_code" name="weigh_product_code" required>
+                            <select class="form-control select2" onchange="getWeighedCount(); handleGradeField();" id="weigh_product_code" name="weigh_product_code" required>
                                 <option selected disabled value="">Select... </option>
                                 @foreach($offals_products as $product)
                                     <option value="{{ $product->code }}"
@@ -60,6 +60,15 @@
                                 value="{{ old('weighed_count') }}" readonly>
                         </div>
                     </div>
+                </div>
+                <div class="form-group" id="grade-group" style="display: none;">
+                    <label for="grade">Grade</label>
+                    <select class="form-control select2" id="grade" name="grade">
+                        <option value="" disabled selected>Select Grade</option>
+                        <option value="0">0</option>
+                        <option value="edge">Edge</option>
+                        <option value="reject">Reject</option>
+                    </select>
                 </div>
                 <div class="row text-center">
                     <div class="col-md-4">
@@ -124,7 +133,7 @@
                             Save
                         </button>
                     </div>
-                </div>
+                </div>                
             </form>
         </div>
 
@@ -171,6 +180,7 @@
                         <th>Scale Reading (kgs)</th>
                         <th>Manually Recorded</th>
                         <th>Customer</th>
+                        <th>Grade</th>
                         <th>Recorded by</th>
                         <th>Recorded DateTime</th>
                         <th class="no-export no-sort">Action</th>
@@ -185,6 +195,7 @@
                         <th>Scale Reading (kgs)</th>
                         <th>Manually Recorded</th>
                         <th>Customer</th>
+                        <th>Grade</th>
                         <th>Recorded by</th>
                         <th>Recorded DateTime</th>
                         <th class="no-export no-sort">Action</th>
@@ -208,6 +219,15 @@
                                 </td>
                             @endif
                             <td>{{ $entry->customer_name }}</td>
+                            @if($entry->grade == 'reject')
+                                <td><span class="badge badge-danger">Reject</span></td>
+                            @elseif($entry->grade == '0')
+                                <td><span class="badge badge-success">0</span></td>
+                            @elseif($entry->grade == 'edge')
+                                <td><span class="badge badge-warning">Edge</span></td>
+                            @else
+                                <td>{{ $entry->grade }}</td>
+                            @endif
                             <td>{{ $entry->username }}</td>
                             <td>{{ $helpers->shortDateTime($entry->created_at) }}</td>
                             <td class="no-sort no-export">
@@ -653,6 +673,8 @@
                 $(".btn-prevent-multiple-submits").attr('disabled', true);
             }
             });
+
+            handleGradeField();
         });
 
         $('#form-weigh-offals').on('submit', function(e) {
@@ -664,6 +686,18 @@
                 return false;
             }
         });
+
+        function handleGradeField() {
+    var selectedProduct = $('#weigh_product_code').val();
+    if (selectedProduct === 'BG1054') {
+        $('#grade-group').show();
+        $('#grade').attr('required', true);
+    } else {
+        $('#grade-group').hide();
+        $('#grade').removeAttr('required');
+        $('#grade').val('');
+    }
+}
 
     </script>
     @endsection
