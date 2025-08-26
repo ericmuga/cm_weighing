@@ -31,7 +31,8 @@
                                 <th>ComPort</th>
                                 <th>BaudRate</th>
                                 <th>Tareweight</th>
-                                <Th>Date Created</Th>
+                                <th>Section</th>
+                                <th>Date Created</th>
                                 <th style="width: 30px">Config</th>
                             </tr>
                         </thead>
@@ -41,7 +42,8 @@
                             <th>ComPort</th>
                             <th>BaudRate</th>
                             <th>Tareweight</th>
-                            <Th>Date Created</Th>
+                            <th>Section</th>
+                            <th>Date Created</th>
                             <th style="width: 30px">Config</th>
                         </tfoot>
                         <tbody>
@@ -52,6 +54,7 @@
                                 <td>{{ $data->comport }}</td>
                                 <td>{{ $data->baudrate }}</td>
                                 <td>{{ number_format($data->tareweight, 2) }}</td>
+                                <td>{{ $data->section }}</td>
                                 <td>{{ $helpers->dateToHumanFormat($data->created_at) }}</td>
                                 <td>
                                     <button type="button" data-id="{{ $data->id }}" data-item="{{ $data->scale }}"
@@ -202,5 +205,9 @@
         });
     }
 
+    $('#editScaleModal').on('hidden.bs.modal', function () {
+        $('button:visible:first').focus();
+    });
+    
 </script>
 @endsection
