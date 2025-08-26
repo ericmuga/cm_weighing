@@ -88,17 +88,17 @@ class SlaughterController extends Controller
 
         $configs = DB::table('scale_configs')->where('section', 'offals')->get();
 
-        $entries = Offal::whereDate('offals.created_at', '>=', today()->subDays(2))
-        ->leftJoin('users', 'offals.user_id', '=', 'users.id')
-        ->leftJoin('customers', 'offals.customer_id', '=', 'customers.id')
-        ->join('items', 'offals.product_code', '=', 'items.code')
-        ->where('offals.archived', 0)
-        ->select('offals.*', 'users.username', 'customers.name AS customer_name', 'items.description AS product_name')
-        ->orderBy('offals.created_at', 'DESC')
-        ->when($customer, function ($query, $customer) {
-            return $query->where('offals.customer_id', $customer);
-        })
-        ->get();
+        $entries = Offal::whereDate('offals.created_at', today())
+            ->leftJoin('users', 'offals.user_id', '=', 'users.id')
+            ->leftJoin('customers', 'offals.customer_id', '=', 'customers.id')
+            ->join('items', 'offals.product_code', '=', 'items.code')
+            ->where('offals.archived', 0)
+            ->select('offals.*', 'users.username', 'customers.name AS customer_name', 'items.description AS product_name')
+            ->orderBy('offals.created_at', 'DESC')
+            ->when($customer, function ($query, $customer) {
+                return $query->where('offals.customer_id', $customer);
+            })
+            ->get();
 
         $entryCustomers = $entries->pluck('customer_id', 'customer_name')->unique();
 
@@ -172,7 +172,7 @@ class SlaughterController extends Controller
         try {
             $weights = [];
             foreach ($request->entries as $entry) {
-                if (Offal::where('id', $entry['id'])->where('published', 0)->where('archived', 0)->exists()) {
+                if (Offal::where('id', $entry['id'])->where('published', 0)->where('archived', 0)->where('created_at', today())->exists()) {
                     $weight = [
                         'entry_id' => $entry['id'],
                         'product_code' => $entry['product_code'],
