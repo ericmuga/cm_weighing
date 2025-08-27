@@ -114,9 +114,9 @@
                         </div>                        
                     </div>
                 </div>
-                <div class="row text-center">
+                <div class="row">
                     <div class="col-md-4"> 
-                        <label for="scale">Scale</label>
+                        <label for="scale">Automatic Scale</label>
                         <select class="form-control select2" id="scale" name="scale">
                             <option value="" disabled selected>Select Scale</option>
                             @foreach($configs as $config)
@@ -130,7 +130,7 @@
                     </div>
                     <div class="col-md-4">
                         <div>
-                            <button type="button" id="weighBtn" onclick="getWeightV2()" class="btn btn-primary btn-lg" style="margin-top: 5%;">
+                            <button type="button" id="weighBtn" onclick="getWeightV2()" class="btn btn-primary btn-lg" style="margin-top: 7%;margin-left: 15%;">
                                 <i class="fas fa-balance-scale"></i> Get Weight
                             </button>
                         </div><br>
@@ -138,7 +138,7 @@
                     </div>
                     <div class="col-md-4">
                         <button type="submit" id="btn_save"
-                            class="btn btn-primary btn-lg btn-prevent-multiple-submits mt-3">
+                            class="btn btn-primary btn-lg btn-prevent-multiple-submits mt-3" style="margin-left: 25%;">
                             <i class="fa fa-paper-plane" aria-hidden="true"></i>
                             Save
                         </button>
