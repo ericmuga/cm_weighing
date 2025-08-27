@@ -81,22 +81,7 @@
                             <input type="checkbox" class="form-check-input" id="manual_weight" name="manual_weight"
                                 onchange="toggleManualWeight()">
                             <label class="form-check-label" for="manual_weight">Enter Manual weight</label>
-                        </div>
-                        <div>
-                            @if(count($configs) == 0)
-                                <small class="d-block">No comport configured</small>
-                            @else
-                                @if(isset($configs[0]))
-                                    <small class="d-block mt-2">
-                                        <label>Reading from ComPort:</label>
-                                        <span id="comport_value" disabled>{{ $configs[0]->comport }}</span>
-                                    </small>
-                                @endif
-                            @endif
-                            <button type="button" onclick="getScaleReading()" class="btn btn-primary btn-lg">
-                                <i class="fas fa-balance-scale"></i> Weigh
-                            </button>
-                        </div>
+                        </div>                        
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
@@ -126,14 +111,39 @@
                             <label for="net_weight">Net-Weight</label>
                             <input type="number" class="form-control" id="net_weight" name="net_weight" value=""
                                 readonly required>
-                        </div>
+                        </div>                        
+                    </div>
+                </div>
+                <div class="row text-center">
+                    <div class="col-md-4"> 
+                        <label for="scale">Scale</label>
+                        <select class="form-control select2" id="scale" name="scale">
+                            <option value="" disabled selected>Select Scale</option>
+                            @foreach($configs as $config)
+                                <option value="{{ $config->comport }}" 
+                                        data-ip_address="{{ $config->ip_address.config('app.get_weight_v2_endpoint').'/'. $config->comport }}"
+                                        {{ old('scale') == $config->comport ? 'selected' : '' }}>
+                                    {{ $config->scale  }} ({{ $config->comport }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <div>
+                            <button type="button" id="weighBtn" onclick="getWeightV2()" class="btn btn-primary btn-lg" style="margin-top: 5%;">
+                                <i class="fas fa-balance-scale"></i> Get Weight
+                            </button>
+                        </div><br>
+                        <div class="form-group error"></div>
+                    </div>
+                    <div class="col-md-4">
                         <button type="submit" id="btn_save"
                             class="btn btn-primary btn-lg btn-prevent-multiple-submits mt-3">
                             <i class="fa fa-paper-plane" aria-hidden="true"></i>
                             Save
                         </button>
                     </div>
-                </div>                
+                </div>               
             </form>
         </div>
 
@@ -445,7 +455,7 @@
         }
 
         function getScaleReading() {
-            var comport = $('#comport_value').val();
+            var comport = $('#scale').val();
 
             if (comport != null) {
                 $.ajax({
@@ -487,9 +497,76 @@
                 });
 
             } else {
-                alert("Please set comport value first");
+                alert("Please set Scale Comport first");
             }
         }
+
+        const getWeightV2 = () => {
+            let url;
+            let button;
+            let ip = $('#scale').find(':selected').data('ip_address');
+
+            if (ip) {
+                fullUrl = 'http://' + ip;
+                console.log('full URL from selected option:', fullUrl);
+                button = document.getElementById('weighBtn');
+            } else {
+                console.error('Please select Scale Comport First');
+                document.querySelector('.form-group.error').innerHTML = '<div class="alert alert-danger small-alert">Please select Scale Comport First</div>';
+                return;
+            }
+
+            // Disable the button and change its label
+            button.disabled = true;
+            const originalLabel = button.innerHTML;
+            button.innerHTML = '<strong>Reading...</strong>';
+
+            // Clear any previous error message
+            document.querySelector('.form-group.error').innerHTML = '';
+
+            // Set a timeout to abort the request if it takes longer than 5 seconds
+            const source = axios.CancelToken.source();
+            const timeoutId = setTimeout(() => {
+                source.cancel('No response received from scale');
+                console.error('No response received from scale');
+                // Re-enable the button and revert the label
+                button.disabled = false;
+                button.innerHTML = originalLabel;
+                // Display the error message
+                document.querySelector('.form-group.error').innerHTML = '<div class="alert alert-danger small-alert">No response received from scale</div>';
+            }, 30000);
+
+            axios.get(fullUrl, { cancelToken: source.token })
+                .then(function (response) {
+                    console.log(response.data);
+                    clearTimeout(timeoutId); // Clear the timeout
+                    if (response.data.success) {
+                        // Set the value of the input field with id="reading"
+                        const readingInput = document.getElementById('reading');
+                        readingInput.value = parseFloat(response.data.response).toFixed(2);
+
+                        // Trigger the getNet function manually
+                        updateNetWeight();
+                    } else {
+                        console.error('API call was not successful.');
+                        document.querySelector('.form-group.error').innerHTML = '<div class="alert alert-danger small-alert">API call was not successful.</div>';
+                    }
+                })
+                .catch(function (error) {
+                    if (axios.isCancel(error)) {
+                        console.log(error.message);
+                        document.querySelector('.form-group.error').innerHTML = '<div class="alert alert-danger small-alert">' + error.message + '</div>';
+                    } else {
+                        console.log('There was an error making the request: ' + error.message);
+                        document.querySelector('.form-group.error').innerHTML = '<div class="alert alert-danger small-alert">Error on request: ' + error.message + '</div>';
+                    }
+                })
+                .finally(function () {
+                    // Re-enable the button and revert the label
+                    button.disabled = false;
+                    button.innerHTML = originalLabel;
+                });
+        };
 
         function toggleManualWeight() {
             const manualWeightInput = document.getElementById('manual_weight');
@@ -659,7 +736,13 @@
 
         $(document).ready(function () {
             getWeighedCount(); 
-            
+
+            $(document).on('change', '#scale', function () {
+                // Clear any previous error message
+                console.log('clear error message');
+                document.querySelector('.form-group.error').innerHTML = '';
+            });
+
             $('.form-prevent-multiple-submits').on('submit', function () {
             $(".btn-prevent-multiple-submits").attr('disabled', true);
             });

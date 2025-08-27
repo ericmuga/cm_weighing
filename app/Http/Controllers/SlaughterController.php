@@ -87,6 +87,7 @@ class SlaughterController extends Controller
         $customers = Customer::where('active', 1)->get();
 
         $configs = DB::table('scale_configs')->where('section', 'offals')->get();
+        // dd($configs);
 
         $entries = Offal::whereDate('offals.created_at', today())
             ->leftJoin('users', 'offals.user_id', '=', 'users.id')

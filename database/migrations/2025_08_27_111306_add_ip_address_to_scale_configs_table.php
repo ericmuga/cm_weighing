@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddGradeToOffalsTable extends Migration
+class AddIpAddressToScaleConfigsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,8 @@ class AddGradeToOffalsTable extends Migration
      */
     public function up()
     {
-        Schema::table('offals', function (Blueprint $table) {
-            $table->string('grade')->nullable();
+        Schema::table('scale_configs', function (Blueprint $table) {
+            $table->string('ip_address')->nullable()->after('section');
         });
     }
 
@@ -25,8 +25,8 @@ class AddGradeToOffalsTable extends Migration
      */
     public function down()
     {
-        Schema::table('offals', function (Blueprint $table) {
-            $table->dropColumnIfExists('grade');
+        Schema::table('scale_configs', function (Blueprint $table) {
+            $table->dropColumnIfExists('ip_address');
         });
     }
 }

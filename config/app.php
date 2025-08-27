@@ -18,6 +18,7 @@ return [
     'list_comport_api_url' => env('GET_COMPORT_LIST_API_SERVICE', ''),
     'login_api_url' => env('LOGIN_URL', ''),
     'show_manual_weight' => env('SHOW_MANUAL_WEIGHT', '0'),
+    'get_weight_v2_endpoint' => env('GET_WEIGHT_V2_ENDPOINT', ''),
 
     'sms_send_url' => env('SMS_SEND_URL', ''),
     'sms_sender_id' => env('SMS_SENDER_ID', ''),
