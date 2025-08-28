@@ -1050,7 +1050,7 @@
                     case (item_code == 'BG1101'):
                         // lamb
                         if (s_weight > 30) {
-                            $('#classification_code').val('LAMB-STd');
+                            $('#classification_code').val('LAMB-STD');
 
                         } else if (s_weight >= 14 && s_weight < 30) {
                             $('#classification_code').val('LAMB-PMX');
