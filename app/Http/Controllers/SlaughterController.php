@@ -192,7 +192,7 @@ class SlaughterController extends Controller
                 'customer_id'=> $request->entries[0]['customer_id'],
                 'weights' => $weights,
             ];
-            $helpers->publishToQueue($data, 'offals.bc');
+            //$helpers->publishToQueue($data, 'offals.bc');
             Offal::whereIn('id', array_column($weights, 'entry_id'))->update(['published' => 1]);
             return response()->json(['success' => true, 'message' => 'Offals published successfully']);
         } catch (\Exception $e) {

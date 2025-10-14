@@ -125,7 +125,7 @@ class StockController extends Controller
 
             //write to queue
             try {
-            $helpers->publishToQueue($data, 'intercompany_transfers.wms');
+            //$helpers->publishToQueue($data, 'intercompany_transfers.wms');
             } catch (\Exception $e) {
             // Log the error but do not throw or fail the request
             Log::warning('Failed to publish to queue: ' . $e->getMessage());

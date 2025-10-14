@@ -229,25 +229,25 @@ class Helpers
 
 
     //Rabbit MQ
-    public function publishToQueue($data, $queue_name)
-    {
-        // Add the company name flag to the data
-        $data['company_name'] = 'CM';
+    // public function publishToQueue($data, $queue_name)
+    // {
+    //     // Add the company name flag to the data
+    //     $data['company_name'] = 'CM';
 
-        $channel = $this->getRabbitMQChannel();
+    //     $channel = $this->getRabbitMQChannel();
 
-        try {
-            $channel->exchange_declare('fcl.exchange.direct', 'direct', false, true, false);
+    //     try {
+    //         $channel->exchange_declare('fcl.exchange.direct', 'direct', false, true, false);
 
-            $msg = new AMQPMessage(json_encode($data), [
-                'delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT,
-            ]);
+    //         $msg = new AMQPMessage(json_encode($data), [
+    //             'delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT,
+    //         ]);
 
-            $channel->basic_publish($msg, 'fcl.exchange.direct', $queue_name);
-            Log::info("Message published to queue: {$queue_name}");
-        } catch (\Exception $e) {
-            Log::error("Failed to publish message to queue {$queue_name}: {$e->getMessage()}");
-        }
-    }
+    //         $channel->basic_publish($msg, 'fcl.exchange.direct', $queue_name);
+    //         Log::info("Message published to queue: {$queue_name}");
+    //     } catch (\Exception $e) {
+    //         Log::error("Failed to publish message to queue {$queue_name}: {$e->getMessage()}");
+    //     }
+    // }
 
 }
