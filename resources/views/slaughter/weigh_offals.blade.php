@@ -77,7 +77,7 @@
                             <input type="number" step="0.01" class="form-control" id="reading" name="reading" value=""
                                 oninput="updateNetWeight()" placeholder="" readonly required>
                         </div>
-                        <div class="form-check">
+                        <div class="form-check" id="manual-weight-div" >
                             <input type="checkbox" class="form-check-input" id="manual_weight" name="manual_weight"
                                 onchange="toggleManualWeight()">
                             <label class="form-check-label" for="manual_weight">Enter Manual weight</label>
@@ -117,7 +117,7 @@
                 <div class="row">
                     <div class="col-md-4"> 
                         <label for="scale">Automatic Scale</label>
-                        <select class="form-control select2" id="scale" name="scale">
+                        <select class="form-control select2" id="scale" name="scale" onchange="toggleManualWeightVisibility()">
                             <option value="" disabled selected>Select Scale</option>
                             @foreach($configs as $config)
                                 <option value="{{ $config->comport }}" 
@@ -601,6 +601,25 @@
             document.getElementById('archive_id').value = id;
         }
 
+        const toggleManualWeightVisibility = () => {
+            const manualWeightDiv = document.getElementById('manual-weight-div');
+            let scale_value = $('#scale option:selected').text().trim();
+
+            let firstWord = scale_value.split(' ')[0];
+
+            // {{ config('app.show_manual_weight_v2') }}
+
+            if ("{{ config('app.show_manual_weight_v2') }}" == 1) {
+                manualWeightDiv.style.display = 'block';
+            } else {
+                if (firstWord === 'Red') {
+                    manualWeightDiv.style.display = 'block';
+                } else {
+                    manualWeightDiv.style.display = 'none';
+                }
+            }
+        }
+
         function showCustomerEntries(event) {
             const input = event.currentTarget;
             customerId = input.value
@@ -736,6 +755,8 @@
 
         $(document).ready(function () {
             getWeighedCount(); 
+
+            toggleManualWeightVisibility();
 
             $(document).on('change', '#scale', function () {
                 // Clear any previous error message

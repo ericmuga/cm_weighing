@@ -19,6 +19,7 @@ return [
     'login_api_url' => env('LOGIN_URL', ''),
     'show_manual_weight' => env('SHOW_MANUAL_WEIGHT', '0'),
     'get_weight_v2_endpoint' => env('GET_WEIGHT_V2_ENDPOINT', ''),
+    'show_manual_weight_v2' => env('SHOW_MANUAL_WEIGHT_V2', 0),
 
     'sms_send_url' => env('SMS_SEND_URL', ''),
     'sms_sender_id' => env('SMS_SENDER_ID', ''),
