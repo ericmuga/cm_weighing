@@ -42,7 +42,9 @@ Route::prefix('slaughter')->group(function () {
     Route::get('/receipts/{filter?}', [SlaughterController::class, 'receipts'])->name('receipts');
     Route::post('/receipts/import', [SlaughterController::class, 'importReceipts'])->name('receipts_import');
     Route::get('/report/{filter?}', [SlaughterController::class, 'slaughterReport'])->name('slaughter_report');
+    Route::get('/offals-report/{filter?}', [SlaughterController::class, 'offalsReport'])->name('offals_report');
     Route::post('/report/summary', [SlaughterController::class, 'slaughterSummaryReport'])->name('slaughter_summary_report');
+    Route::post('/offals-report/export', [SlaughterController::class, 'offalsReportExport'])->name('offals_report_export');
 
     Route::get('/pending-etims', [SlaughterController::class, 'pendingEtimsData'])->name('pending_etims');
     Route::post('/update-pending-etims', [SlaughterController::class, 'updatePendingEtimsData'])->name('update_pending_etims');

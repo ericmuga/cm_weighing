@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\ReceiptsUploadCompleted;
+use App\Exports\OffalsDataExport;
 use App\Exports\SlaughterSummaryExport;
 use App\Models\Customer;
 use App\Models\Helpers;
@@ -10,6 +11,7 @@ use App\Models\Item;
 use App\Models\Offal;
 use Brian2694\Toastr\Facades\Toastr;
 use Carbon\Carbon;
+use Dflydev\DotAccessData\Data;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
@@ -496,6 +498,35 @@ class SlaughterController extends Controller
         return view('slaughter.report', compact('title', 'helpers', 'slaughter_data', 'filter'));
     }
 
+    public function offalsReport(Helpers $helpers, $filter = null)
+    {
+        $title = "Offals Data";
+
+        if (!$filter) {
+            $offals_data = DB::table('offals')
+                ->where('offals.archived', 0)
+                ->whereDate('offals.created_at', '>=', today()->subDays(30)) //default 3 days
+                ->leftJoin('customers', 'offals.customer_id', '=', 'customers.id')
+                ->leftJoin('items', 'offals.product_code', '=', 'items.code')
+                ->leftJoin('users', 'offals.user_id', '=', 'users.id')
+                ->select('offals.*', 'customers.name AS customer_name', 'items.description AS product_name', 'users.username AS username')
+                ->orderBy('offals.created_at', 'DESC')
+                ->get();
+        } elseif ($filter == 'today') {
+            $offals_data = DB::table('offals')
+                ->where('offals.archived', 0)
+                ->leftJoin('customers', 'offals.customer_id', '=', 'customers.id')
+                ->leftJoin('items', 'offals.product_code', '=', 'items.code')
+                ->leftJoin('users', 'offals.user_id', '=', 'users.id')
+                ->select('offals.*', 'customers.name AS customer_name', 'items.description AS product_name','users.username AS username')
+                ->orderBy('offals.id', 'ASC')
+                ->whereDate('offals.created_at', today())
+                ->get();
+        }
+
+        return view('slaughter.offals-report', compact('title', 'helpers', 'offals_data', 'filter'));
+    }
+
     public function slaughterSummaryReport(Request $request, Helpers $helpers)
     {
 
@@ -512,6 +543,28 @@ class SlaughterController extends Controller
         $exports = Session::put('session_export_data', $data);
 
         return Excel::download(new SlaughterSummaryExport, 'SlaughterReportSummaryFrom-' . $request->from_date . '-To-' . $request->to_date . '.xlsx');
+    }
+
+    public function offalsReportExport(Request $request, Helpers $helpers)
+    {
+
+        $from = date($request->from_date);
+        $to = date($request->to_date);
+
+        $data = DB::table('offals')
+            ->where('offals.archived', 0)
+            ->leftJoin('customers', 'offals.customer_id', '=', 'customers.id')
+            ->leftJoin('items', 'offals.product_code', '=', 'items.code')
+            ->leftJoin('users', 'offals.user_id', '=', 'users.id')
+            ->select('offals.id', 'customers.name AS customer_name', 'offals.product_code','items.description AS product_name', 'offals.scale_reading', 'offals.net_weight', 'offals.is_manual', 'users.username AS username', 'offals.created_at as Timestamps')
+            ->orderBy('offals.id', 'ASC')
+            ->whereDate('offals.created_at', '>=', $from)
+            ->whereDate('offals.created_at', '<=', $to)
+            ->get();
+
+        $exports = Session::put('session_export_data', $data);
+
+        return Excel::download(new OffalsDataExport, 'OffalsDataExportFrom-' . $request->from_date . '-To-' . $request->to_date . '.xlsx');
     }
 
     public function scaleConfigs(Helpers $helpers, $section = null)

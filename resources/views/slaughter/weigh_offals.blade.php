@@ -611,13 +611,14 @@
 
             if ("{{ config('app.show_manual_weight_v2') }}" == 1) {
                 manualWeightDiv.style.display = 'block';
-            } else {
-                if (firstWord === 'Red') {
-                    manualWeightDiv.style.display = 'block';
-                } else {
-                    manualWeightDiv.style.display = 'none';
-                }
-            }
+            } 
+            // else {
+            //     if (firstWord === 'Red') {
+            //         manualWeightDiv.style.display = 'block';
+            //     } else {
+            //         manualWeightDiv.style.display = 'none';
+            //     }
+            // }
         }
 
         function showCustomerEntries(event) {
