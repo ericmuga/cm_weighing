@@ -232,6 +232,20 @@
                 "buttons": ["excel", "csv", "pdf", "colvis"]
             }).buttons().container().appendTo('#example3_wrapper .col-md-6:eq(0)');
         });
+        $(function () {
+            $("#farmersView").DataTable({
+                "responsive": false,
+                "autoWidth": false,
+                "lengthChange": true,                
+                "order": [],
+                "lengthMenu": [
+                    [10, 15, 25, 50, -1],
+                    [10, 15, 25, 50, "All"]
+                ],
+                // "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
+                "buttons": ["excel", "csv", "pdf", "colvis"]
+            }).buttons().container().appendTo('#farmersView_wrapper .col-md-6:eq(0)');
+        });
 
         $(function () {
             //Initialize Select2 Elements

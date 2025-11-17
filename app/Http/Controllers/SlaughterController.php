@@ -81,6 +81,21 @@ class SlaughterController extends Controller
         return view('slaughter.weigh', compact('title', 'configs', 'receipts', 'helpers', 'slaughter_data'));
     }
 
+    public function viewFarmersReport(Helpers $helpers)
+    {
+        $title = "farmers_view";
+
+        $slaughter_data = DB::table('slaughter_data')
+            ->whereDate('slaughter_data.created_at', today())
+            ->where('slaughter_data.deleted', '!=', 1)
+            ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
+            ->select('slaughter_data.*', 'carcass_types.description')
+            ->orderBy('slaughter_data.created_at', 'ASC')
+            ->get();
+
+        return view('slaughter.farmers-view', compact('title',  'helpers', 'slaughter_data'));
+    }
+
     public function weighOffals(Helpers $helpers, $customer = null) {
         $title = "Offals";
 

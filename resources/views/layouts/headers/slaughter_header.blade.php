@@ -50,8 +50,14 @@
                                 </li>
                                 <li class="dropdown-divider"></li>
                                 <li>
+                                    <a tabindex="-1" href="{{ route('farmers_view') }}"
+                                        class="dropdown-item">Farmers View</a>
+                                </li>
+                                <li class="dropdown-divider"></li>
+                                <li>
                                     <a tabindex="-1" href="{{ route('offals_report') }}"
                                         class="dropdown-item">Offals Report</a>
+                                </li>
                                 
                                 <li class="dropdown-divider"></li>
                                 <li>
