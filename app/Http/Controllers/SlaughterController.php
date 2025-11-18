@@ -760,4 +760,31 @@ class SlaughterController extends Controller
             return response()->json(['success' => false, 'message' => 'Failed to update SMS status. Error: ' . $e->getMessage()]);
         }
     }
+
+    public function farmersViewData(Helpers $helpers)
+    {
+        $slaughter_data = DB::table('slaughter_data')
+            ->whereDate('slaughter_data.created_at', today())
+            ->where('slaughter_data.deleted', '!=', 1)
+            ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
+            ->select('slaughter_data.*', 'carcass_types.description')
+            ->orderBy('slaughter_data.created_at', 'ASC')
+            ->get();
+        
+        // Format dates
+        foreach ($slaughter_data as $data) {
+            $data->created_at_formatted = $helpers->shortDateTime($data->created_at);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'data' => $slaughter_data,
+            'count' => $slaughter_data->count(),
+            'timestamp' => now()->toDateTimeString()
+        ], 200, [
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0'
+        ]);
+    }
 }

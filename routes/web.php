@@ -51,6 +51,7 @@ Route::prefix('slaughter')->group(function () {
     Route::post('/update-pending-etims', [SlaughterController::class, 'updatePendingEtimsData'])->name('update_pending_etims');
     Route::post('/send-sms', [SlaughterController::class, 'sendSmsCurl'])->name('send_sms');
     Route::post('/update-sms-sent-status', [SlaughterController::class, 'updateSmsSentStatus'])->name('update_send_sms_status');
+    Route::get('/farmers-view-data', [SlaughterController::class, 'farmersViewData'])->name('farmers_view_data');
 });
 /* -------------------------------- End Slaughter ------------------------------------------------ */
 
