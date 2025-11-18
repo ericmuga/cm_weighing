@@ -768,7 +768,7 @@ class SlaughterController extends Controller
             ->where('slaughter_data.deleted', '!=', 1)
             ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
             ->select('slaughter_data.*', 'carcass_types.description')
-            ->orderBy('slaughter_data.created_at', 'ASC')
+            ->orderBy('slaughter_data.created_at', 'desc')
             ->get();
         
         // Format dates
