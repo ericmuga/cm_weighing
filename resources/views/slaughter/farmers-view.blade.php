@@ -10,7 +10,7 @@
                     Slaughter Data Report | 
                     <span id="subtext-h1-title"><small>showing all entries</small></span>
                     <span id="last-refresh" class="badge badge-info ml-2" style="font-size: 10px;">
-                        Auto-refresh: 30s
+                        Auto-refresh: 5s
                     </span>
                 </h3>
             </div>
@@ -134,9 +134,9 @@
         }
 
         // Auto refresh every 30 seconds
-        setInterval(refreshTableData, 30000);
+        setInterval(refreshTableData, 5000);
 
-        console.log('Auto-refresh interval set (30 seconds)');
+        console.log('Auto-refresh interval set (5 seconds)');
     });
 </script>
 @endsection
