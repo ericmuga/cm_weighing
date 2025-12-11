@@ -385,7 +385,8 @@
                                 <th>#</th>
                                 <th>Product Code</th>
                                 <th>Product Name</th>
-                                <th>Cummulative Net Weight (kgs)</th>
+                                <th>Cumm Net Weight (kgs)</th>
+                                <th>Invoice Weight(0.75 off) kgs</th>
                             </tr>
                         </thead>
                         <tbody id="selectedEntriesTableBody">
@@ -671,14 +672,17 @@
                 <td>${entry.product_code}</td>
                 <td>${entry.product_name}</td>
                 <td>${Number(entry.net_weight).toFixed(2)}</td>
+                <td>${(Number(entry.net_weight) * 0.75).toFixed(2)}</td>
             `;
                     tableBody.appendChild(row);
                 });
                 const totalWeight = offals.reduce((total, entry) => total + Number(entry.net_weight), 0);
+                const totalInvoiceWeight = totalWeight * 0.75;
                 const totalRow = document.createElement('tr');
                 totalRow.innerHTML = `
             <td colspan="3" class="text-right font-weight-bold">Total Weight</td>
             <td class="font-weight-bold">${totalWeight.toFixed(2)}</td>
+            <td class="font-weight-bold">${totalInvoiceWeight.toFixed(2)}</td>
         `;
                 tableBody.appendChild(totalRow);
 
