@@ -91,6 +91,19 @@ return [
             'prefix_indexes' => true,
         ],
 
+        'bc240' => [
+            'driver' => 'sqlsrv',
+            'url' => env('DATABASE_URL'),
+            'host' => env('DB_HOST_BC240', 'localhost'),
+            'port' => env('DB_PORT_BC240', '1433'),
+            'database' => env('DB_DATABASE_BC240', 'forge'),
+            'username' => env('DB_USERNAME_BC240', 'forge'),
+            'password' => env('DB_PASSWORD_BC240', ''),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+        ],
+
         'main' => [
             'driver' => env('DB_CONNECTION_MAIN'),
             'host' => env('DB_HOST_MAIN'),

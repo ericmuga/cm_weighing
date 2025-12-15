@@ -186,8 +186,9 @@
                         <th>#</th>
                         <th>Product Code</th>
                         <th>Product Name</th>
-                        <th>Net Weight (kgs)</th>
                         <th>Scale Reading (kgs)</th>
+                        <th>Net Weight (kgs)</th>
+                        <th>Invoice Weight (kgs)</th>
                         <th>Manually Recorded</th>
                         <th>Customer</th>
                         <th>Grade</th>
@@ -201,8 +202,9 @@
                         <th>#</th>
                         <th>Product Code</th>
                         <th>Product Name</th>
-                        <th>Net Weight (kgs)</th>
                         <th>Scale Reading (kgs)</th>
+                        <th>Net Weight (kgs)</th>
+                        <th>Invoice Weight (kgs)</th>
                         <th>Manually Recorded</th>
                         <th>Customer</th>
                         <th>Grade</th>
@@ -217,8 +219,9 @@
                             <td>{{ $loop->iteration }}</td>
                             <td>{{ $entry->product_code }}</td>
                             <td>{{ $entry->product_name }}</td>
-                            <td>{{ number_format($entry->net_weight, 2) }}</td>
                             <td>{{ number_format($entry->scale_reading, 2) }}</td>
+                            <td>{{ number_format($entry->net_weight, 2) }}</td>
+                            <td>{{ number_format($entry->net_weight * 0.75, 2) }}</td>
                             @if($entry->is_manual == 0)
                                 <td>
                                     <span class="badge badge-success">No</span>

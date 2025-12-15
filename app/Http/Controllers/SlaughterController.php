@@ -186,36 +186,148 @@ class SlaughterController extends Controller
         }
     }
 
-    public function publishOffals(Request $request, Helpers $helpers) {
+    public function publishOffals(Request $request) {
         try {
-            $weights = [];
-            foreach ($request->entries as $entry) {
-                if (Offal::where('id', $entry['id'])->where('published', 0)->where('archived', 0)->where('created_at', today())->exists()) {
-                    $weight = [
-                        'entry_id' => $entry['id'],
-                        'product_code' => $entry['product_code'],
-                        'product_name' => $entry['product_name'],
-                        'scale_reading' => $entry['scale_reading'],
-                        'net_weight' => $entry['net_weight'],
-                        'is_manual' => $entry['is_manual'],
-                        'grade' => $entry['grade'],
-                        'user_id' => $entry['user_id'],
-                    ];
-                    $weights[] = $weight;
-                }
+            if (empty($request->entries) || !is_array($request->entries)) {
+                return response()->json(['success' => false, 'message' => 'No entries to publish']);
             }
+
+            $weights = [];
+            $customerData = null;
+
+            foreach ($request->entries as $entry) {
+                $offalRecord = DB::table('offals')
+                    ->where('offals.id', $entry['id'] ?? null)
+                    ->where('offals.published', 0)
+                    ->where('offals.archived', 0)
+                    ->leftJoin('customers', 'offals.customer_id', '=', 'customers.id')
+                    ->select('offals.*', 'customers.customer_code', 'customers.name AS customer_name')
+                    ->first();
+
+                if (!$offalRecord) {
+                    continue;
+                }
+
+                if (!$customerData) {
+                    $customerData = [
+                        'customer_name' => $offalRecord->customer_name,
+                        'customer_code' => $offalRecord->customer_code,
+                    ];
+                }
+
+                // Map BG1054 by grade to correct bc_code and price
+                $mapped = $this->mapPriceAndBcCode($entry['product_code'] ?? null, $entry['grade'] ?? null);
+
+                // Fallback for other products: fetch price/bc_code from offal_prices
+                if (!$mapped['bc_code'] || !$mapped['unit_price']) {
+                    $priceRow = DB::table('offal_prices')
+                        ->where('product_code', $entry['product_code'] ?? '')
+                        ->first();
+                    $mapped['bc_code']    = $mapped['bc_code']    ?: ($priceRow->bc_code ?? null);
+                    $mapped['unit_price'] = $mapped['unit_price'] ?: ($priceRow->unit_price ?? 0);
+                }
+
+                $invWeight  = round(($entry['net_weight'] ?? 0) * 0.75, 2);
+                $unitPrice  = (float) $mapped['unit_price'];
+                $lineAmount = round($invWeight * $unitPrice, 2);
+
+                $weights[] = [
+                    'entry_id'      => $entry['id'] ?? null,
+                    'product_code'  => $entry['product_code'] ?? null,
+                    'product_name'  => $entry['product_name'] ?? null,
+                    'bc_code'       => $mapped['bc_code'],
+                    'invoice_weight'=> $invWeight,
+                    'unit_price'    => $unitPrice,
+                    'line_amount'   => $lineAmount,
+                    'grade'         => $entry['grade'] ?? null,
+                    'created_at'    => $offalRecord->created_at,
+                ];
+            }
+
+            if (count($weights) === 0) {
+                return response()->json(['success' => false, 'message' => 'No eligible offals to publish for today']);
+            }
+
             $data = [
-                'customer_name'=> $request->entries[0]['customer_name'],
-                'customer_id'=> $request->entries[0]['customer_id'],
-                'weights' => $weights,
+                'extdocno'      => 'IV-' . ($customerData['customer_code'] ?? 'NA') . '-' . now()->format('Ymd'),
+                'customer_name' => $customerData['customer_name'] ?? null,
+                'customer_code' => $customerData['customer_code'] ?? null,
+                'weights'       => $weights,
             ];
-            //$helpers->publishToQueue($data, 'offals.bc');
-            Offal::whereIn('id', array_column($weights, 'entry_id'))->update(['published' => 1]);
-            return response()->json(['success' => true, 'message' => 'Offals published successfully']);
+
+            info('Publishing offals data: ' . json_encode($data));
+
+            // Write to BC database
+            $this->writeToDb($data);
+
+            // Mark offals as published
+            DB::table('offals')
+                ->whereIn('id', array_column($weights, 'entry_id'))
+                ->update([
+                    'published' => 1,
+                    'updated_by' => Auth::id(),
+                    'updated_at' => now(),
+                ]);
+
+            return response()->json(['success' => true, 'message' => 'Offals published successfully', 'count' => count($weights)]);
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             return response()->json(['success' => false, 'message' => 'Failed to publish offals. Error: ' . $e->getMessage()]);
         }
+    }
+
+    // Map BG1054 grade to specific bc_code and unit price
+    private function mapPriceAndBcCode(?string $productCode, ?string $grade): array
+    {
+        if ($productCode !== 'BG1054') {
+            return ['bc_code' => null, 'unit_price' => null];
+        }
+
+        switch ($grade) {
+            case '0':
+                // Hide (cow) - Zero Flay
+                return ['bc_code' => 'BJ31100378', 'unit_price' => 68.97];
+            case 'edge':
+                // Hide (cow) - Edge Flay
+                return ['bc_code' => 'BJ31100379', 'unit_price' => 43.10];
+            case 'reject':
+                // Hide (cow) - Reject
+                return ['bc_code' => 'BJ31100380', 'unit_price' => 21.55];
+            default:
+                // Unknown grade: default to reject price to avoid failing
+                return ['bc_code' => 'BJ31100380', 'unit_price' => 21.55];
+        }
+    }
+
+    private function writeToDb($data) {
+        // Compute header totals once
+        $totalAmount = (float) array_sum(array_column($data['weights'], 'line_amount'));
+        $totalQty    = (float) array_sum(array_column($data['weights'], 'invoice_weight'));
+
+        DB::connection('bc240')->transaction(function () use ($data, $totalAmount, $totalQty) {
+            foreach ($data['weights'] as $idx => $w) {
+            DB::connection('bc240')
+                ->table('CM3$Imported SalesAL$23dc970e-11e8-4d9b-8613-b7582aec86ba')
+                ->insert([
+                'ExtDocNo'           => strtoupper($data['extdocno']),
+                'LineNo'             => $idx + 1,
+                'CustNO'             => $data['customer_code'],
+                'Date'               => $w['created_at'],
+                'SPCode'             => 001,
+                'ItemNo'             => $w['bc_code'],
+                'Qty'                => (float) $w['invoice_weight'],
+                'UnitPrice'          => (float) $w['unit_price'],
+                'LineAmount'         => (float) $w['line_amount'],
+                'TotalHeaderAmount'  => $totalAmount,
+                'TotalHeaderQty'     => $totalQty,
+                'Type'               => 2,
+                'Executed'           => 0,
+                'Posted'             => 0,
+                'ItemBlockedStatus'  => 0,
+                'RevertFlag'         => 0,
+                ]);
+            }
+        });
     }
 
     public function loadWeighDataAjax(Request $request)
