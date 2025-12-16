@@ -415,27 +415,36 @@
     <script>
 
         const getWeighedCount = () => {
+            console.log('Calculating weighed count...');
             let totalCounts = 0;
 
-            let table = $('#example1').DataTable();
-            let entries = table.rows().nodes().toArray(); // Convert to array
+            const table = $('#example1').DataTable();
+            const entries = table.rows().nodes().toArray();
 
-            let productCode = $('#weigh_product_code').val();
-            let customerName = $('#weigh_customer_id option:selected').text().trim();
+            const productCode = $('#weigh_product_code').val();
+            const customerName = $('#weigh_customer_id option:selected').text().trim();
 
-            // console.log(entries.length);    
+            // Determine column indexes by header labels (robust to layout changes)
+            const headers = $('#example1 thead tr th').toArray().map(th => th.innerText.trim());
+            let productCodeIdx = headers.findIndex(h => h.toLowerCase().includes('product code'));
+            let customerIdx = headers.findIndex(h => h.toLowerCase() === 'customer');
+
+            // Fallback to known positions if headers are not found
+            if (productCodeIdx < 0) productCodeIdx = 1; // Product Code column
+            if (customerIdx < 0) customerIdx = 7; // Customer column (after Manually Recorded)
 
             entries.forEach(entry => {
-                // Get product_code and customer_id from data attributes on the row
-                // Get product_code and customer_id from the table cells
-                let entryProductCode = entry.children[1]?.innerText?.trim();
-                let entryCustomerName = entry.children[6]?.innerText?.trim();
+                const cells = entry.children;
+                const entryProductCode = cells[productCodeIdx]?.innerText?.trim();
+                const entryCustomerName = cells[customerIdx]?.innerText?.trim();
 
-                if (entryProductCode == productCode && entryCustomerName == customerName) {
+                if (entryProductCode === productCode && entryCustomerName === customerName) {
                     totalCounts += 1;
                 }
             });
-            // return totalCounts;
+
+            console.log('Total weighed count for product', productCode, 'and customer', customerName, ':', totalCounts);
+
             $('#weighed_count').val(totalCounts);
         }
 
