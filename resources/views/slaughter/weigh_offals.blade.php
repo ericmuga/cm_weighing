@@ -221,7 +221,7 @@
                             <td>{{ $entry->product_name }}</td>
                             <td>{{ number_format($entry->scale_reading, 2) }}</td>
                             <td>{{ number_format($entry->net_weight, 2) }}</td>
-                            <td>{{ number_format($entry->net_weight * 0.75, 2) }}</td>
+                            <td>{{ number_format($entry->net_weight * 0.975, 2) }}</td>
                             @if($entry->is_manual == 0)
                                 <td>
                                     <span class="badge badge-success">No</span>
@@ -389,7 +389,7 @@
                                 <th>Product Code</th>
                                 <th>Product Name</th>
                                 <th>Cumm Net Weight (kgs)</th>
-                                <th>Invoice Weight(0.75 off) kgs</th>
+                                <th>Invoice Weight(0.975 off) kgs</th>
                             </tr>
                         </thead>
                         <tbody id="selectedEntriesTableBody">
@@ -684,12 +684,12 @@
                 <td>${entry.product_code}</td>
                 <td>${entry.product_name}</td>
                 <td>${Number(entry.net_weight).toFixed(2)}</td>
-                <td>${(Number(entry.net_weight) * 0.75).toFixed(2)}</td>
+                <td>${(Number(entry.net_weight) * 0.975).toFixed(2)}</td>
             `;
                     tableBody.appendChild(row);
                 });
                 const totalWeight = offals.reduce((total, entry) => total + Number(entry.net_weight), 0);
-                const totalInvoiceWeight = totalWeight * 0.75;
+                const totalInvoiceWeight = totalWeight * 0.975;
                 const totalRow = document.createElement('tr');
                 totalRow.innerHTML = `
             <td colspan="3" class="text-right font-weight-bold">Total Weight</td>
