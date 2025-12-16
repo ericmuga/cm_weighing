@@ -313,7 +313,7 @@ class SlaughterController extends Controller
                 'LineNo'             => $idx + 1,
                 'CustNO'             => $data['customer_code'],
                 'Date'               => $w['created_at'],
-                'SPCode'             => 001,
+                'SPCode'             => '001',
                 'ItemNo'             => $w['bc_code'],
                 'Qty'                => (float) $w['invoice_weight'],
                 'UnitPrice'          => (float) $w['unit_price'],
