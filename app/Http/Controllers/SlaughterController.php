@@ -312,7 +312,7 @@ class SlaughterController extends Controller
                 'ExtDocNo'           => strtoupper($data['extdocno']),
                 'LineNo'             => $idx + 1,
                 'CustNO'             => $data['customer_code'],
-                'Date'               => $w['created_at'],
+                'Date'               => $w['created_at']->format('Y-m-d'), //use date not datetime e.g 2026-01-02 10:23:29.1766667 to be 2026-01-02 00:00.000
                 'SPCode'             => '001',
                 'ItemNo'             => $w['bc_code'],
                 'Qty'                => (float) $w['invoice_weight'],
