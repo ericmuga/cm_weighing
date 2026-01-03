@@ -318,7 +318,7 @@ class SlaughterController extends Controller
             foreach ($data['weights'] as $idx => $w) {
             // Guard: bc_code must be present
             if (empty($w['bc_code'])) {
-                throw new \RuntimeException('Cannot publish offals: product_code ' . ($w['product_code'] ?? 'UNKNOWN') . ' does not have a bc_code configured.');
+                throw new \RuntimeException('Cannot publish offals: product_code ' . ($w['product_code'] ?? 'UNKNOWN') . ' does not have a bc_code & prices configured.');
             }
             DB::connection('bc240')
                 ->table('CM3$Imported SalesAL$23dc970e-11e8-4d9b-8613-b7582aec86ba')
