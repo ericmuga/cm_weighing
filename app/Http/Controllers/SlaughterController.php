@@ -227,6 +227,15 @@ class SlaughterController extends Controller
                     $mapped['unit_price'] = $mapped['unit_price'] ?: ($priceRow->unit_price ?? 0);
                 }
 
+                // If bc_code is still missing, exit and notify the user
+                if (!$mapped['bc_code']) {
+                    Log::warning('Missing bc_code for product_code: ' . ($entry['product_code'] ?? 'UNKNOWN'));
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cannot publish offals: product_code ' . ($entry['product_code'] ?? 'UNKNOWN') . ' does not have a bc_code configured'
+                    ]);
+                }
+
                 $invWeight  = round(($entry['net_weight'] ?? 0) * 0.75, 2);
                 $unitPrice  = (float) $mapped['unit_price'];
                 $lineAmount = round($invWeight * $unitPrice, 2);
@@ -305,7 +314,12 @@ class SlaughterController extends Controller
         $totalQty    = (float) array_sum(array_column($data['weights'], 'invoice_weight'));
 
         DB::connection('bc240')->transaction(function () use ($data, $totalAmount, $totalQty) {
+            info('Inserting weights to BC DB: ' . json_encode($data['weights']));
             foreach ($data['weights'] as $idx => $w) {
+            // Guard: bc_code must be present
+            if (empty($w['bc_code'])) {
+                throw new \RuntimeException('Cannot publish offals: product_code ' . ($w['product_code'] ?? 'UNKNOWN') . ' does not have a bc_code configured.');
+            }
             DB::connection('bc240')
                 ->table('CM3$Imported SalesAL$23dc970e-11e8-4d9b-8613-b7582aec86ba')
                 ->insert([
