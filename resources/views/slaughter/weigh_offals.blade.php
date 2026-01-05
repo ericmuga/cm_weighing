@@ -221,7 +221,13 @@
                             <td>{{ $entry->product_name }}</td>
                             <td>{{ number_format($entry->scale_reading, 2) }}</td>
                             <td>{{ number_format($entry->net_weight, 2) }}</td>
-                            <td>{{ number_format($entry->net_weight * 0.975, 2) }}</td>
+                            @php
+                                $invoiceExceptions = ['BG1051','BG1060','BG1054','BG1254'];
+                                $invoiceWeight = in_array($entry->product_code, $invoiceExceptions)
+                                    ? $entry->net_weight
+                                    : $entry->net_weight * 0.975;
+                            @endphp
+                            <td>{{ number_format($invoiceWeight, 2) }}</td>
                             @if($entry->is_manual == 0)
                                 <td>
                                     <span class="badge badge-success">No</span>
@@ -389,7 +395,7 @@
                                 <th>Product Code</th>
                                 <th>Product Name</th>
                                 <th>Cumm Net Weight (kgs)</th>
-                                <th>Invoice Weight(0.975 off) kgs</th>
+                                <th>Invoice Weight (kgs)</th>
                             </tr>
                         </thead>
                         <tbody id="selectedEntriesTableBody">
@@ -659,6 +665,9 @@
             // Convert map to array
             var offals = Object.values(offalsMap);
 
+            // Exceptions where 0.975 should NOT be applied
+            const invoiceExceptions = ['BG1051','BG1060','BG1054','BG1254'];
+
             console.log(offals);
 
             const tableBody = document.getElementById('selectedEntriesTableBody');
@@ -679,17 +688,25 @@
             } else {
                 offals.forEach((entry, index) => {
                     const row = document.createElement('tr');
+                    const invoiceWeight = invoiceExceptions.includes(entry.product_code)
+                        ? Number(entry.net_weight)
+                        : Number(entry.net_weight) * 0.975;
                     row.innerHTML = `
                 <td>${index + 1}</td>
                 <td>${entry.product_code}</td>
                 <td>${entry.product_name}</td>
                 <td>${Number(entry.net_weight).toFixed(2)}</td>
-                <td>${(Number(entry.net_weight) * 0.975).toFixed(2)}</td>
+                <td>${invoiceWeight.toFixed(2)}</td>
             `;
                     tableBody.appendChild(row);
                 });
                 const totalWeight = offals.reduce((total, entry) => total + Number(entry.net_weight), 0);
-                const totalInvoiceWeight = totalWeight * 0.975;
+                const totalInvoiceWeight = offals.reduce((total, entry) => {
+                    const invWt = invoiceExceptions.includes(entry.product_code)
+                        ? Number(entry.net_weight)
+                        : Number(entry.net_weight) * 0.975;
+                    return total + invWt;
+                }, 0);
                 const totalRow = document.createElement('tr');
                 totalRow.innerHTML = `
             <td colspan="3" class="text-right font-weight-bold">Total Weight</td>

@@ -236,7 +236,11 @@ class SlaughterController extends Controller
                     ]);
                 }
 
-                $invWeight  = round(($entry['net_weight'] ?? 0) * 0.75, 2);
+                // Apply invoice weight exceptions (no 0.975 for specific product codes)
+                $invoiceExceptions = ['BG1051','BG1060','BG1054','BG1254'];
+                $net = (float) ($entry['net_weight'] ?? 0);
+                $productCode = $entry['product_code'] ?? '';
+                $invWeight  = round(in_array($productCode, $invoiceExceptions) ? $net : $net * 0.975, 2);
                 $unitPrice  = (float) $mapped['unit_price'];
                 $lineAmount = round($invWeight * $unitPrice, 2);
 
