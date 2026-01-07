@@ -193,6 +193,7 @@
                         <th>Customer</th>
                         <th>Grade</th>
                         <th>Recorded by</th>
+                        <th>Published?</th>
                         <th>Recorded DateTime</th>
                         <th class="no-export no-sort">Action</th>
                     </tr>
@@ -209,6 +210,7 @@
                         <th>Customer</th>
                         <th>Grade</th>
                         <th>Recorded by</th>
+                        <th>Published?</th>
                         <th>Recorded DateTime</th>
                         <th class="no-export no-sort">Action</th>
                     </tr>
@@ -248,6 +250,9 @@
                                 <td>{{ $entry->grade }}</td>
                             @endif
                             <td>{{ $entry->username }}</td>
+                            <td>
+                                {!! $entry->published == 1 ? '<span class="badge badge-success">Published</span>' : '<span class="badge badge-warning">Not Published</span>' !!}                                
+                            </td>
                             <td>{{ $helpers->shortDateTime($entry->created_at) }}</td>
                             <td class="no-sort no-export">
                                 @if($entry->published == 0)
@@ -262,8 +267,7 @@
                                         class="btn btn-danger btn-sm m-1" data-id="{{ $entry->id }}"
                                         onclick="updateArchiveId(event)">
                                         <i class="fa fa-trash"></i> Delete</button>
-                                @else
-                                    <span class="badge badge-warning">published</span>
+                                    
                                 @endif
                             </td>
                         </tr>
