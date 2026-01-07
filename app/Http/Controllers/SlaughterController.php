@@ -106,7 +106,7 @@ class SlaughterController extends Controller
         $configs = DB::table('scale_configs')->where('section', 'offals')->get();
         // dd($configs);
 
-        $entries = Offal::whereDate('offals.created_at', today())
+        $entries = Offal::whereDate('offals.created_at', today()->subDay(1))
             ->leftJoin('users', 'offals.user_id', '=', 'users.id')
             ->leftJoin('customers', 'offals.customer_id', '=', 'customers.id')
             ->join('items', 'offals.product_code', '=', 'items.code')
@@ -313,37 +313,58 @@ class SlaughterController extends Controller
     }
 
     private function writeToDb($data) {
-        // Compute header totals once
-        $totalAmount = (float) array_sum(array_column($data['weights'], 'line_amount'));
-        $totalQty    = (float) array_sum(array_column($data['weights'], 'invoice_weight'));
-
-        DB::connection('bc240')->transaction(function () use ($data, $totalAmount, $totalQty) {
-            info('Inserting weights to BC DB: ' . json_encode($data['weights']));
-            foreach ($data['weights'] as $idx => $w) {
+        // Group weights by bc_code to avoid repeated lines per customer
+        $grouped = [];
+        foreach ($data['weights'] as $w) {
             // Guard: bc_code must be present
             if (empty($w['bc_code'])) {
                 throw new \RuntimeException('Cannot publish offals: product_code ' . ($w['product_code'] ?? 'UNKNOWN') . ' does not have a bc_code & prices configured.');
             }
-            DB::connection('bc240')
-                ->table('CM3$Imported SalesAL$23dc970e-11e8-4d9b-8613-b7582aec86ba')
-                ->insert([
-                'ExtDocNo'           => strtoupper($data['extdocno']),
-                'LineNo'             => $idx + 1,
-                'CustNO'             => $data['customer_code'],
-                'Date'               => Carbon::parse($w['created_at'])->format('Y-m-d'), //use date not datetime e.g 2026-01-02 10:23:29.1766667 to be 2026-01-02 00:00.000
-                'SPCode'             => '001',
-                'ItemNo'             => $w['bc_code'],
-                'Qty'                => (float) $w['invoice_weight'],
-                'UnitPrice'          => (float) $w['unit_price'],
-                'LineAmount'         => (float) $w['line_amount'],
-                'TotalHeaderAmount'  => $totalAmount,
-                'TotalHeaderQty'     => $totalQty,
-                'Type'               => 2,
-                'Executed'           => 0,
-                'Posted'             => 0,
-                'ItemBlockedStatus'  => 0,
-                'RevertFlag'         => 0,
-                ]);
+
+            $key = $w['bc_code'];
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = [
+                    'bc_code'        => $w['bc_code'],
+                    'invoice_weight' => 0.0,
+                    'unit_price'     => (float) $w['unit_price'],
+                    'line_amount'    => 0.0,
+                    'created_at'     => $w['created_at'], // use date from first occurrence
+                ];
+            }
+
+            $grouped[$key]['invoice_weight'] += (float) $w['invoice_weight'];
+            // Sum per-line amounts to preserve any price variations safely
+            $grouped[$key]['line_amount']    += (float) $w['line_amount'];
+        }
+
+        // Compute header totals from grouped lines
+        $totalAmount = (float) array_sum(array_column($grouped, 'line_amount'));
+        $totalQty    = (float) array_sum(array_column($grouped, 'invoice_weight'));
+
+        DB::connection('bc240')->transaction(function () use ($data, $grouped, $totalAmount, $totalQty) {
+            info('Inserting grouped weights to BC DB: ' . json_encode(array_values($grouped)));
+            $lineNo = 1;
+            foreach ($grouped as $gw) {
+                DB::connection('bc240')
+                    ->table('CM3$Imported SalesAL$23dc970e-11e8-4d9b-8613-b7582aec86ba')
+                    ->insert([
+                        'ExtDocNo'           => strtoupper($data['extdocno']),
+                        'LineNo'             => $lineNo++,
+                        'CustNO'             => $data['customer_code'],
+                        'Date'               => Carbon::parse($gw['created_at'])->format('Y-m-d'), // use date not datetime
+                        'SPCode'             => '001',
+                        'ItemNo'             => $gw['bc_code'],
+                        'Qty'                => (float) $gw['invoice_weight'],
+                        'UnitPrice'          => (float) $gw['unit_price'],
+                        'LineAmount'         => (float) $gw['line_amount'],
+                        'TotalHeaderAmount'  => $totalAmount,
+                        'TotalHeaderQty'     => $totalQty,
+                        'Type'               => 2,
+                        'Executed'           => 0,
+                        'Posted'             => 0,
+                        'ItemBlockedStatus'  => 0,
+                        'RevertFlag'         => 0,
+                    ]);
             }
         });
     }
