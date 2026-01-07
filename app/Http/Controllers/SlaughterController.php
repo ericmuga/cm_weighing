@@ -573,7 +573,7 @@ class SlaughterController extends Controller
                             $cleanDate = str_replace('\\', '', trim($row[4]));
                             $receiptDate = Carbon::createFromFormat('m/d/y', $cleanDate)->format('d/m/Y');
 
-                            info('Parsed db date: ' . $receiptDate);
+                            // info('Parsed db date: ' . $receiptDate);
                         } catch (\Exception $e) {
                             Log::error('Invalid date format for row: ' . json_encode($row) . ' - ' . $e->getMessage());
                             continue; // Skip this row
