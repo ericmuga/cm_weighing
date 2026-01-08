@@ -265,31 +265,55 @@ class SlaughterController extends Controller
             }
 
             if (count($weights) === 0) {
-                return response()->json(['success' => false, 'message' => 'No eligible offals to publish for today']);
+                return response()->json(['success' => false, 'message' => 'No eligible offals to publish']);
             }
 
-            $data = [
-                'extdocno'      => 'IV-' . ($customerData['customer_code'] ?? 'NA') . '-' . now()->format('Ymd'),
-                'customer_name' => $customerData['customer_name'] ?? null,
-                'customer_code' => $customerData['customer_code'] ?? null,
-                'weights'       => $weights,
-            ];
+            // Group by created_at date (Y-m-d) to avoid batching across days
+            $groups = [];
+            foreach ($weights as $w) {
+                $dateKey = Carbon::parse($w['created_at'])->format('Y-m-d');
+                if (!isset($groups[$dateKey])) {
+                    $groups[$dateKey] = [];
+                }
+                $groups[$dateKey][] = $w;
+            }
 
-            info('Publishing offals data: ' . json_encode($data));
+            $publishedIds = [];
+            $totalCount   = 0;
+            foreach ($groups as $dateKey => $groupWeights) {
+                $extdocDate = Carbon::parse($dateKey)->format('Ymd');
+                $data = [
+                    'extdocno'      => 'IV-' . ($customerData['customer_code'] ?? 'NA') . '-' . $extdocDate,
+                    'customer_name' => $customerData['customer_name'] ?? null,
+                    'customer_code' => $customerData['customer_code'] ?? null,
+                    'weights'       => $groupWeights,
+                ];
 
-            // Write to BC database
-            $this->writeToDb($data);
+                info('Publishing offals data for ' . $dateKey . ': ' . json_encode($data));
+                // Write this date group to BC database
+                $this->writeToDb($data);
 
-            // Mark offals as published
-            DB::table('offals')
-                ->whereIn('id', array_column($weights, 'entry_id'))
-                ->update([
-                    'published' => 1,
-                    'updated_by' => Auth::id(),
-                    'updated_at' => now(),
-                ]);
+                $publishedIds = array_merge($publishedIds, array_column($groupWeights, 'entry_id'));
+                $totalCount  += count($groupWeights);
+            }
 
-            return response()->json(['success' => true, 'message' => 'Offals published successfully', 'count' => count($weights)]);
+            // Mark only published entries as published
+            if (!empty($publishedIds)) {
+                DB::table('offals')
+                    ->whereIn('id', $publishedIds)
+                    ->update([
+                        'published' => 1,
+                        'updated_by' => Auth::id(),
+                        'updated_at' => now(),
+                    ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Offals published successfully',
+                'count'   => $totalCount,
+                'dates'   => array_keys($groups),
+            ]);
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             return response()->json(['success' => false, 'message' => 'Failed to publish offals. Error: ' . $e->getMessage()]);

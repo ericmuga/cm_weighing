@@ -392,6 +392,14 @@
                         </select>
                     </div>
 
+                    <div class="form-group">
+                        <label for="publish_date">Date</label>
+                        <select class="form-control" id="publish_date" name="publish_date" onchange="onPublishDateChange()" disabled>
+                            <option disabled selected value="">Select Date</option>
+                        </select>
+                        <small class="text-muted">Select a date to push only that day's entries.</small>
+                    </div>
+
                     <table class="table table-bordered table-hover overflow-auto">
                         <thead>
                             <tr>
@@ -646,16 +654,62 @@
 
         function showCustomerEntries(event) {
             const input = event.currentTarget;
-            customerId = input.value
+            customerId = input.value;
 
-            // Group entries by product_code and sum net_weight per product_code for the selected customer and unpublished entries
-            var rawOffals = @json($entries)
+            const entriesAll = @json($entries);
+            const rawOffals = entriesAll
                 .filter((entry) => entry.customer_id == customerId)
                 .filter((entry) => entry.published == 0);
 
-            // Aggregate by product_code
-            var offalsMap = {};
-            rawOffals.forEach(function (entry) {
+            // Populate date selector with unique dates from created_at
+            const dateSelect = document.getElementById('publish_date');
+            dateSelect.innerHTML = '<option disabled selected value="">Select Date</option>';
+            const uniqueDates = Array.from(new Set(rawOffals.map(e => String(e.created_at).slice(0,10)))).sort();
+            uniqueDates.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d; opt.textContent = d;
+                dateSelect.appendChild(opt);
+            });
+            dateSelect.disabled = uniqueDates.length === 0;
+
+            // If only one date available, auto-select it and render
+            if (uniqueDates.length === 1) {
+                dateSelect.value = uniqueDates[0];
+                renderEntriesForDate(uniqueDates[0], rawOffals);
+            } else {
+                // Render segmented view by date until a specific date is selected
+                renderEntriesSegmentedByDate(rawOffals);
+            }
+        }
+
+        function onPublishDateChange() {
+            const customerId = document.getElementById('publish_customer').value;
+            const selectedDate = document.getElementById('publish_date').value;
+            const entriesAll = @json($entries);
+            const rawOffals = entriesAll
+                .filter((entry) => entry.customer_id == customerId)
+                .filter((entry) => entry.published == 0);
+            if (selectedDate) {
+                renderEntriesForDate(selectedDate, rawOffals);
+            }
+        }
+
+        function renderEntriesForDate(dateKey, rawOffals) {
+            const confirmButton = document.getElementById('confirmPublishButton');
+            const tableBody = document.getElementById('selectedEntriesTableBody');
+            tableBody.innerHTML = '';
+
+            const filtered = rawOffals.filter(e => String(e.created_at).slice(0,10) === dateKey);
+            if (filtered.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="5" class="text-center">No entries for ${dateKey}</td>`;
+                tableBody.appendChild(row);
+                confirmButton.disabled = true;
+                return;
+            }
+
+            const offalsMap = {};
+            filtered.forEach(function (entry) {
                 if (!offalsMap[entry.product_code]) {
                     offalsMap[entry.product_code] = {
                         product_code: entry.product_code,
@@ -665,45 +719,101 @@
                 }
                 offalsMap[entry.product_code].net_weight += Number(entry.net_weight);
             });
+            const offals = Object.values(offalsMap);
 
-            // Convert map to array
-            var offals = Object.values(offalsMap);
-
-            // Exceptions where 0.975 should NOT be applied
             const invoiceExceptions = ['BG1051','BG1060','BG1054','BG1254'];
+            let idx = 0;
+            offals.forEach((entry) => {
+                const row = document.createElement('tr');
+                const invoiceWeight = invoiceExceptions.includes(entry.product_code)
+                    ? Number(entry.net_weight)
+                    : Number(entry.net_weight) * 0.975;
+                row.innerHTML = `
+                    <td>${++idx}</td>
+                    <td>${entry.product_code}</td>
+                    <td>${entry.product_name}</td>
+                    <td>${Number(entry.net_weight).toFixed(2)}</td>
+                    <td>${invoiceWeight.toFixed(2)}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+            const totalWeight = offals.reduce((total, entry) => total + Number(entry.net_weight), 0);
+            const totalInvoiceWeight = offals.reduce((total, entry) => {
+                const invWt = invoiceExceptions.includes(entry.product_code)
+                    ? Number(entry.net_weight)
+                    : Number(entry.net_weight) * 0.975;
+                return total + invWt;
+            }, 0);
+            const totalRow = document.createElement('tr');
+            totalRow.innerHTML = `
+                <td colspan="3" class="text-right font-weight-bold">Total Weight (${dateKey})</td>
+                <td class="font-weight-bold">${totalWeight.toFixed(2)}</td>
+                <td class="font-weight-bold">${totalInvoiceWeight.toFixed(2)}</td>
+            `;
+            tableBody.appendChild(totalRow);
 
-            console.log(offals);
+            confirmButton.disabled = false;
+        }
 
+        function renderEntriesSegmentedByDate(rawOffals) {
+            const confirmButton = document.getElementById('confirmPublishButton');
             const tableBody = document.getElementById('selectedEntriesTableBody');
-            while (tableBody.firstChild) {
-                tableBody.removeChild(tableBody.firstChild);
+            tableBody.innerHTML = '';
+
+            const byDate = {};
+            rawOffals.forEach(e => {
+                const d = String(e.created_at).slice(0,10);
+                if (!byDate[d]) byDate[d] = [];
+                byDate[d].push(e);
+            });
+
+            const invoiceExceptions = ['BG1051','BG1060','BG1054','BG1254'];
+            const dates = Object.keys(byDate).sort();
+            if (dates.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="5" class="text-center">No entries for this customer not pushed for invoicing</td>`;
+                tableBody.appendChild(row);
+                confirmButton.disabled = true;
+                return;
             }
 
-            const confirmButton = document.getElementById('confirmPublishButton');
+            dates.forEach(dateKey => {
+                // Date header row
+                const headerRow = document.createElement('tr');
+                headerRow.className = 'table-secondary';
+                headerRow.innerHTML = `<td colspan="5"><strong>Date: ${dateKey}</strong></td>`;
+                tableBody.appendChild(headerRow);
 
-            if (offals.length == 0) {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-            <td colspan="4" class="text-center">No entries for this customer not pushed for invoicing</td>
-        `;
-                tableBody.appendChild(row);
+                // Aggregate by product_code for this date
+                const grouped = {};
+                byDate[dateKey].forEach(entry => {
+                    if (!grouped[entry.product_code]) {
+                        grouped[entry.product_code] = {
+                            product_code: entry.product_code,
+                            product_name: entry.product_name,
+                            net_weight: 0,
+                        };
+                    }
+                    grouped[entry.product_code].net_weight += Number(entry.net_weight);
+                });
+                const offals = Object.values(grouped);
 
-                confirmButton.disabled = true;
-            } else {
-                offals.forEach((entry, index) => {
+                let idx = 0;
+                offals.forEach(entry => {
                     const row = document.createElement('tr');
                     const invoiceWeight = invoiceExceptions.includes(entry.product_code)
                         ? Number(entry.net_weight)
                         : Number(entry.net_weight) * 0.975;
                     row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${entry.product_code}</td>
-                <td>${entry.product_name}</td>
-                <td>${Number(entry.net_weight).toFixed(2)}</td>
-                <td>${invoiceWeight.toFixed(2)}</td>
-            `;
+                        <td>${++idx}</td>
+                        <td>${entry.product_code}</td>
+                        <td>${entry.product_name}</td>
+                        <td>${Number(entry.net_weight).toFixed(2)}</td>
+                        <td>${invoiceWeight.toFixed(2)}</td>
+                    `;
                     tableBody.appendChild(row);
                 });
+
                 const totalWeight = offals.reduce((total, entry) => total + Number(entry.net_weight), 0);
                 const totalInvoiceWeight = offals.reduce((total, entry) => {
                     const invWt = invoiceExceptions.includes(entry.product_code)
@@ -713,15 +823,15 @@
                 }, 0);
                 const totalRow = document.createElement('tr');
                 totalRow.innerHTML = `
-            <td colspan="3" class="text-right font-weight-bold">Total Weight</td>
-            <td class="font-weight-bold">${totalWeight.toFixed(2)}</td>
-            <td class="font-weight-bold">${totalInvoiceWeight.toFixed(2)}</td>
-        `;
+                    <td colspan="3" class="text-right font-weight-bold">Total Weight (${dateKey})</td>
+                    <td class="font-weight-bold">${totalWeight.toFixed(2)}</td>
+                    <td class="font-weight-bold">${totalInvoiceWeight.toFixed(2)}</td>
+                `;
                 tableBody.appendChild(totalRow);
+            });
 
-                confirmButton.disabled = false;
-            }
-
+            // Require date selection to enable confirm
+            confirmButton.disabled = true;
         }
 
 
@@ -730,6 +840,13 @@
             while (tableBody.firstChild) {
                 tableBody.removeChild(tableBody.firstChild);
             }
+            const dateSelect = document.getElementById('publish_date');
+            if (dateSelect) {
+                dateSelect.innerHTML = '<option disabled selected value="">Select Date</option>';
+                dateSelect.disabled = true;
+            }
+            const confirmButton = document.getElementById('confirmPublishButton');
+            if (confirmButton) confirmButton.disabled = true;
         });
 
         function publishOffals(event) {
@@ -749,6 +866,8 @@
             const customerId = formData.get('customer_id');
             const url = form.action;
             const offals = @json($entries).filter((entry) => entry.customer_id == customerId);
+            const publishDate = document.getElementById('publish_date').value;
+            const offalsForDate = publishDate ? offals.filter(e => String(e.created_at).slice(0,10) === publishDate) : [];
 
             try {
                 // Send request to server
@@ -760,7 +879,7 @@
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            entries: offals
+                            entries: offalsForDate
                         })
                     })
                     .then(response => response.json())
