@@ -106,8 +106,7 @@ class SlaughterController extends Controller
         $configs = DB::table('scale_configs')->where('section', 'offals')->get();
         // dd($configs);
 
-        $entries = Offal::whereDate('offals.created_at', today())
-            ->leftJoin('users', 'offals.user_id', '=', 'users.id')
+        $entries = Offal::leftJoin('users', 'offals.user_id', '=', 'users.id')
             ->leftJoin('customers', 'offals.customer_id', '=', 'customers.id')
             ->join('items', 'offals.product_code', '=', 'items.code')
             ->where('offals.archived', 0)
@@ -116,6 +115,14 @@ class SlaughterController extends Controller
             ->when($customer, function ($query, $customer) {
                 return $query->where('offals.customer_id', $customer);
             })
+            ->when(strtolower((string) Session::get('auth_username', '')) === 'ekaranja',
+                function ($query) {
+                    return $query->whereDate('offals.created_at', '>=', today()->subDays(3));
+                },
+                function ($query) {
+                    return $query->whereDate('offals.created_at', today());
+                }
+            )
             ->get();
 
         $entryCustomers = $entries->pluck('customer_id', 'customer_name')->unique();

@@ -95,6 +95,8 @@ class LoginController extends Controller
         // Log in the user
         Auth::login($user);
 
+        Session::put('auth_username', $request->username);
+
         // regenerate session to prevent session fixation
         $request->session()->regenerate();
 
