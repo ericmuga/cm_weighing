@@ -43,7 +43,7 @@
                         <td>{{ $entry->name }}</td>
                         <td>{{ $entry->phone_number }}</td>
                         <td>{{ $entry->kra_pin }}</td>
-                        <td>{{ $entry->location }}</td>>
+                        <td>{{ $entry->location }}</td>
                         <td>{{ $helpers->dateToHumanFormat($entry->updated_at) }}</td>
                         <td>
                             <button

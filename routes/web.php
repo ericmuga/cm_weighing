@@ -108,5 +108,6 @@ Route::prefix('butchery')->group(function () {
     Route::get('/scale3', [ButcheryController::class, 'scale3'])->name('butchery_scale_3');
     Route::post('/scale3/save', [ButcheryController::class, 'scale3Save'])->name('butchery_scale3_save');
     Route::post('/scale3/update', [ButcheryController::class, 'scale3Update'])->name('butchery_scale3_update');
+    Route::get('deboning/report/{filter?}', [ButcheryController::class, 'deboningReport'])->name('deboning_report');
 });
 /* -------------------------------- End Customers ------------------------------------------------ */

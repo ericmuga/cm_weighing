@@ -155,7 +155,7 @@ class ButcheryController extends Controller
 
     public function scale3Update(Request $request)
     {
-        dd($request->all());
+        // dd($request->all());
         $validatedData = $this->validate($request, [
             'edit_product' => 'required',
             'edit_net' => 'required|numeric',
@@ -191,4 +191,25 @@ class ButcheryController extends Controller
             return redirect()->back();
         }
     }
+
+    public function deboningReport(Request $request, $filter = null) { 
+        $title = 'Deboning report'; 
+        
+        $scale_filter = 'butchery';
+
+        $report_data = DB::table('deboning as a') 
+            ->leftJoin('items as b', 'a.product_code', '=', 'b.code' ) 
+            ->select('a.id', 'b.description', 'a.product_code', 'a.scale_reading', 'a.tareweight', 'a.netweight', 'a.is_manual', 'a.no_of_pieces', 'a.process_code', 'a.narration', 'a.created_at') 
+            ->orderBy('a.created_at', 'desc') 
+            ->when(is_null($filter), function($query) {
+                    return $query->whereDate('a.created_at', '>=', now()->subDays(3)->toDateString());
+                }, function($query) use ($filter) {
+                    return $query->whereDate('a.created_at', '>=', now()->subWeek()->toDateString());
+                })
+            ->get();
+
+        // dd($report_data);
+        
+        return view('butchery.scale3-report', compact('title', 'report_data', 'scale_filter', 'filter')); 
+    }  
 }
