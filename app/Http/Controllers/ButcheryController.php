@@ -201,15 +201,47 @@ class ButcheryController extends Controller
             ->leftJoin('items as b', 'a.product_code', '=', 'b.code' ) 
             ->select('a.id', 'b.description', 'a.product_code', 'a.scale_reading', 'a.tareweight', 'a.netweight', 'a.is_manual', 'a.no_of_pieces', 'a.process_code', 'a.narration', 'a.created_at') 
             ->orderBy('a.created_at', 'desc') 
-            ->when(is_null($filter), function($query) {
-                    return $query->whereDate('a.created_at', '>=', now()->subDays(3)->toDateString());
-                }, function($query) use ($filter) {
-                    return $query->whereDate('a.created_at', '>=', now()->subWeek()->toDateString());
-                })
+            ->when(is_null($filter), function ($query) {
+                return $query->whereDate('a.created_at', '>=', now()->subDays(3)->toDateString());
+            })
+            ->when($filter === 'today', function ($query) {
+                return $query->whereDate('a.created_at', today());
+            })
+            ->when(!is_null($filter) && $filter !== 'today', function ($query) {
+                return $query->whereDate('a.created_at', '>=', now()->subWeek()->toDateString());
+            })
+            ->orderByDesc('id')
             ->get();
 
         // dd($report_data);
         
         return view('butchery.scale3-report', compact('title', 'report_data', 'scale_filter', 'filter')); 
     }  
+
+    public function deboningReportExport(Request $request) {
+
+        $request->validate([
+            'item_code' => 'nullable|string',
+            'from_date' => 'required|date',
+            'to_date' => 'required|date',
+        ]);
+
+        $query = DB::table('deboning as a') 
+            ->leftJoin('items as b', 'a.product_code', '=', 'b.code' ) 
+            ->select('a.id', 'b.description', 'a.product_code', 'a.scale_reading', 'a.tareweight', 'a.netweight', 'a.is_manual', 'a.no_of_pieces', 'a.process_code', 'a.narration', 'a.created_at') 
+            ->orderBy('a.created_at', 'desc');
+
+        if ($request->item_code) {
+            $query->where('a.product_code', $request->item_code);
+        }
+
+        if ($request->from_date && $request->to_date) {
+            $query->whereBetween('a.created_at', [$request->from_date, $request->to_date]);
+        }
+
+        $report_data = $query->get();
+
+        $export = new \App\Exports\DeboningReportExport($report_data);
+        return \Maatwebsite\Excel\Facades\Excel::download($export, 'deboning_report.xlsx');
+    }
 }

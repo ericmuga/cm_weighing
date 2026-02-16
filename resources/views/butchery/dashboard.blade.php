@@ -11,12 +11,12 @@
         <div class="small-box bg-info">
             <div class="inner">
                 <h3>60</h3>
-                <p>No. of expected sides</p>
+                <p>No. of expected sides Today</p>
             </div>
             <div class="icon">
                 <i class="fa fa-box"></i>
             </div>
-            <a href="{{ route('stock_take') }}" class="small-box-footer">More info <i
+            <a href="#" class="small-box-footer">More info <i
                     class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
@@ -24,12 +24,12 @@
         <div class="small-box bg-success">
             <div class="inner">
                 <h3>35<sup style="font-size: 20px"></sup></h3>
-                <p>No. of Sides transfered</p>
+                <p>No. of Sides transfered Today</p>
             </div>
             <div class="icon">
                 <i class="fa fa-exchange-alt"></i>
             </div>
-            <a href="{{ route('stock_transfers_issue') }}" class="small-box-footer">More info <i
+            <a href="{{ route('butchery_scale2') }}" class="small-box-footer">More info <i
                     class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
@@ -37,12 +37,12 @@
         <div class="small-box bg-warning">
             <div class="inner">
                 <h3>133,567 <sup style="font-size: 20px">kgs</sup></h3>
-                <p>Weight of deboned products</p>
+                <p>Weight of deboned products Today</p>
             </div>
             <div class="icon">
                 <i class="fa fa-balance-scale"></i>
             </div>
-            <a href="{{ route('stock_transfers_receive') }}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+            <a href="{{ route('deboning_report', ['filter' => 'today']) }}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
 </div>
