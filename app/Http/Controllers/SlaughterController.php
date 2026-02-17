@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\ReceiptsUploadCompleted;
 use App\Exports\OffalsDataExport;
+use App\Exports\OffalsDataExportSummary;
 use App\Exports\SlaughterSummaryExport;
 use App\Models\Customer;
 use App\Models\Helpers;
@@ -762,6 +763,30 @@ class SlaughterController extends Controller
         $exports = Session::put('session_export_data', $data);
 
         return Excel::download(new OffalsDataExport, 'OffalsDataExportFrom-' . $request->from_date . '-To-' . $request->to_date . '.xlsx');
+    }
+
+    public function offalsReportExportSummary(Request $request, Helpers $helpers)
+    {
+
+        $from = date($request->from_date);
+        $to = date($request->to_date);
+
+        $data = DB::table('offals')
+            ->where('offals.archived', 0)
+            ->leftJoin('customers', 'offals.customer_id', '=', 'customers.id')
+            ->leftJoin('items', 'offals.product_code', '=', 'items.code')
+            ->select('customers.name AS cust', 'offals.product_code','items.description AS product_name', DB::raw('SUM(offals.net_weight) as total_net_weight'), DB::raw('COUNT(offals.id) as total_records'))
+            ->orderBy('customers.name', 'ASC')
+            ->whereDate('offals.created_at', '>=', $from)
+            ->whereDate('offals.created_at', '<=', $to)
+            ->groupBy('customers.name', 'offals.product_code','items.description')
+            ->get();
+
+        // dd($data);
+
+        $exports = Session::put('session_export_data', $data);
+
+        return Excel::download(new OffalsDataExportSummary, 'OffalsDataExportSummaryFrom-' . $request->from_date . '-To-' . $request->to_date . '.xlsx');
     }
 
     public function scaleConfigs(Helpers $helpers, $section = null)
