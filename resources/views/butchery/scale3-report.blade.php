@@ -22,7 +22,12 @@
                     <div class="col-md-5">
                         <button class="btn btn-success" data-toggle="modal" data-target="#export_data"><i
                                 class="fas fa-file-excel"></i>
-                            Generate Lines Report</button>
+                            Generate Lines Report
+                        </button>
+
+                        <button class="btn btn-warning" data-toggle="modal" data-target="#export_data_summary"><i
+                            class="fas fa-file-excel"></i>
+                        Generate Summary Report</button>
                     </div>
                 </div>
             </div>
@@ -145,6 +150,54 @@
     </form>
 </div>
 <!-- End Export combined Modal -->
+
+<!-- Start Export summary Modal -->
+<div class="modal fade" id="export_data_summary" tabindex="-1" role="dialog" aria-hidden="true">
+    <form id="form-orders-export" action="{{ route('deboning_report_export_summary') }}" method="POST" class="form-prevent-multiple-submits">
+        @csrf
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Export Deboning Summary Report</h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label for="from_date">From Date:</label>
+                            <input type="date" class="form-control" name="from_date"
+                                id="stemplate_date_created_from_flagged" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="to_date">To Date:</label>
+                            <input type="date" class="form-control" name="to_date"
+                                id="stemplate_date_created_from_flagged" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label for="item_code">Product <i>(For all items, leave this blank)</i></label>
+                            <select class="form-control select2" name="item_code" id="item_code">
+                                <option disabled selected>Select Product</option>
+                                @foreach($report_data as $product)
+                                <option value="{{ $product->product_code }}">{{ $product->product_code }} - {{ $product->description }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary float-left" type="button" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success btn-lg  float-right  btn-prevent-multiple-submits"><i class="fa fa-send"></i>
+                        Export</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<!-- End Export summary Modal -->
 
 @endsection
 

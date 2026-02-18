@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Exports\DeboningReportSummaryExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
 
 class ButcheryController extends Controller
 {
@@ -226,6 +229,9 @@ class ButcheryController extends Controller
             'to_date' => 'required|date',
         ]);
 
+        $fromDate = Carbon::parse($request->from_date)->startOfDay();
+        $toDate = Carbon::parse($request->to_date)->endOfDay();
+
         $query = DB::table('deboning as a') 
             ->leftJoin('items as b', 'a.product_code', '=', 'b.code' ) 
             ->select('a.id', 'b.description', 'a.product_code', 'a.scale_reading', 'a.tareweight', 'a.netweight', 'a.is_manual', 'a.no_of_pieces', 'a.process_code', 'a.narration', 'a.created_at') 
@@ -236,12 +242,42 @@ class ButcheryController extends Controller
         }
 
         if ($request->from_date && $request->to_date) {
-            $query->whereBetween('a.created_at', [$request->from_date, $request->to_date]);
+            $query->whereBetween('a.created_at', [$fromDate, $toDate]);
         }
 
         $report_data = $query->get();
 
         $export = new \App\Exports\DeboningReportExport($report_data);
         return \Maatwebsite\Excel\Facades\Excel::download($export, 'deboning_report.xlsx');
+    }
+
+    public function deboningReportExportSummary(Request $request){
+        $request->validate([
+            'item_code' => 'nullable|string',
+            'from_date' => 'required|date',
+            'to_date' => 'required|date',
+        ]);
+
+        $fromDate = Carbon::parse($request->from_date)->startOfDay();
+        $toDate = Carbon::parse($request->to_date)->endOfDay();
+
+        $query = DB::table('deboning as a') 
+            ->leftJoin('items as b', 'a.product_code', '=', 'b.code' ) 
+            ->select('a.product_code', 'b.description', DB::raw('SUM(a.netweight) as total_netweight'), DB::raw('SUM(a.no_of_pieces) as total_pieces'), DB::raw('COUNT(a.id) as total_records'))
+            ->groupBy('a.product_code', 'b.description')
+            ->orderBy('a.product_code', 'asc');
+
+        if ($request->item_code) {
+            $query->where('a.product_code', $request->item_code);
+        }
+
+        if ($request->from_date && $request->to_date) {
+            $query->whereBetween('a.created_at', [$fromDate, $toDate]);
+        }
+
+        $report_data = $query->get();
+
+        $export = new DeboningReportSummaryExport($report_data);
+        return Excel::download($export, 'deboning_report_summary.xlsx');
     }
 }
