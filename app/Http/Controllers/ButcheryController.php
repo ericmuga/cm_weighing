@@ -136,14 +136,15 @@ class ButcheryController extends Controller
         }
         try {
             DB::table('deboning')->insert([
-            'no_of_pieces'=> $request->no_of_pieces,
-            'product_code'=> $request->product,
-            'scale_reading'=> $request->reading,
-            'tareweight'=> $request->tareweight,
-            'netweight'=> $request->net,
-            'process_code'=> $request->production_process_code,
-            'is_manual'=> $manual_weight,
-            'user_id' => Auth::id(),
+                'no_of_pieces'=> $request->no_of_pieces,
+                'product_code'=> $request->product,
+                'scale_reading'=> $request->reading,
+                'tareweight'=> $request->tareweight,
+                'netweight'=> $request->net,
+                'process_code'=> $request->production_process_code,
+                'is_manual'=> $manual_weight,
+                'narration'=> $request->desc,
+                'user_id' => Auth::id(),
             ]);
 
             Toastr::success('Deboning weight saved successfully', 'Success');
