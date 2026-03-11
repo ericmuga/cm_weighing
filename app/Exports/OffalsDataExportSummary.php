@@ -5,8 +5,9 @@ namespace App\Exports;
 use Illuminate\Support\Facades\Session;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 
-class OffalsDataExportSummary implements FromArray, WithHeadings
+class OffalsDataExportSummary implements FromArray, WithHeadings, WithStrictNullComparison
 {
     private array $columns;
     private array $rows;

@@ -3,10 +3,10 @@
 namespace App\Exports;
 
 use Illuminate\Support\Facades\Session;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class SlaughterSummaryExport implements FromCollection, withHeadings
+class SlaughterSummaryExport implements FromCollection, WithHeadings
 {
     /**
      * @return \Illuminate\Support\Collection
@@ -19,9 +19,16 @@ class SlaughterSummaryExport implements FromCollection, withHeadings
 
     public function headings(): array
     {
-        return
-            [
-                'ReceiptNo', 'SupplierCode', 'SupplierName', 'ProductCode', 'No. Weighed', 'Total Net Weight', 'CDW Weight(97.5%)'
-            ];
+        return [
+            'ReceiptNo',
+            'SupplierCode',
+            'SupplierName',
+            'ProductCode',
+            'First Weighing DateTime',
+            'Last Weighing DateTime',
+            'No. Weighed',
+            'Total Net Weight',
+            'CDW Weight(97.5%)'
+        ];
     }
 }

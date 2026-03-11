@@ -734,7 +734,17 @@ class SlaughterController extends Controller
         $data = DB::table('slaughter_data')
             ->whereDate('created_at', '>=', $from)
             ->whereDate('created_at', '<=', $to)
-            ->select('receipt_no', 'vendor_no', 'vendor_name', 'item_code', DB::raw('COUNT(slaughter_data.id) as qty'), DB::raw('SUM(slaughter_data.total_net) as total_net'), DB::raw('ROUND(SUM(slaughter_data.total_net * 0.975), 2) as total_settlement'))
+            ->select(
+                'receipt_no',
+                'vendor_no',
+                'vendor_name',
+                'item_code',
+                DB::raw('MIN(slaughter_data.created_at) as first_date'),
+                DB::raw('MAX(slaughter_data.created_at) as last_date'),
+                DB::raw('COUNT(slaughter_data.id) as qty'),
+                DB::raw('SUM(slaughter_data.total_net) as total_net'),
+                DB::raw('ROUND(SUM(slaughter_data.total_net * 0.975), 2) as total_settlement')
+            )
             ->groupBy('receipt_no', 'vendor_no', 'vendor_name', 'item_code')
             ->get();
 
