@@ -739,8 +739,8 @@ class SlaughterController extends Controller
                 'vendor_no',
                 'vendor_name',
                 'item_code',
-                DB::raw('MIN(slaughter_data.created_at) as first_date'),
-                DB::raw('MAX(slaughter_data.created_at) as last_date'),
+                DB::raw('MIN(CAST(slaughter_data.created_at AS DATE)) as first_date'),
+                DB::raw('MAX(CAST(slaughter_data.created_at AS DATE)) as last_date'),
                 DB::raw('COUNT(slaughter_data.id) as qty'),
                 DB::raw('SUM(slaughter_data.total_net) as total_net'),
                 DB::raw('ROUND(SUM(slaughter_data.total_net * 0.975), 2) as total_settlement')

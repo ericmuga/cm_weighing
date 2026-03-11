@@ -24,8 +24,8 @@ class SlaughterSummaryExport implements FromCollection, WithHeadings
             'SupplierCode',
             'SupplierName',
             'ProductCode',
-            'First Weighing DateTime',
-            'Last Weighing DateTime',
+            'First Weighing Date',
+            'Last Weighing Date',
             'No. Weighed',
             'Total Net Weight',
             'CDW Weight(97.5%)'
