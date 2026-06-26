@@ -68,13 +68,20 @@
                 <input type="hidden" id="old_manual" value="{{ old('manual_weight') }}">
                 <div class="row">
                     <div class="col-6 form-group">
-                        <label for="crate_weight">Crate Weight</label>
-                        <select class="form-control" id="crate_weight" name="crate_weight" onchange="updateTotalTare()">
-                            <option selected value="1.8">1.8</option>
-                            <option value="1.5">1.5</option>
+                        <label for="vessel_type">Vessel Type</label>
+                        <select class="form-control" id="vessel_type" name="vessel_type" onchange="handleVesselTypeChange()">
+                            @foreach ($vessels as $vessel)
+                                <option
+                                    value="{{ $vessel->tare_weight }}"
+                                    data-type="{{ stripos($vessel->name, 'van') !== false ? 'van' : 'crate' }}"
+                                    {{ $loop->first ? 'selected' : '' }}
+                                >
+                                    {{ $vessel->name }}
+                                </option>
+                            @endforeach
                         </select>
                     </div>
-                    <div class="col-6 form-group">
+                    <div class="col-6 form-group" id="black_crates_group">
                         <label for="black_crates">Black Crates</label>
                         <input type="number" class="form-control" id="black_crates" name="black_crates" min="0" oninput="updateTotalTare()" value="1" max="4">
                     </div>
@@ -398,12 +405,37 @@
     };
 
     function updateTotalTare() {
-        crate_weight = document.getElementById('crate_weight').value;
-        no_of_crates = document.getElementById('no_of_crates').value;
-        black_crates = document.getElementById('black_crates').value;
-        tareweight_input = document.getElementById('tareweight');
-        tareweight_input.value = (no_of_crates * crate_weight + (black_crates * (2-crate_weight))).toFixed(2);
+        var vesselSelect = document.getElementById('vessel_type');
+        var crate_weight = parseFloat(vesselSelect.value);
+        var no_of_crates = document.getElementById('no_of_crates').value;
+        var black_crates = document.getElementById('black_crates').value;
+        var tareweight_input = document.getElementById('tareweight');
+        tareweight_input.value = (no_of_crates * crate_weight + (black_crates * (2 - crate_weight))).toFixed(2);
         getNet();
+    };
+
+    function handleVesselTypeChange() {
+        var vesselSelect = document.getElementById('vessel_type');
+        var vesselType = vesselSelect.options[vesselSelect.selectedIndex].getAttribute('data-type');
+        var blackCratesGroup = document.getElementById('black_crates_group');
+        var blackCratesInput = document.getElementById('black_crates');
+        var totalCratesInput = document.getElementById('no_of_crates');
+        var totalCratesGroup = totalCratesInput.closest('.col-md-6');
+
+        if (vesselType === 'van') {
+            blackCratesGroup.style.display = 'none';
+            blackCratesInput.disabled = true;
+            totalCratesGroup.style.display = 'none';
+            totalCratesInput.disabled = true;
+            document.getElementById('tareweight').value = parseFloat(vesselSelect.value).toFixed(2);
+            getNet();
+        } else {
+            blackCratesGroup.style.display = '';
+            blackCratesInput.disabled = false;
+            totalCratesGroup.style.display = '';
+            totalCratesInput.disabled = false;
+            updateTotalTare();
+        }
     };
 
     $(document).ready(function () {
@@ -412,7 +444,7 @@
             $(".btn-prevent-multiple-submits").attr('disabled', true);
         });
 
-        updateTotalTare();
+        handleVesselTypeChange();
 
         let reading = document.getElementById('reading');
         if (($('#old_manual').val()) == "on") {

@@ -2,9 +2,19 @@
 
 @section('content')
 
+@section('content-header')
+<div class="container">
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1 class="m-0"> {{ $title }} |<small> Sides/Halves </small></h1>
+        </div><!-- /.col -->
+    </div><!-- /.row -->
+</div><!-- /.container-fluid -->
+
+@endsection
+
 <div class="container-fluid">
     <div class="card">
-        <h2 class="card-header">Butchery Scale 2 Weighings| Sides</h2>
         <div class="card-body">
             <form id="form-weigh-offals" action="{{ route('butchery_scale2_save') }}"
                 class="form-prevent-multiple-submits" method="POST">

@@ -111,7 +111,14 @@ class ButcheryController extends Controller
                     ->get();
             });
 
-        return view('butchery.scale3', compact('title', 'scale_filter', 'products', 'configs', 'deboning_data'));
+        $vessels = Cache::remember('vessels', now()->addHours(12), function () {
+            return DB::table('transfer_vessels')
+                ->select('name', 'tare_weight')
+                ->orderBy('id', 'asc')
+                ->get();
+        });
+
+        return view('butchery.scale3', compact('title', 'scale_filter', 'products', 'configs', 'deboning_data', 'vessels'));
     }
 
     public function scale3Save(Request $request)
