@@ -100,9 +100,9 @@
                                 <option value="0.1"
                                     {{ old('tare_weight') == '0.1' ? 'selected' : '' }}>
                                     Hook 100 grams</option>
-                                <option value="1.8"
-                                    {{ old('tare_weight') == '1.8' ? 'selected' : '' }}>
-                                    Bucket 1.8 kg</option>
+                                <option value="0"
+                                    {{ old('tare_weight') == '0' ? 'selected' : '' }}>
+                                    Hooves 0 kg</option>
                             </select>
                         </div>
                     </div>
@@ -224,7 +224,7 @@
                             <td>{{ number_format($entry->scale_reading, 2) }}</td>
                             <td>{{ number_format($entry->net_weight, 2) }}</td>
                             @php
-                                $invoiceExceptions = ['BG1051','BG1060','BG1054','BG1254'];
+                                $invoiceExceptions = ['BG1051','BG1054','BG1254'];
                                 $invoiceWeight = in_array($entry->product_code, $invoiceExceptions)
                                     ? $entry->net_weight
                                     : $entry->net_weight * 0.975;
@@ -473,10 +473,12 @@
 
         function updateNetWeight() {
             var reading = parseFloat(document.getElementById('reading').value);
-            var tareweight = parseFloat(document.getElementById('tare_weight').value);
+            var tareSelect = document.getElementById('tare_weight');
+            var tareweight = parseFloat(tareSelect.value);
+            var tareSelected = !tareSelect.options[tareSelect.selectedIndex].disabled;
             var netWeightInput = document.getElementById('net_weight');
 
-            if (!isNaN(reading) && !isNaN(tareweight) && tareweight > 0) {
+            if (!isNaN(reading) && tareSelected && !isNaN(tareweight) && tareweight >= 0) {
                 netWeightInput.value = (reading - tareweight).toFixed(2);
             } else {
                 netWeightInput.value = '';
@@ -721,7 +723,7 @@
             });
             const offals = Object.values(offalsMap);
 
-            const invoiceExceptions = ['BG1051','BG1060','BG1054','BG1254'];
+            const invoiceExceptions = ['BG1051','BG1054','BG1254'];
             let idx = 0;
             offals.forEach((entry) => {
                 const row = document.createElement('tr');
@@ -767,7 +769,7 @@
                 byDate[d].push(e);
             });
 
-            const invoiceExceptions = ['BG1051','BG1060','BG1054','BG1254'];
+            const invoiceExceptions = ['BG1051','BG1054','BG1254'];
             const dates = Object.keys(byDate).sort();
             if (dates.length === 0) {
                 const row = document.createElement('tr');
@@ -949,16 +951,20 @@
         });
 
         function handleGradeField() {
-    var selectedProduct = $('#weigh_product_code').val();
-    if (selectedProduct === 'BG1054') {
-        $('#grade-group').show();
-        $('#grade').attr('required', true);
-    } else {
-        $('#grade-group').hide();
-        $('#grade').removeAttr('required');
-        $('#grade').val('');
-    }
-}
+            var selectedProduct = $('#weigh_product_code').val();
+            if (selectedProduct === 'BG1054') {
+                $('#grade-group').show();
+                $('#grade').attr('required', true);
+            } else {
+                $('#grade-group').hide();
+                $('#grade').removeAttr('required');
+                $('#grade').val('');
+            }
 
+            if (selectedProduct === 'BG1060') {
+                $('#tare_weight option:not([disabled])[value="0"]').prop('selected', true);
+                $('#tare_weight').trigger('change');
+            }
+        }
     </script>
     @endsection
