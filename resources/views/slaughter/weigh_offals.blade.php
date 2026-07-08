@@ -224,7 +224,7 @@
                             <td>{{ number_format($entry->scale_reading, 2) }}</td>
                             <td>{{ number_format($entry->net_weight, 2) }}</td>
                             @php
-                                $invoiceExceptions = ['BG1051','BG1054','BG1254'];
+                                $invoiceExceptions = ['BG1051','BG1054','BG1254','BG1060'];
                                 $invoiceWeight = in_array($entry->product_code, $invoiceExceptions)
                                     ? $entry->net_weight
                                     : $entry->net_weight * 0.975;
@@ -723,7 +723,7 @@
             });
             const offals = Object.values(offalsMap);
 
-            const invoiceExceptions = ['BG1051','BG1054','BG1254'];
+            const invoiceExceptions = ['BG1051','BG1054','BG1254','BG1060'];
             let idx = 0;
             offals.forEach((entry) => {
                 const row = document.createElement('tr');
@@ -769,7 +769,7 @@
                 byDate[d].push(e);
             });
 
-            const invoiceExceptions = ['BG1051','BG1054','BG1254'];
+            const invoiceExceptions = ['BG1051','BG1054','BG1254','BG1060'];
             const dates = Object.keys(byDate).sort();
             if (dates.length === 0) {
                 const row = document.createElement('tr');
