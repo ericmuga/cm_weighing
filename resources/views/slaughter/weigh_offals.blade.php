@@ -386,8 +386,10 @@
                         <select class="form-control select2" id="publish_customer" name="customer_id"
                             onchange="showCustomerEntries(event)" required>
                             <option disabled selected value="">Select Customer</option>
-                            @foreach($customers as $customer)
-                                <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                            @foreach($customers->where('customer_code', '!=', '003') as $customer)
+                                <option value="{{ $customer->id }}"
+                                    {{ old('weigh_customer_id') == $customer->id ? 'selected' : '' }}>
+                                    {{ $customer->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -661,7 +663,8 @@
             const entriesAll = @json($entries);
             const rawOffals = entriesAll
                 .filter((entry) => entry.customer_id == customerId)
-                .filter((entry) => entry.published == 0);
+                .filter((entry) => entry.published == 0)
+                .filter((entry) => entry.customer_code !== '003');
 
             // Populate date selector with unique dates from created_at
             const dateSelect = document.getElementById('publish_date');

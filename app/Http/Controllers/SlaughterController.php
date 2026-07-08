@@ -111,7 +111,7 @@ class SlaughterController extends Controller
             ->leftJoin('customers', 'offals.customer_id', '=', 'customers.id')
             ->join('items', 'offals.product_code', '=', 'items.code')
             ->where('offals.archived', 0)
-            ->select('offals.*', 'users.username', 'customers.name AS customer_name', 'items.description AS product_name')
+            ->select('offals.*', 'users.username', 'customers.name AS customer_name', 'customers.customer_code', 'items.description AS product_name')
             ->orderBy('offals.created_at', 'DESC')
             ->when($customer, function ($query, $customer) {
                 return $query->where('offals.customer_id', $customer);
