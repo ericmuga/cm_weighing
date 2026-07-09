@@ -328,19 +328,16 @@ class SlaughterController extends Controller
             return ['bc_code' => null, 'unit_price' => null];
         }
 
+        $grades = config('offals.hide_grades');
+        $gradeConfig = $grades[$grade] ?? $grades['reject'];
+
         switch ($grade) {
             case '0':
-                // Hide (cow) - Zero Flay
-                return ['bc_code' => 'BJ31100378', 'unit_price' => 68.97];
             case 'edge':
-                // Hide (cow) - Edge Flay
-                return ['bc_code' => 'BJ31100379', 'unit_price' => 43.10];
             case 'reject':
-                // Hide (cow) - Reject
-                return ['bc_code' => 'BJ31100380', 'unit_price' => 21.55];
+                return $gradeConfig;
             default:
-                // Unknown grade: default to reject price to avoid failing
-                return ['bc_code' => 'BJ31100380', 'unit_price' => 21.55];
+                return $grades['reject'];
         }
     }
 
