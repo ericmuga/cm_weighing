@@ -248,7 +248,7 @@ class SlaughterController extends Controller
                 $invoiceExceptions = ['BG1051','BG1060','BG1054','BG1254'];
                 $net = (float) ($entry['net_weight'] ?? 0);
                 $productCode = $entry['product_code'] ?? '';
-                $invWeight  = round(in_array($productCode, $invoiceExceptions) ? $net : $net * 0.975, 2);
+                $invWeight  = round(in_array($productCode, $invoiceExceptions) ? $net : $net * 0.975, 1);
                 $unitPrice  = (float) $mapped['unit_price'];
                 $lineAmount = round($invWeight * $unitPrice, 2);
 
