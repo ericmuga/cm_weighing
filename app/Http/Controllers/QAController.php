@@ -178,7 +178,7 @@ class QAController extends Controller
                 } else {
                     return '2nd Grade';
                 }
-                
+
             //Goat
             case 'BG1202':
                 return 'GOATLCL'; // Direct return for goat classification
