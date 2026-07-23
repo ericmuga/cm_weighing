@@ -645,37 +645,37 @@ class SlaughterController extends Controller
 
     public function insertForQAGrading($database_date)
     {
+        $helpers = app(\App\Models\Helpers::class);
+
         $getReceipts = DB::table('receipts')
             ->where('slaughter_date', $database_date)
             ->get();
 
-        // Check if there are receipts for the given slaughter date
         if ($getReceipts->count() > 0) {
             foreach ($getReceipts as $receipt) {
                 $receivedQty = intval($receipt->received_qty);
+                $carcassCode = $helpers->transformToCarcassCode($receipt->item_code);
 
                 for ($i = 1; $i <= $receivedQty; $i++) {
-                    // Check if the record already exists
                     $exists = DB::table('qa_grading')
                         ->where('receipt_no', $receipt->receipt_no)
                         ->where('agg_no', $i)
                         ->where('slaughter_date', $database_date)
                         ->exists();
 
-                    // If the record does not exist, then insert it
                     if (!$exists) {
                         DB::table('qa_grading')->insert([
                             'receipt_no' => $receipt->receipt_no,
-                            'agg_no' => $i,
-                            'item_code' => null,
-                            'slaughter_date' => $database_date
+                            'agg_no'     => $i,
+                            'item_code'  => $carcassCode,
+                            'slaughter_date' => $database_date,
                         ]);
                     }
                 }
             }
         }
 
-        // Backfill item_code from slaughter_data for any animals already weighed
+        // Safety-net: backfill any remaining NULLs for already-weighed animals
         DB::statement("
             UPDATE qg
             SET qg.item_code = sd.item_code

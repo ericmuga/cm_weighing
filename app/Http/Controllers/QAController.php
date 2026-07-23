@@ -159,106 +159,6 @@ class QAController extends Controller
 
         return 1;
     }
-    
-    // private function getClassificationCode($class_type, $settlement_weight, $item_code)
-    // {
-    //     $classification_code = '--';
-
-    //     if ($settlement_weight > 1 && $item_code != '') {
-    //         if ($item_code == 'BG1101' || $item_code == 'BG1201') {
-    //             // lamb/goat classes
-    //             switch (true) {
-    //                 case ($item_code == 'BG1101'):
-    //                     // lamb
-    //                     if ($settlement_weight > 25) {
-    //                         $classification_code = 'LAMB-STD';
-
-    //                     } else if ($settlement_weight >= 14 && $settlement_weight < 25) {
-    //                         $classification_code = 'LAMB-PRM';
-
-    //                     } else if ($settlement_weight >= 11 && $settlement_weight < 14) {
-    //                         $classification_code = 'LAMB-STD';
-    //                     }
-    //                     break;
-
-    //                 case ($item_code == 'BG1201'):
-    //                     // goat
-    //                     $classification_code = 'GOATLCL';
-    //                     break;
-
-    //                 default:
-    //                     $classification_code = '**';
-    //             }
-
-    //         } else if ($class_type == 2) {
-    //             // High Grade 
-    //             switch (true) {
-    //                 case ($settlement_weight < 120):
-    //                     $classification_code = 'STDB-119';
-    //                     break;
-
-    //                 case ($settlement_weight >= 120 && $settlement_weight < 150):
-    //                     $classification_code = 'STDA-149';
-    //                     break;
-
-    //                 case ($settlement_weight >= 150 && $settlement_weight < 160):
-    //                     $classification_code = 'FAQ+150';                        
-    //                     break;
-
-    //                 case ($settlement_weight >= 160 && $settlement_weight < 170):
-    //                     $classification_code = 'HG+160';
-    //                     break;
-
-    //                 case ($settlement_weight >= 170):
-    //                     $classification_code = 'HG+170';
-    //                     break;
-
-    //                 default:
-    //                     $classification_code = '**';
-    //             }
-    //         } else if ($class_type == 3) {
-    //             // comm-beef
-    //             switch (true) {
-    //                 case ($settlement_weight < 120):
-    //                     $classification_code = 'CG-120';
-    //                     break;
-
-    //                 case ($settlement_weight >= 120 && $settlement_weight < 150):
-    //                     $classification_code = 'CG+120';
-    //                     break;
-
-    //                 case ($settlement_weight >= 150 && $settlement_weight < 160):
-    //                      $classification_code = 'CG+150';
-    //                     break;
-
-    //                 case ($settlement_weight >= 160 && $settlement_weight < 170):
-    //                     $classification_code = 'CG+160';
-    //                     break;
-
-    //                 case ($settlement_weight >= 170):
-    //                     $classification_code = 'CG+170';
-    //                     break;
-
-    //                 default:
-    //                     $classification_code = '**';
-    //             }
-    //         } else if ($class_type == 1) {
-    //             // premium
-    //             switch (true) {
-    //                 case ($settlement_weight > 170):
-    //                     $classification_code = 'PG+170';
-    //                     break;
-    //                 default:
-    //                     $classification_code = '**';
-    //             }
-    //         } else if ($class_type == 4) {
-    //             // premium
-    //             $classification_code = 'Poor C';
-    //         }
-    //     }
-
-    //     return $classification_code;
-    // }
 
     private function getClassificationCode($class_type, $settlement_weight, $item_code)
     {
@@ -269,21 +169,19 @@ class QAController extends Controller
         switch ($item_code) {
             //lamb
             case 'BG1900':
-                if ($settlement_weight >= 25) {
-                    return '2nd Grade';
-                } elseif ($settlement_weight >= 14) {
-                    return '1st Grade';
-                } elseif ($settlement_weight <= 11) {
+                if ($settlement_weight < 11) {
                     return 'Class R';
+                } elseif ($settlement_weight < 14) {
+                    return '2nd Grade';
+                } elseif ($settlement_weight <= 30) {
+                    return '1st Grade';
                 } else {
-                    return 'lamb**';
+                    return '2nd Grade';
                 }
-                break;
-
+                
             //Goat
             case 'BG1202':
                 return 'GOATLCL'; // Direct return for goat classification
-                break;
 
             default:
                 break;
