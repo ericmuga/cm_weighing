@@ -162,8 +162,8 @@ class QAController extends Controller
 
     private function getClassificationCode($class_type, $settlement_weight, $item_code)
     {
-        if ($settlement_weight <= 1 || $item_code == '') {
-            return '--'; // Early exit for invalid conditions
+        if ($settlement_weight <= 1 || empty($item_code)) {
+            return '--';
         }
 
         switch ($item_code) {
@@ -187,53 +187,45 @@ class QAController extends Controller
                 break;
         }
 
-        switch ($class_type) {
-            case is_string($class_type) && str_contains($class_type, 'High Grade'):
-            case 2: // High Grade
-                if ($settlement_weight < 120) {
-                    return 'STDB-119';
-                } elseif ($settlement_weight < 150) {
-                    return 'STDA-149';
-                } elseif ($settlement_weight < 160) {
-                    return 'FAQ+150';
-                } elseif ($settlement_weight < 170) {
-                    return 'HG+160';
-                } else {
-                    return 'HG+170';
-                }
-                break;
+        // Beef codes only — BG1900 (lamb) and BG1202 (goat) already returned above
 
-            case is_string($class_type) && str_contains($class_type, 'Comm'):
-            case 3: // Comm-Beef
-                if ($settlement_weight < 120) {
-                    return 'CG-120';
-                } elseif ($settlement_weight < 150) {
-                    return 'CG+120';
-                } elseif ($settlement_weight < 160) {
-                    return 'CG+150';
-                } elseif ($settlement_weight < 170) {
-                    return 'CG+160';
-                } else {
-                    return 'CG+170';
-                }
-                break;
+        if ((is_string($class_type) && str_contains($class_type, 'High Grade')) || (int) $class_type === 2) {
+            if ($settlement_weight < 120) {
+                return 'STDB-119';
+            } elseif ($settlement_weight < 150) {
+                return 'STDA-149';
+            } elseif ($settlement_weight < 160) {
+                return 'FAQ+150';
+            } elseif ($settlement_weight < 170) {
+                return 'HG+160';
+            }
 
-            case 1: // Premium
-                if ($settlement_weight > 170) {
-                    return 'PG+170';
-                } else {
-                    return '**';
-                }
-                break;
-
-            case 4: // Poor C
-                return 'Poor C';
-                break;
-
-            default:
-                return '**'; // Default case
-                break;
+            return 'HG+170';
         }
+
+        if ((is_string($class_type) && str_contains($class_type, 'Comm')) || (int) $class_type === 3) {
+            if ($settlement_weight < 120) {
+                return 'CG-120';
+            } elseif ($settlement_weight < 150) {
+                return 'CG+120';
+            } elseif ($settlement_weight < 160) {
+                return 'CG+150';
+            } elseif ($settlement_weight < 170) {
+                return 'CG+160';
+            }
+
+            return 'CG+170';
+        }
+
+        if ((int) $class_type === 1) { // Premium
+            return $settlement_weight > 170 ? 'PG+170' : '**';
+        }
+
+        if ((int) $class_type === 4) { // Poor C
+            return 'Poor C';
+        }
+
+        return '**'; // Default case
     }
 
     private function updateClassificationCode(string $receipt_no, int $agg_no, string $item_code, string $class_type)
