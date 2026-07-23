@@ -155,7 +155,6 @@ class QAController extends Controller
             if ($slaughter_data->isEmpty()) {
                 // Handle case where no slaughter data found
             }
-        // }
 
         return 1;
     }
