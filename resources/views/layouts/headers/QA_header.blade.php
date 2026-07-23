@@ -17,11 +17,11 @@
                 <li class="nav-item">
                     <a href="{{ route('qa_dashboard') }}" class="nav-link">Dashboard</a>
                 </li>
+                {{-- <li class="nav-item">
+                    <a href="{{ route('qa_grading') }}" class="nav-link">Grading V1</a>
+                </li> --}}
                 <li class="nav-item">
-                    <a href="{{ route('qa_grading') }}" class="nav-link">Grading</a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('qa_grading_v2') }}" class="nav-link">Grading V2</a>
+                    <a href="{{ route('qa_grading_v2') }}" class="nav-link">Grading</a>
                 </li>
                 <li class="nav-item dropdown">
                     <a id="dropdownSubMenu1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"

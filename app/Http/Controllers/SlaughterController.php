@@ -483,6 +483,13 @@ class SlaughterController extends Controller
                 DB::table('slaughter_data')->insert($data);
             }
 
+            // Sync the carcass item_code into qa_grading for this animal
+            DB::table('qa_grading')
+                ->where('receipt_no', $request->receipt_no)
+                ->where('agg_no', $request->agg_no)
+                ->whereDate('slaughter_date', today())
+                ->update(['item_code' => $data['item_code']]);
+
             //$helpers->publishToQueue($data, 'cm_slaughter.bc');
 
             Toastr::success('record added successfully', 'Success');
@@ -660,12 +667,25 @@ class SlaughterController extends Controller
                         DB::table('qa_grading')->insert([
                             'receipt_no' => $receipt->receipt_no,
                             'agg_no' => $i,
+                            'item_code' => null,
                             'slaughter_date' => $database_date
                         ]);
                     }
                 }
             }
         }
+
+        // Backfill item_code from slaughter_data for any animals already weighed
+        DB::statement("
+            UPDATE qg
+            SET qg.item_code = sd.item_code
+            FROM qa_grading qg
+            INNER JOIN slaughter_data sd
+                ON qg.agg_no = sd.agg_no
+                AND qg.receipt_no = sd.receipt_no
+                AND CAST(sd.created_at AS DATE) = CAST(qg.slaughter_date AS DATE)
+            WHERE qg.item_code IS NULL
+        ");
     }
 
     public function slaughterReport(Helpers $helpers, $filter = null)

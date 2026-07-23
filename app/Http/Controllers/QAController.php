@@ -64,16 +64,18 @@ class QAController extends Controller
         $title = "Grading V2";
 
         $grading_data = DB::table('qa_grading as a')
-            ->select('a.*', 'b.vendor_no', 'b.description', 'b.item_code', 'c.settlement_weight')
-            ->join('receipts as b', function ($join) {
+            ->select('a.*', 'b.vendor_no', 'ct.description', 'c.settlement_weight')
+            ->join(DB::raw('(SELECT DISTINCT receipt_no, slaughter_date, vendor_no FROM receipts) as b'), function ($join) {
                 $join->on('a.receipt_no', '=', 'b.receipt_no')
                     ->on('a.slaughter_date', '=', 'b.slaughter_date');
             })
+            ->leftJoin('carcass_types as ct', 'a.item_code', '=', 'ct.code')
             ->leftJoin('slaughter_data as c', function ($join) {
                 $join->on('a.agg_no', '=', 'c.agg_no')
                     ->on('a.receipt_no', '=', 'c.receipt_no')
+                    ->on('a.item_code', '=', 'c.item_code')
                     ->whereDate('c.created_at', '=', today());
-            })            
+            })
             ->where('a.slaughter_date', today())
             ->orderBy('a.created_at', 'asc')
             ->get();
@@ -111,32 +113,42 @@ class QAController extends Controller
     {
         $qa_graded = DB::table('qa_grading')
             ->whereDate('slaughter_date', today())
-            ->select('receipt_no', 'agg_no', 'classification')
+            ->select('receipt_no', 'agg_no', 'item_code', 'classification')
             ->get();
+
+        if ($qa_graded->isEmpty()) {
+            app(\App\Http\Controllers\SlaughterController::class)->insertForQAGrading(today());
+
+            $qa_graded = DB::table('qa_grading')
+                ->whereDate('slaughter_date', today())
+                ->select('receipt_no', 'agg_no', 'item_code', 'classification')
+                ->get();
+        }
 
         // if ($qa_graded->isNotEmpty()) {
             // Combine receipt_no and agg_no into pairs
             $combined_pairs = $qa_graded->map(function ($item) {
-                return $item->receipt_no . '_' . $item->agg_no;
+                return $item->receipt_no . '_' . $item->agg_no . '_' . $item->item_code;
             });
 
             $slaughter_data = DB::table('slaughter_data as a')
                 ->whereDate('a.created_at', today())
-                ->whereIn(DB::raw("CONCAT(a.receipt_no, '_', a.agg_no)"), $combined_pairs)
+                ->whereIn(DB::raw("CONCAT(a.receipt_no, '_', a.agg_no, '_', a.item_code)"), $combined_pairs)
                 ->join('qa_grading as b', function ($join) {
                     $join->on('b.receipt_no', '=', 'a.receipt_no')
-                        ->on('b.agg_no', '=', 'a.agg_no');
+                        ->on('b.agg_no', '=', 'a.agg_no')
+                        ->on('b.item_code', '=', 'a.item_code');
                 })
                 ->leftJoin('receipts', 'a.receipt_no', '=', 'receipts.receipt_no')
-                ->select('a.settlement_weight', 'a.receipt_no', 'a.agg_no', 'b.classification', 'receipts.description as receipt_description', 'a.item_code')
+                ->select('a.settlement_weight', 'a.receipt_no', 'a.agg_no', 'a.item_code', 'b.classification', 'receipts.description as receipt_description')
                 ->get();
 
             foreach ($slaughter_data as $d) {
                 $classification = $d->classification ?? $d->receipt_description;
-                
+
                 $class_type = $this->getClassificationCode($classification, $d->settlement_weight, $d->item_code);
 
-                $this->updateClassificationCode($d->receipt_no, $d->agg_no, $class_type);
+                $this->updateClassificationCode($d->receipt_no, $d->agg_no, $d->item_code, $class_type);
             }
 
 
@@ -257,7 +269,7 @@ class QAController extends Controller
         switch ($item_code) {
             //lamb
             case 'BG1900':
-                if ($settlement_weight > 25) {
+                if ($settlement_weight >= 25) {
                     return '2nd Grade';
                 } elseif ($settlement_weight >= 14) {
                     return '1st Grade';
@@ -326,13 +338,14 @@ class QAController extends Controller
         }
     }
 
-    private function updateClassificationCode($receipt_no, $agg_no, $class_type)
+    private function updateClassificationCode(string $receipt_no, int $agg_no, string $item_code, string $class_type)
     {
         try {
             //code...
             DB::table('qa_grading')
                 ->where('receipt_no', $receipt_no)
                 ->where('agg_no', $agg_no)
+                ->where('item_code', $item_code)
                 ->update([
                     'classification_code' => $class_type
                 ]);

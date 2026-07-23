@@ -158,6 +158,9 @@
     <script src="{{ asset('assets/toastr.min.js') }}"></script>
     {!! Toastr::message() !!}
 
+    <!-- jQuery Validation -->
+    <script src="{{ asset('assets/plugins/jquery-validation/jquery.validate.min.js') }}"></script>
+
     <script>
          $(document).ready(function () {
             $('.form-prevent-multiple-submits').on('submit', function(){
