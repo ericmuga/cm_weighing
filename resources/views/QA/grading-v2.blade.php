@@ -254,31 +254,28 @@
 <script>
     $(document).ready(function () {
 
-        $('.form-prevent-multiple-submits').on('submit', function () {
-            $(".btn-prevent-multiple-submits").attr('disabled', true);
-        });
+        var currentGradingRow = null;
 
         $("#execute-grading-btn").click(function (e) {
             e.preventDefault();
             runGradingClasses();
         });
 
-        $('.params').on("change", function(a){
-            a.preventDefault();
+        $('.params').on("change", function () {
             $('.btn-prevent-multiple-submits').prop('disabled', false);
-        })
+        });
 
         $("body").on("click", ".gradingShow", function (a) {
             a.preventDefault();
 
-            var id = $(this).data('id');
-            var agg_no = $(this).data('agg_no');
-            var item_code = $(this).data('item_code');
-            var item_name = $(this).data('item_name');
-            var vendor = $(this).data('vendor');
-            var settlement = $(this).data('settlement_weight');
-            var fat_group = $(this).data('fat_group');
-            var narration = $(this).data('narration');
+            currentGradingRow = $(this).closest('tr');
+
+            var id           = $(this).data('id');
+            var agg_no       = $(this).data('agg_no');
+            var item_code    = $(this).data('item_code');
+            var item_name    = $(this).data('item_name');
+            var vendor       = $(this).data('vendor');
+            var settlement   = $(this).data('settlement_weight');
 
             $('#item_id').val(id);
             $('#agg_no').val(agg_no);
@@ -286,22 +283,18 @@
             $('#item_name').val(item_name);
             $('#vendor_no').val(vendor);
             $('#settlement_weight').val((Math.round(settlement * 100) / 100).toFixed(2));
-            $('#fat_group').val(fat_group);
-            $('#narration').val(narration);
+            $('#narration').val('');
 
-            // Clear previous options
-            $('#fat_group').empty();
+            $('#fat_group').empty().append('<option disabled selected> select an option </option>');
 
-            // Determine options based on item_code value
-            $('#fat_group').append('<option disabled selected> select an option </option>');
-            if (item_code == 'BG1006') {                
+            if (item_code === 'BG1021') {
                 $('#fat_group').append('<option value="1">Premium</option>');
                 $('#fat_group').append('<option value="2">High Grade</option>');
                 $('#fat_group').append('<option value="3">Commercial</option>');
                 $('#fat_group').append('<option value="4">Poor C</option>');
-                $('#fat_group').append('<option value="5">FAQ >150kg </option>');
-                $('#fat_group').append('<option value="5">Standard >120kg </option>');
-                $('#fat_group').append('<option value="5">Standard <120kg </option>');
+                $('#fat_group').append('<option value="5">FAQ >150kg</option>');
+                $('#fat_group').append('<option value="5">Standard >120kg</option>');
+                $('#fat_group').append('<option value="5">Standard <120kg</option>');
             } else {
                 $('#fat_group').append('<option value="5">Lamb 1st grade</option>');
                 $('#fat_group').append('<option value="6">Lamb 2nd grade</option>');
@@ -309,67 +302,90 @@
             }
 
             $('#fat_group').select2('destroy').select2();
-
             $('#gradingShow').modal('show');
         });
 
         $('#form-grading-slaughter').validate({
             rules: {
-                fat_group: {
-                    required: true,
-                },
-                narration: {
-                    maxlength: 50,
-                },
+                fat_group: { required: true },
+                narration:  { maxlength: 50 },
             },
             messages: {
-                fat_group: "Please select a fat group first",
-                maxlength: "Your narration must be at most 50 characters long",
+                fat_group: "Please select a classification first",
+                narration: { maxlength: "Narration must be at most 50 characters" },
             },
             errorElement: 'span',
             errorPlacement: function (error, element) {
                 error.addClass('invalid-feedback');
                 element.closest('.form-group').append(error);
             },
-            highlight: function (element, errorClass, validClass) {
+            highlight: function (element) {
                 $(element).addClass('is-invalid');
             },
-            unhighlight: function (element, errorClass, validClass) {
+            unhighlight: function (element) {
                 $(element).removeClass('is-invalid');
+            },
+            submitHandler: function (form) {
+                var $btn = $('.btn-prevent-multiple-submits');
+                var originalBtnHtml = $btn.html();
+                $btn.prop('disabled', true)
+                    .html('<span class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span> Saving...');
+
+                var savedRowId    = $('#item_id').val();
+                var savedClassText = $('#fat_group option:selected').text().trim();
+
+                $.ajax({
+                    url: $(form).attr('action'),
+                    type: 'POST',
+                    data: $(form).serialize(),
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    success: function (response) {
+                        // Find the td by data-id (works regardless of DataTable page/order)
+                        var $gradingTd = $('td.gradingShow[data-id="' + savedRowId + '"]');
+                        $gradingTd.find('a')
+                            .attr('class', 'text-success')
+                            .html('graded <i class="fas fa-arrow-right"></i>');
+                        $gradingTd.next('td').text(savedClassText);
+
+                        $('#gradingShow').modal('hide');
+                        $btn.prop('disabled', false).html(originalBtnHtml);
+                        toastr.success(response.message, 'Saved');
+                        setUserMessage('succ', 'err', response.message, '');
+                        setTimeout(function () { setUserMessage('succ', 'err', '', ''); }, 3000);
+                    },
+                    error: function (xhr) {
+                        var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'An error occurred';
+                        toastr.error(msg, 'Error');
+                        setUserMessage('succ', 'err', '', msg);
+                        $btn.prop('disabled', false).html(originalBtnHtml);
+                    }
+                });
             }
         });
     });
 
     const setUserMessage = (field_succ, field_err, message_succ, message_err) => {
-        document.getElementById(field_succ).innerHTML = message_succ
-        document.getElementById(field_err).innerHTML = message_err
-    }
+        document.getElementById(field_succ).innerHTML = message_succ;
+        document.getElementById(field_err).innerHTML = message_err;
+    };
 
     const runGradingClasses = () => {
-        setUserMessage('succ', 'err', 'initiated classifications..', '')
+        setUserMessage('succ', 'err', 'Generating classifications...', '');
         $.ajax({
             url: "{{ url('QA/run/grading-classes') }}",
             type: 'POST',
             dataType: 'json',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
             success: function (response) {
-                // Redirect on success
-                console.log(response)
-                setUserMessage('succ', 'err', 'run grading successfully.reloading...', '')
-                setTimeout(function () {
-                    // Reload current route after delay
-                    window.location.reload();
-                }, 1000); // 1 seconds delay
+                setUserMessage('succ', 'err', 'Classifications generated. Reloading...', '');
+                setTimeout(function () { window.location.reload(); }, 1000);
             },
             error: function (data) {
-                var errors = data.responseJSON;
-                console.log(errors);
-                alert('error occured when sending request');
+                console.log(data.responseJSON);
+                setUserMessage('succ', 'err', '', 'Error generating classifications');
             }
         });
-    }
+    };
 
 </script>
 @endsection

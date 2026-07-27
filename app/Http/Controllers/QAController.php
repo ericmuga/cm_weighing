@@ -248,7 +248,6 @@ class QAController extends Controller
 
     public function updateGradingV2(Request $request, Helpers $helpers)
     {
-        // dd($request->all());
         try {
             DB::transaction(function () use ($request, $helpers) {
                 DB::table('qa_grading')
@@ -256,24 +255,33 @@ class QAController extends Controller
                     ->update([
                         'classification' => $request->fat_group,
                         'narration' => $request->narration,
-                        'dentition' => $request->dentition,  
-                        'fat_cover' => $request->fat_cover,  
-                        'fat_color' => $request->fat_color,  
-                        'meat_color' => $request->meat_color,  
-                        'bruising' => $request->bruising,  
-                        'muscle_conformation' => $request->muscle,  
-                        'graded_by' =>  Auth::id(),
+                        'dentition' => $request->dentition,
+                        'fat_cover' => $request->fat_cover,
+                        'fat_color' => $request->fat_color,
+                        'meat_color' => $request->meat_color,
+                        'bruising' => $request->bruising,
+                        'muscle_conformation' => $request->muscle,
+                        'graded_by' => Auth::id(),
                     ]);
-                $desc = 'new fat_group:' . $request->fat_group . ', narration: ' . $request->narration;
 
+                $desc = 'new fat_group:' . $request->fat_group . ', narration: ' . $request->narration;
                 $helpers->insertChangeDataLogs('qa_grading', $request->item_id, '3', $desc);
             });
+
+            if ($request->ajax()) {
+                return response()->json(['success' => true, 'message' => "Carcass no. {$request->agg_no} graded successfully"]);
+            }
 
             Toastr::success("Carcass no. {$request->agg_no} graded successfully", 'Success');
             return redirect()->back();
         } catch (\Exception $e) {
-            Toastr::error($e->getMessage(), 'Error!');
             Log::error($e->getMessage());
+
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
+
+            Toastr::error($e->getMessage(), 'Error!');
             return back();
         }
     }
