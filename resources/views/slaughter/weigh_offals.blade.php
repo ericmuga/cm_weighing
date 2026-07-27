@@ -158,7 +158,7 @@
 <button class="btn btn-primary " data-toggle="collapse" data-target="#entries" class="my-4">
     <i class="fa fa-plus"></i>
     Entries
-</button>
+</button> <hr/>
 
 <!-- Table of saved entries -->
 <div id="entries" class="collapse my-4">
