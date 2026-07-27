@@ -67,17 +67,13 @@
 
                                     @php $tdAttrs = 'class="gradingShow" data-agg_no="'.$data->agg_no.'" data-item_code="'.$data->item_code.'" data-id="'.$data->id.'" data-settlement_weight="'.$data->settlement_weight.'" data-item_name="'.$data->description.'" data-vendor="'.$data->vendor_no.'"'; @endphp
 
-                                    @if(!$data->settlement_weight)
+                                    @if($data->classification == null && !$data->settlement_weight)
                                         <td {!! $tdAttrs !!}><a href="#" class="text-warning">
-                                            <i class="fas fa-weight-hanging"></i> Weight pending <i class="fas fa-arrow-right"></i></a>
-                                        </td>
-                                    @elseif($data->classification_code == null)
-                                        <td {!! $tdAttrs !!}><a href="#" class="text-warning">
-                                            <i class="fas fa-tag"></i> Classify pending <i class="fas fa-arrow-right"></i></a>
+                                            <i class="fas fa-exclamation-circle"></i> QA &amp; Wght pending <i class="fas fa-arrow-right"></i></a>
                                         </td>
                                     @elseif($data->classification == null)
                                         <td {!! $tdAttrs !!}><a href="#" class="text-info">
-                                            <i class="fas fa-clipboard-check"></i> pending QA <i class="fas fa-arrow-right"></i></a>
+                                            <i class="fas fa-clipboard-check"></i> QA pending <i class="fas fa-arrow-right"></i></a>
                                         </td>
                                     @else
                                         <td {!! $tdAttrs !!}><a href="#" class="text-success">
@@ -352,7 +348,7 @@
                         var $gradingTd = $('td.gradingShow[data-id="' + savedRowId + '"]');
                         $gradingTd.find('a')
                             .attr('class', 'text-success')
-                            .html('graded <i class="fas fa-arrow-right"></i>');
+                            .html('<i class="fas fa-check-circle"></i> graded <i class="fas fa-arrow-right"></i>');
                         $gradingTd.next('td').text(savedClassText);
 
                         // Update is_downgraded badge
