@@ -227,23 +227,51 @@ class QAController extends Controller
         return '**'; // Default case
     }
 
+    private function computeIsDowngraded(int $classification, string $classificationCode): ?int
+    {
+        $matches = match ($classification) {
+            1 => $classificationCode === 'PG+170',
+            2 => in_array($classificationCode, ['STDB-119', 'STDA-149', 'FAQ+150', 'HG+160', 'HG+170']),
+            3 => in_array($classificationCode, ['CG-120', 'CG+120', 'CG+150', 'CG+160', 'CG+170']),
+            4 => $classificationCode === 'Poor C',
+            5 => $classificationCode === '1st Grade',
+            6 => $classificationCode === '2nd Grade',
+            7 => $classificationCode === 'Class R',
+            default => null,
+        };
+
+        return $matches === null ? null : ($matches ? 0 : 1);
+    }
+
     private function updateClassificationCode(string $receipt_no, int $agg_no, string $item_code, string $class_type)
     {
         try {
-            //code...
             DB::table('qa_grading')
                 ->where('receipt_no', $receipt_no)
                 ->where('agg_no', $agg_no)
                 ->where('item_code', $item_code)
-                ->update([
-                    'classification_code' => $class_type
-                ]);
-            // Log::info('grading class successful');
+                ->update(['classification_code' => $class_type]);
+
+            // Compute is_downgraded if QA classification is already set
+            $row = DB::table('qa_grading')
+                ->where('receipt_no', $receipt_no)
+                ->where('agg_no', $agg_no)
+                ->where('item_code', $item_code)
+                ->value('classification');
+
+            if ($row) {
+                $isDowngraded = $this->computeIsDowngraded((int) $row, $class_type);
+                if ($isDowngraded !== null) {
+                    DB::table('qa_grading')
+                        ->where('receipt_no', $receipt_no)
+                        ->where('agg_no', $agg_no)
+                        ->where('item_code', $item_code)
+                        ->update(['is_downgraded' => $isDowngraded]);
+                }
+            }
         } catch (\Exception $e) {
             Log::error($e->getMessage());
-            return back();
         }
-        
     }
 
     public function updateGradingV2(Request $request, Helpers $helpers)
@@ -268,8 +296,23 @@ class QAController extends Controller
                 $helpers->insertChangeDataLogs('qa_grading', $request->item_id, '3', $desc);
             });
 
+            // Compute is_downgraded now that QA classification is saved
+            $classificationCode = DB::table('qa_grading')->where('id', $request->item_id)->value('classification_code');
+            $isDowngraded = null;
+            if ($classificationCode) {
+                $isDowngraded = $this->computeIsDowngraded((int) $request->fat_group, $classificationCode);
+                if ($isDowngraded !== null) {
+                    DB::table('qa_grading')->where('id', $request->item_id)
+                        ->update(['is_downgraded' => $isDowngraded]);
+                }
+            }
+
             if ($request->ajax()) {
-                return response()->json(['success' => true, 'message' => "Carcass no. {$request->agg_no} graded successfully"]);
+                return response()->json([
+                    'success'       => true,
+                    'message'       => "Carcass no. {$request->agg_no} graded successfully",
+                    'is_downgraded' => $isDowngraded,
+                ]);
             }
 
             Toastr::success("Carcass no. {$request->agg_no} graded successfully", 'Success');

@@ -32,6 +32,7 @@
                                 <th>Weight Classification</th>
                                 <th>Grading Status</th>
                                 <th>QA Classification</th>
+                                <th>Downgraded?</th>
                                 <th>Slaughter Date</th>
                             </tr>
                         </thead>
@@ -47,6 +48,7 @@
                                 <th>Weight Classification</th>
                                 <th>Grading Status</th>
                                 <th>QA Classification</th>
+                                <th>Downgraded?</th>
                                 <th>Slaughter Date</th>
                             </tr>
                         </tfoot>
@@ -100,6 +102,15 @@
                                     @else
                                         <td>---</td>
                                     @endif
+
+                                    @if($data->is_downgraded === null)
+                                        <td class="downgraded-cell"><span class="badge badge-secondary">--</span></td>
+                                    @elseif($data->is_downgraded == 0)
+                                        <td class="downgraded-cell"><span class="badge badge-success">No</span></td>
+                                    @else
+                                        <td class="downgraded-cell"><span class="badge badge-danger">Yes</span></td>
+                                    @endif
+
                                     <td>{{ $helpers->shortDateTime($data->updated_at) }}</td>
                                 </tr>
                             @endforeach
@@ -343,6 +354,16 @@
                             .attr('class', 'text-success')
                             .html('graded <i class="fas fa-arrow-right"></i>');
                         $gradingTd.next('td').text(savedClassText);
+
+                        // Update is_downgraded badge
+                        var $downgradedTd = $gradingTd.closest('tr').find('.downgraded-cell');
+                        if (response.is_downgraded === null || response.is_downgraded === undefined) {
+                            $downgradedTd.html('<span class="badge badge-secondary">--</span>');
+                        } else if (response.is_downgraded === 0) {
+                            $downgradedTd.html('<span class="badge badge-success">No</span>');
+                        } else {
+                            $downgradedTd.html('<span class="badge badge-danger">Yes</span>');
+                        }
 
                         $('#gradingShow').modal('hide');
                         $btn.prop('disabled', false).html(originalBtnHtml);
