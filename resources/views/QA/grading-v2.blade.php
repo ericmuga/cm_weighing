@@ -63,26 +63,23 @@
 
                                     <td>{{ $data->classification_code }}</td>
 
-                                    @if($data->classification_code == null)                                        
-                                        <td class="gradingShow" data-agg_no="{{ $data->agg_no }}"
-                                            data-item_code="{{ $data->item_code }}" data-id="{{ $data->id }}" data-settlement_weight="{{ $data->settlement_weight }}"
-                                            data-item_name="{{ $data->description }}"
-                                            data-vendor="{{ $data->vendor_no }}"><a href="#"
-                                                class="text-warning">Wght&QA pending <i class="fas fa-arrow-right"></i></a>
+                                    @php $tdAttrs = 'class="gradingShow" data-agg_no="'.$data->agg_no.'" data-item_code="'.$data->item_code.'" data-id="'.$data->id.'" data-settlement_weight="'.$data->settlement_weight.'" data-item_name="'.$data->description.'" data-vendor="'.$data->vendor_no.'"'; @endphp
+
+                                    @if(!$data->settlement_weight)
+                                        <td {!! $tdAttrs !!}><a href="#" class="text-warning">
+                                            <i class="fas fa-weight-hanging"></i> Weight pending <i class="fas fa-arrow-right"></i></a>
+                                        </td>
+                                    @elseif($data->classification_code == null)
+                                        <td {!! $tdAttrs !!}><a href="#" class="text-warning">
+                                            <i class="fas fa-tag"></i> Classify pending <i class="fas fa-arrow-right"></i></a>
                                         </td>
                                     @elseif($data->classification == null)
-                                        <td class="gradingShow" data-agg_no="{{ $data->agg_no }}"
-                                            data-item_code="{{ $data->item_code }}" data-id="{{ $data->id }}" data-settlement_weight="{{ $data->settlement_weight }}"
-                                            data-item_name="{{ $data->description }}"
-                                            data-vendor="{{ $data->vendor_no }}"><a href="#"
-                                                class="text-info">pending QA <i class="fas fa-arrow-right"></i></a>
+                                        <td {!! $tdAttrs !!}><a href="#" class="text-info">
+                                            <i class="fas fa-clipboard-check"></i> pending QA <i class="fas fa-arrow-right"></i></a>
                                         </td>
                                     @else
-                                        <td class="gradingShow" data-agg_no="{{ $data->agg_no }}"
-                                            data-item_code="{{ $data->item_code }}" data-id="{{ $data->id }}" data-settlement_weight="{{ $data->settlement_weight }}"
-                                            data-item_name="{{ $data->description }}"
-                                            data-vendor="{{ $data->vendor_no }}"><a href="#"
-                                                class="text-success">graded <i class="fas fa-arrow-right"></i></a>
+                                        <td {!! $tdAttrs !!}><a href="#" class="text-success">
+                                            <i class="fas fa-check-circle"></i> graded <i class="fas fa-arrow-right"></i></a>
                                         </td>
                                     @endif
 
