@@ -277,6 +277,7 @@
             </form>
         </div>
     </div>
+</div>{{-- /container --}}
 
     <!-- Modal for editing weight entry -->
     <div class="modal fade" id="editWeightEntry" tabindex="-1" role="dialog" aria-labelledby="editWeightEntryLabel"
