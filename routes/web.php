@@ -65,6 +65,8 @@ Route::prefix('QA')->group(function () {
     Route::post('update/grade', [QAController::class, 'updateGrading'])->name('qa_update_grading');
     Route::post('run/grading-classes', [QAController::class, 'runGradingClasses'])->name('run_grading_classes');
     Route::post('update/grade/v2', [QAController::class, 'updateGradingV2'])->name('qa_update_grading_v2');
+    Route::post('reports/qa-grading', [QAController::class, 'qaGradingReportExport'])->name('qa_grading_report_export');
+    Route::post('reports/slaughter-grading', [QAController::class, 'slaughterGradingReportExport'])->name('slaughter_grading_report_export');
 });
 /* -------------------------------- End Slaughter ------------------------------------------------ */
 

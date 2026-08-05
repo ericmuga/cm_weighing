@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\QAGradingReportExport;
+use App\Exports\SlaughterGradingReportExport;
 use App\Models\Helpers;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
@@ -9,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
+use Maatwebsite\Excel\Facades\Excel;
 
 class QAController extends Controller
 {
@@ -64,7 +68,7 @@ class QAController extends Controller
         $title = "Grading V2";
 
         $grading_data = DB::table('qa_grading as a')
-            ->select('a.*', 'b.vendor_no', 'ct.description', 'c.settlement_weight')
+            ->select('a.*', 'b.vendor_no', 'ct.description', 'c.settlement_weight', 'c.agg_no as slaughter_agg_no')
             ->join(DB::raw('(SELECT DISTINCT receipt_no, slaughter_date, vendor_no FROM receipts) as b'), function ($join) {
                 $join->on('a.receipt_no', '=', 'b.receipt_no')
                     ->on('a.slaughter_date', '=', 'b.slaughter_date');
@@ -327,5 +331,109 @@ class QAController extends Controller
             Toastr::error($e->getMessage(), 'Error!');
             return back();
         }
+    }
+
+    public function qaGradingReportExport(Request $request)
+    {
+        $from = $request->from_date;
+        $to   = $request->to_date;
+
+        $dentitionMap  = [1 => 'Full mouth', 2 => '3 pairs', 3 => '2 pairs', 4 => '1 pair', 5 => 'Milk Teeth'];
+        $fatCoverMap   = [1 => 'Good fat cover', 2 => 'Fair fat cover', 3 => 'Minimum/inadequate'];
+        $fatColorMap   = [1 => 'Creamish white', 2 => 'Deep yellow'];
+        $meatColorMap  = [1 => 'Bright red', 2 => 'Dark meat'];
+        $bruisingMap   = [0 => 'No Bruises', 1 => 'Mild', 2 => 'Extensive', 3 => 'Severely bruised', 4 => 'Cysts Bovis', 5 => 'Other discolouration'];
+        $muscleMap     = [1 => 'Well finished', 2 => 'Fair', 3 => 'Poor'];
+        $classMap      = [1 => 'Premium', 2 => 'High Grade', 3 => 'Commercial', 4 => 'Poor C', 5 => '1st Grade', 6 => '2nd Grade', 7 => 'Class R'];
+
+        $rows = DB::table('qa_grading as a')
+            ->join(DB::raw('(SELECT DISTINCT receipt_no, slaughter_date, vendor_no, vendor_name FROM receipts) as r'), function ($join) {
+                $join->on('a.receipt_no', '=', 'r.receipt_no')
+                     ->on('a.slaughter_date', '=', 'r.slaughter_date');
+            })
+            ->whereBetween(DB::raw('CAST(a.slaughter_date AS DATE)'), [$from, $to])
+            ->orderBy('a.receipt_no')->orderBy('a.agg_no')
+            ->select('r.vendor_no', 'r.vendor_name', 'a.receipt_no', 'a.agg_no',
+                     'a.dentition', 'a.fat_cover', 'a.fat_color', 'a.meat_color',
+                     'a.bruising', 'a.muscle_conformation', 'a.classification',
+                     'a.classification_code', 'a.narration')
+            ->get()
+            ->map(fn($row) => [
+                $row->vendor_no,
+                $row->vendor_name,
+                $row->receipt_no,
+                $row->agg_no,
+                $dentitionMap[$row->dentition]         ?? '--',
+                $fatCoverMap[$row->fat_cover]          ?? '--',
+                $fatColorMap[$row->fat_color]          ?? '--',
+                $meatColorMap[$row->meat_color]        ?? '--',
+                $bruisingMap[$row->bruising]           ?? '--',
+                $muscleMap[$row->muscle_conformation]  ?? '--',
+                $classMap[$row->classification]        ?? '--',
+                $row->classification_code              ?? '--',
+                $row->narration                        ?? '',
+            ]);
+
+        Session::put('qa_grading_export_data', $rows);
+
+        return Excel::download(new QAGradingReportExport, "QA-Grading-Report-{$from}-to-{$to}.xlsx");
+    }
+
+    public function slaughterGradingReportExport(Request $request)
+    {
+        $from = $request->from_date;
+        $to   = $request->to_date;
+
+        // Pre-aggregate CDW per (receipt_no, item_code) to prevent row multiplication
+        // when joined against qa_grading's many rows.
+        $rows = DB::table('qa_grading as a')
+            ->join(
+                DB::raw('(SELECT receipt_no, slaughter_date, vendor_no, vendor_name, received_qty FROM receipts) as r'),
+                function ($join) {
+                    $join->on('a.receipt_no', '=', 'r.receipt_no')
+                         ->on('a.slaughter_date', '=', 'r.slaughter_date');
+                }
+            )
+            ->leftJoin(
+                // Sum CDW once per (receipt_no, item_code) — scoped to the same date
+                // range as the outer filter so historical re-entries don't inflate totals.
+                DB::raw("(SELECT receipt_no, item_code, ROUND(SUM(settlement_weight), 2) AS cdw
+                          FROM slaughter_data
+                          WHERE (deleted IS NULL OR deleted != 1)
+                            AND CAST(created_at AS DATE) BETWEEN '{$from}' AND '{$to}'
+                          GROUP BY receipt_no, item_code) AS sd"),
+                function ($join) {
+                    $join->on('a.receipt_no', '=', 'sd.receipt_no')
+                         ->on('a.item_code', '=', 'sd.item_code');
+                }
+            )
+            ->whereBetween(DB::raw('CAST(a.slaughter_date AS DATE)'), [$from, $to])
+            ->groupBy('r.vendor_no', 'r.vendor_name', 'a.receipt_no', 'r.received_qty')
+            ->orderBy('a.receipt_no')
+            ->select(
+                'r.vendor_no', 'r.vendor_name', 'a.receipt_no',
+                'r.received_qty',                               // source-of-truth from receipts
+                DB::raw('MAX(sd.cdw) AS total_cdw'),            // unique per receipt after pre-agg
+                DB::raw('SUM(CASE WHEN a.classification = 1 THEN 1 ELSE 0 END) as premium'),
+                DB::raw('SUM(CASE WHEN a.classification = 2 THEN 1 ELSE 0 END) as high_grade'),
+                DB::raw('SUM(CASE WHEN a.classification = 3 THEN 1 ELSE 0 END) as commercial'),
+                DB::raw('SUM(CASE WHEN a.classification = 4 THEN 1 ELSE 0 END) as poor_c'),
+                DB::raw('SUM(CASE WHEN a.classification = 5 THEN 1 ELSE 0 END) as first_grade'),
+                DB::raw('SUM(CASE WHEN a.classification = 6 THEN 1 ELSE 0 END) as second_grade'),
+                DB::raw('SUM(CASE WHEN a.classification = 7 THEN 1 ELSE 0 END) as class_r'),
+                DB::raw('SUM(CASE WHEN a.is_downgraded = 1 THEN 1 ELSE 0 END) as downgraded_count')
+            )
+            ->get()
+            ->map(fn($row) => [
+                $row->vendor_no, $row->vendor_name, $row->receipt_no,
+                $row->received_qty, $row->total_cdw,
+                $row->premium, $row->high_grade, $row->commercial, $row->poor_c,
+                $row->first_grade, $row->second_grade, $row->class_r,
+                $row->downgraded_count,
+            ]);
+
+        Session::put('slaughter_grading_export_data', $rows);
+
+        return Excel::download(new SlaughterGradingReportExport, "Slaughter-Grading-Summary-{$from}-to-{$to}.xlsx");
     }
 }

@@ -27,8 +27,11 @@
                     <a id="dropdownSubMenu1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
                         class="nav-link dropdown-toggle">Data Management</a>
                     <ul aria-labelledby="dropdownSubMenu1" class="dropdown-menu border-0 shadow">
-                        <li><a href="#" class="dropdown-item">Grading Report
-                                </a></li>
+                        <li><a href="{{ route('qa_grading_v2') }}?export=qa" class="dropdown-item">
+                            <i class="fas fa-file-excel text-success mr-1"></i> QA Grading Report</a></li>
+                        <hr class="dropdown-divider" />    
+                        <li><a href="{{ route('qa_grading_v2') }}?export=slaughter" class="dropdown-item">
+                            <i class="fas fa-file-excel text-success mr-1"></i> Slaughter Grading Report</a></li>
                     </ul>
                 </li>
             </ul>

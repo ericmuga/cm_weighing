@@ -11,6 +11,13 @@
                                 Classifications</button></span></h1>
                 </div>
                 <div class="col-lg-4 text-right">
+                    <button type="button" class="btn btn-outline-success btn-sm mr-1" id="btn-qa-report">
+                        <i class="fas fa-file-excel"></i> QA Report
+                    </button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="btn-slaughter-report">
+                        <i class="fas fa-chart-bar"></i> Summary Report
+                    </button>
+                    <br>
                     <span class="text-danger" id="err"></span>
                     <span class="text-success" id="succ"></span>
                 </div>
@@ -56,7 +63,7 @@
                             @foreach($grading_data as $data)
                                 <tr>
                                     <td>{{ $data->id }}</td>
-                                    <td>{{ $data->agg_no }}</td>
+                                    <td>{{ $data->slaughter_agg_no ?? '--' }}</td>
                                     <td>{{ $data->receipt_no }}</td>
                                     <td>{{ $data->item_code }}</td>
                                     <td>{{ $data->description }}</td>
@@ -65,7 +72,23 @@
 
                                     <td>{{ $data->classification_code }}</td>
 
-                                    @php $tdAttrs = 'class="gradingShow" data-agg_no="'.$data->agg_no.'" data-item_code="'.$data->item_code.'" data-id="'.$data->id.'" data-settlement_weight="'.$data->settlement_weight.'" data-item_name="'.$data->description.'" data-vendor="'.$data->vendor_no.'"'; @endphp
+                                    @php
+    $tdAttrs = 'class="gradingShow"'
+        .' data-agg_no="'.($data->slaughter_agg_no ?? '').'"'
+        .' data-item_code="'.$data->item_code.'"'
+        .' data-id="'.$data->id.'"'
+        .' data-settlement_weight="'.$data->settlement_weight.'"'
+        .' data-item_name="'.$data->description.'"'
+        .' data-vendor="'.$data->vendor_no.'"'
+        .' data-classification="'.($data->classification ?? '').'"'
+        .' data-dentition="'.($data->dentition ?? '').'"'
+        .' data-fat_cover="'.($data->fat_cover ?? '').'"'
+        .' data-fat_color="'.($data->fat_color ?? '').'"'
+        .' data-meat_color="'.($data->meat_color ?? '').'"'
+        .' data-bruising="'.($data->bruising ?? '').'"'
+        .' data-muscle="'.($data->muscle_conformation ?? '').'"'
+        .' data-narration="'.e($data->narration ?? '').'"';
+@endphp
 
                                     @if($data->classification == null && !$data->settlement_weight)
                                         <td {!! $tdAttrs !!}><a href="#" class="text-warning">
@@ -122,10 +145,10 @@
 
 <div id="gradingShow" class="modal fade" role="dialog">
     <div class="modal-dialog modal-xl">
-        <form id="form-grading-slaughter" class="form-prevent-multiple-submits"
-            action="{{ route('qa_update_grading_v2') }}" method="post">
-            @csrf
-            <div class="modal-content">
+        <div class="modal-content">
+            <form id="form-grading-slaughter" class="form-prevent-multiple-submits"
+                action="{{ route('qa_update_grading_v2') }}" method="post">
+                @csrf
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">Grading For Carcass No: <strong><input
                                 style="border:none" type="text" id="agg_no" name="agg_no" value="" readonly></strong>
@@ -161,7 +184,7 @@
                         <div class="col-md-2">
                             <label for="email" class="col-form-label">Dentition</label>
                             <select class="form-control select2 params" name="dentition" id="dentition">
-                                <<option value="" selected> Select an option </option>
+                                <option value="" selected> Select an option </option>
                                 <option value="1">Full mouth </option>
                                 <option value="2">3 pairs </option>
                                 <option value="3">2 pairs </option>
@@ -240,23 +263,102 @@
                         <input type="text" class="form-control params" id="narration" name="narration" value="">
                     </div>
                     <input type="hidden" id="item_id" name="item_id" value="">
-                    <div class="modal-footer">
-                        <div class="form-group">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-warning btn-lg btn-prevent-multiple-submits">
-                                <i class="fa fa-paper-plane" aria-hidden="true"></i> Update
-                            </button>
+                </div>{{-- /modal-body --}}
+                <div class="modal-footer">
+                    <div class="form-group">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-warning btn-lg btn-prevent-multiple-submits">
+                            <i class="fa fa-paper-plane" aria-hidden="true"></i> Update
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>{{-- /modal-content --}}
+    </div>
+</div>
+
+<!-- QA Grading Report Modal -->
+<div class="modal fade" id="qaGradingReportModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form action="{{ route('qa_grading_report_export') }}" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-file-excel text-success"></i> QA Grading Report</h5>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Per-carcass grading details: vendor, carcass no, QA parameters, grade and narration.</p>
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label>From Date</label>
+                            <input type="date" class="form-control" name="from_date" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>To Date</label>
+                            <input type="date" class="form-control" name="to_date" required>
                         </div>
                     </div>
                 </div>
-        </form>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-download"></i> Export Excel</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
+
+<!-- Slaughter Grading Summary Report Modal -->
+<div class="modal fade" id="slaughterGradingReportModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form action="{{ route('slaughter_grading_report_export') }}" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-chart-bar text-primary"></i> Slaughter Grading Summary</h5>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Summary per vendor/receipt: qty supplied, total CDW, grading breakdown and downgrade count.</p>
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label>From Date</label>
+                            <input type="date" class="form-control" name="from_date" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>To Date</label>
+                            <input type="date" class="form-control" name="to_date" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-download"></i> Export Excel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @section('scripts')
 <script>
     $(document).ready(function () {
+
+        // Report buttons — explicit JS to avoid Bootstrap data-api conflicts
+        $('#btn-qa-report').on('click', function () {
+            $('#qaGradingReportModal').modal('show');
+        });
+        $('#btn-slaughter-report').on('click', function () {
+            $('#slaughterGradingReportModal').modal('show');
+        });
+
+        // Auto-open report modal when navigating from the header dropdown
+        var exportParam = new URLSearchParams(window.location.search).get('export');
+        if (exportParam === 'qa')        $('#qaGradingReportModal').modal('show');
+        if (exportParam === 'slaughter') $('#slaughterGradingReportModal').modal('show');
 
         var currentGradingRow = null;
 
@@ -274,12 +376,21 @@
 
             currentGradingRow = $(this).closest('tr');
 
-            var id           = $(this).data('id');
-            var agg_no       = $(this).data('agg_no');
-            var item_code    = $(this).data('item_code');
-            var item_name    = $(this).data('item_name');
-            var vendor       = $(this).data('vendor');
-            var settlement   = $(this).data('settlement_weight');
+            var id             = $(this).data('id');
+            var agg_no         = $(this).data('agg_no');
+            var item_code      = $(this).data('item_code');
+            var item_name      = $(this).data('item_name');
+            var vendor         = $(this).data('vendor');
+            var settlement     = $(this).data('settlement_weight');
+            // Saved QA values for pre-population
+            var savedClass     = $(this).data('classification');
+            var savedDentition = $(this).data('dentition');
+            var savedFatCover  = $(this).data('fat_cover');
+            var savedFatColor  = $(this).data('fat_color');
+            var savedMeatColor = $(this).data('meat_color');
+            var savedBruising  = $(this).data('bruising');
+            var savedMuscle    = $(this).data('muscle');
+            var savedNarration = $(this).data('narration');
 
             $('#item_id').val(id);
             $('#agg_no').val(agg_no);
@@ -287,10 +398,10 @@
             $('#item_name').val(item_name);
             $('#vendor_no').val(vendor);
             $('#settlement_weight').val((Math.round(settlement * 100) / 100).toFixed(2));
-            $('#narration').val('');
+            $('#narration').val(savedNarration || '');
 
+            // Build fat_group options based on animal type
             $('#fat_group').empty().append('<option disabled selected> select an option </option>');
-
             if (item_code === 'BG1021') {
                 $('#fat_group').append('<option value="1">Premium</option>');
                 $('#fat_group').append('<option value="2">High Grade</option>');
@@ -305,7 +416,24 @@
                 $('#fat_group').append('<option value="7">Lamb Class R</option>');
             }
 
+            // Re-init select2 on fat_group (dynamic options), then pre-select saved value
             $('#fat_group').select2('destroy').select2();
+            if (savedClass !== undefined && savedClass !== '') {
+                $('#fat_group').val(savedClass).trigger('change');
+            }
+
+            // Pre-populate remaining selects with saved values ('' resets to placeholder)
+            // Use !== undefined check so 0 (No Bruises) is correctly restored
+            var setSelect = function(id, val) {
+                $(id).val((val !== undefined && val !== '') ? val : '').trigger('change');
+            };
+            setSelect('#dentition',  savedDentition);
+            setSelect('#fat_cover',  savedFatCover);
+            setSelect('#fat_color',  savedFatColor);
+            setSelect('#meat_color', savedMeatColor);
+            setSelect('#bruising',   savedBruising);
+            setSelect('#muscle',     savedMuscle);
+
             $('#gradingShow').modal('show');
         });
 

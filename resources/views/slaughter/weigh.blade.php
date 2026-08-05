@@ -221,10 +221,10 @@
                             id="weighed_cdw" placeholder="" readonly required>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="exampleInputPassword1">Classification Code </label>
+                <div class="hidden form-group" style="display: none;">
+                    <label for="exampleInputPassword1">Weight Classification </label>
                     <input type="text" style="text-align: center" class="form-control" name="classification_code"
-                        id="classification_code" placeholder="" readonly required>
+                        id="classification_code" placeholder="" readonly >
                 </div>
                 <div class="form-group" style="padding-top: 5%">
                     <button id="submit_form" type="submit" onclick="return validateOnSubmit()"
