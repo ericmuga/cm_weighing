@@ -7,8 +7,7 @@
                 <div class="col-lg-8">
                     <h1 class="card-title">Grading Work Sheet V2 | <span id="subtext-h1-title"><small> showing
                                 <strong>Today's</strong>
-                                entries</small> | <button class="btn btn-success" id="execute-grading-btn">Generate
-                                Classifications</button></span></h1>
+                                entries</small></span></h1>
                 </div>
                 <div class="col-lg-4 text-right">
                     <button type="button" class="btn btn-outline-success btn-sm mr-1" id="btn-qa-report">
@@ -39,6 +38,7 @@
                                 <th>Weight Classification</th>
                                 <th>Grading Status</th>
                                 <th>QA Classification</th>
+                                <th>Auto Suggestion</th>
                                 <th>Downgraded?</th>
                                 <th>Slaughter Date</th>
                             </tr>
@@ -55,6 +55,7 @@
                                 <th>Weight Classification</th>
                                 <th>Grading Status</th>
                                 <th>QA Classification</th>
+                                <th>Auto Suggestion</th>
                                 <th>Downgraded?</th>
                                 <th>Slaughter Date</th>
                             </tr>
@@ -70,7 +71,7 @@
                                     <td>{{ $data->vendor_no }}</td>
                                     <td>{{ number_format($data->settlement_weight, 2) }}</td>                                  
 
-                                    <td>{{ $data->classification_code }}</td>
+                                    <td>{{ $data->weigh_classification_code ?? '--' }}</td>
 
                                     @php
     $tdAttrs = 'class="gradingShow"'
@@ -118,9 +119,24 @@
                                         <td>2nd grade</td>
                                     @elseif($data->classification == 7)
                                         <td>Class R</td>
+                                    @elseif($data->classification == 8)
+                                        <td>FAQ</td>
+                                    @elseif($data->classification == 9)
+                                        <td>Standard</td>
                                     @else
                                         <td>---</td>
                                     @endif
+
+                                    <td class="auto-suggestion-cell" data-id="{{ $data->id }}">
+                                        @if($data->auto_classification ?? null)
+                                            {{ \App\Models\CarcassGradingService::label($data->auto_classification) }}
+                                            @if($data->is_indeterminate ?? false)
+                                                <span class="badge badge-warning" title="Verdict 1 tied between grades; weight didn't clearly resolve it &mdash; please review">tied</span>
+                                            @endif
+                                        @else
+                                            <span class="text-muted">--</span>
+                                        @endif
+                                    </td>
 
                                     @if($data->is_downgraded === null)
                                         <td class="downgraded-cell"><span class="badge badge-secondary">--</span></td>
@@ -196,9 +212,11 @@
                             <label for="email" class="col-form-label">Fat Cover</label>
                             <select class="form-control select2 params" name="fat_cover" id="fat_cover">
                                 <option disabled selected> select an option </option>
+                                <option value="4">Marbling (heavy, well-marbled fat cover) </option>
                                 <option value="1">Good fat cover (to be 3 to 10mm (or more), evenly and well distributed </option>
                                 <option value="2">Fair fat cover(2-7mm) </option>
                                 <option value="3">Minimum/inadequate fat cover </option>
+                                <option value="0">None (no discernible fat cover) </option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -206,6 +224,7 @@
                             <select class="form-control select2 params" name="fat_color" id="fat_color">
                                 <option disabled selected> select an option </option>
                                 <option value="1">Creamish white fat </option>
+                                <option value="3">Light yellow fat </option>
                                 <option value="2">Deep yellow fat </option>
                             </select>
                         </div>
@@ -252,11 +271,12 @@
                                 <option value="3"> Commercial</option>
                                 <option value="4"> Poor Commercial</option>
                             @else
-                               <option value="5"> Lamb 1st grade</option>                             
-                               <option value="6"> Lamb 2nd grade</option>                             
-                               <option value="7"> Lamb Class R</option>                             
+                               <option value="5"> Lamb 1st grade</option>
+                               <option value="6"> Lamb 2nd grade</option>
+                               <option value="7"> Lamb Class R</option>
                             @endif --}}
                         </select>
+                        <small id="autoGradeHint" class="form-text text-muted"></small>
                     </div>
                     <div class="form-group">
                         <label for="exampleInputIdNumber">Narration (<em>optional</em>) </label>
@@ -345,6 +365,121 @@
 
 @section('scripts')
 <script>
+    // Mirrors app/Models/CarcassGradingService.php — beef (BG1021) only. Keep
+    // both in sync if the scorecard in "Grading template formulation (2).xlsx"
+    // ever changes; the server recomputes and is authoritative on save, this
+    // is purely for the live preview in the modal.
+    var CarcassGrading = (function () {
+        var GRADE_BANDS = {
+            1: { tier: 5, min: 17, max: 18 }, // Premium
+            2: { tier: 4, min: 13, max: 17 }, // High Grade
+            8: { tier: 3, min: 10, max: 15 }, // FAQ
+            9: { tier: 2, min: 10, max: 16 }, // Standard
+            3: { tier: 1, min: 8,  max: 14 }, // Commercial
+            4: { tier: 0, min: 0,  max: 7  }  // Poor C
+        };
+        var WEIGHT_BANDS = [
+            { min: 220, tier: 5 },
+            { min: 170, tier: 4 },
+            { min: 150, tier: 3 },
+            { min: 120, tier: 2 },
+            { min: 0,   tier: 1 }
+        ];
+        var POINTS = {
+            dentition:  { 1: 1, 2: 2, 3: 3, 4: 3, 5: 3 },
+            fat_cover:  { 4: 4, 1: 3, 2: 2, 3: 1, 0: 0 },
+            fat_color:  { 1: 3, 3: 2, 2: 1 },
+            meat_color: { 1: 2, 2: 1 },
+            bruising:   { 0: 3, 1: 2, 2: 1, 3: 1, 4: 0, 5: 1 },
+            muscle:     { 1: 3, 2: 2, 3: 1 }
+        };
+        var LABELS = { 1: 'Premium', 2: 'High Grade', 8: 'FAQ', 9: 'Standard', 3: 'Commercial', 4: 'Poor C' };
+
+        function scoreAttributes(attrs) {
+            var total = 0, missing = [];
+            Object.keys(POINTS).forEach(function (field) {
+                var raw = attrs[field];
+                if (raw === undefined || raw === null || raw === '') { missing.push(field); return; }
+                var val = parseInt(raw, 10);
+                if (!(val in POINTS[field])) { missing.push(field); return; }
+                total += POINTS[field][val];
+            });
+            return { verdict1: missing.length ? null : total, missing: missing };
+        }
+
+        function weightTier(weight) {
+            for (var i = 0; i < WEIGHT_BANDS.length; i++) {
+                if (weight >= WEIGHT_BANDS[i].min) return WEIGHT_BANDS[i].tier;
+            }
+            return 1;
+        }
+
+        function gradeForTier(tier) {
+            var found = 4;
+            Object.keys(GRADE_BANDS).forEach(function (g) {
+                if (GRADE_BANDS[g].tier === tier) found = parseInt(g, 10);
+            });
+            return found;
+        }
+
+        function compute(attrs, weight) {
+            var scored = scoreAttributes(attrs);
+            var result = {
+                verdict1: scored.verdict1, verdict2: null, classification: null,
+                is_indeterminate: false, candidates: [], missing: scored.missing
+            };
+
+            if (scored.verdict1 === null) return result;
+
+            var candidates = [];
+            Object.keys(GRADE_BANDS).forEach(function (g) {
+                g = parseInt(g, 10);
+                var band = GRADE_BANDS[g];
+                if (scored.verdict1 >= band.min && scored.verdict1 <= band.max) candidates.push(g);
+            });
+            candidates.sort(function (a, b) { return GRADE_BANDS[b].tier - GRADE_BANDS[a].tier; });
+            result.candidates = candidates;
+
+            if (!candidates.length) {
+                result.classification = 4;
+                result.is_indeterminate = true;
+                return result;
+            }
+
+            // Weight is only needed to break a tie between overlapping grade
+            // bands — an unambiguous verdict1 resolves on its own.
+            var hasWeight = !!weight && weight > 0;
+            var wTier = hasWeight ? weightTier(weight) : null;
+            if (hasWeight) result.verdict2 = scored.verdict1 + wTier;
+
+            if (candidates.length === 1) {
+                var grade = candidates[0];
+                if (hasWeight && wTier < GRADE_BANDS[grade].tier) grade = gradeForTier(wTier);
+                result.classification = grade;
+                return result;
+            }
+
+            // Tied bands: weight is the only thing that can break the tie — if
+            // it isn't known yet, leave classification null (candidates still
+            // lists the tie) rather than guessing.
+            if (!hasWeight) return result;
+
+            var supported = candidates.filter(function (g) { return GRADE_BANDS[g].tier <= wTier; });
+            if (supported.length) {
+                supported.sort(function (a, b) { return GRADE_BANDS[b].tier - GRADE_BANDS[a].tier; });
+                result.classification = supported[0];
+                return result;
+            }
+
+            var ranked = candidates.slice().sort(function (a, b) { return GRADE_BANDS[a].tier - GRADE_BANDS[b].tier; });
+            result.classification = ranked[0];
+            result.is_indeterminate = true;
+            return result;
+        }
+
+        return { compute: compute, LABELS: LABELS };
+    })();
+
     $(document).ready(function () {
 
         // Report buttons — explicit JS to avoid Bootstrap data-api conflicts
@@ -361,6 +496,8 @@
         if (exportParam === 'slaughter') $('#slaughterGradingReportModal').modal('show');
 
         var currentGradingRow = null;
+        var currentItemCode = null;
+        var currentSettlementWeight = null;
 
         $("#execute-grading-btn").click(function (e) {
             e.preventDefault();
@@ -370,6 +507,60 @@
         $('.params').on("change", function () {
             $('.btn-prevent-multiple-submits').prop('disabled', false);
         });
+
+        // Live grade preview — beef (BG1021) only. Recomputes on every
+        // attribute change and auto-fills Classification; QA can still pick a
+        // different value afterwards before saving.
+        function updateAutoGradePreview() {
+            if (currentItemCode !== 'BG1021') {
+                $('#autoGradeHint').text('');
+                return;
+            }
+
+            var attrs = {
+                dentition: $('#dentition').val(),
+                fat_cover: $('#fat_cover').val(),
+                fat_color: $('#fat_color').val(),
+                meat_color: $('#meat_color').val(),
+                bruising: $('#bruising').val(),
+                muscle: $('#muscle').val()
+            };
+
+            var result = CarcassGrading.compute(attrs, currentSettlementWeight);
+
+            if (result.classification === null) {
+                if (result.verdict1 === null) {
+                    $('#autoGradeHint').removeClass('text-warning').addClass('text-muted')
+                        .text('Select all 6 attributes to see the auto-computed grade.');
+                    return;
+                }
+
+                // Only reachable when verdict1 ties between candidates and
+                // settlement weight isn't known yet to break it.
+                var tied = result.candidates.map(function (g) { return CarcassGrading.LABELS[g]; });
+                $('#autoGradeHint').removeClass('text-muted').addClass('text-warning')
+                    .text('Tied between ' + tied.join(', ') + ' (Verdict 1: ' + result.verdict1 +
+                        ') — settlement weight is needed to break the tie.');
+                return;
+            }
+
+            $('#fat_group').val(result.classification).trigger('change');
+
+            var hint = 'Auto-computed: ' + CarcassGrading.LABELS[result.classification] +
+                ' (Verdict 1: ' + result.verdict1 + ', Verdict 2: ' + result.verdict2 + ')';
+            if (result.is_indeterminate) {
+                var others = result.candidates
+                    .filter(function (g) { return g !== result.classification; })
+                    .map(function (g) { return CarcassGrading.LABELS[g]; });
+                hint += '. ⚠ Tied with ' + others.join(', ') + ' — weight did not clearly resolve it; please review.';
+                $('#autoGradeHint').removeClass('text-muted').addClass('text-warning');
+            } else {
+                $('#autoGradeHint').removeClass('text-warning').addClass('text-muted');
+            }
+            $('#autoGradeHint').text(hint);
+        }
+
+        $('#dentition, #fat_cover, #fat_color, #meat_color, #bruising, #muscle').on('change', updateAutoGradePreview);
 
         $("body").on("click", ".gradingShow", function (a) {
             a.preventDefault();
@@ -405,11 +596,10 @@
             if (item_code === 'BG1021') {
                 $('#fat_group').append('<option value="1">Premium</option>');
                 $('#fat_group').append('<option value="2">High Grade</option>');
+                $('#fat_group').append('<option value="8">FAQ</option>');
+                $('#fat_group').append('<option value="9">Standard</option>');
                 $('#fat_group').append('<option value="3">Commercial</option>');
                 $('#fat_group').append('<option value="4">Poor C</option>');
-                $('#fat_group').append('<option value="5">FAQ >150kg</option>');
-                $('#fat_group').append('<option value="5">Standard >120kg</option>');
-                $('#fat_group').append('<option value="5">Standard <120kg</option>');
             } else {
                 $('#fat_group').append('<option value="5">Lamb 1st grade</option>');
                 $('#fat_group').append('<option value="6">Lamb 2nd grade</option>');
@@ -421,6 +611,9 @@
             if (savedClass !== undefined && savedClass !== '') {
                 $('#fat_group').val(savedClass).trigger('change');
             }
+            $('#autoGradeHint').text('');
+            currentItemCode = item_code;
+            currentSettlementWeight = parseFloat(settlement) || null;
 
             // Pre-populate remaining selects with saved values ('' resets to placeholder)
             // Use !== undefined check so 0 (No Bruises) is correctly restored
@@ -478,6 +671,18 @@
                             .attr('class', 'text-success')
                             .html('<i class="fas fa-check-circle"></i> graded <i class="fas fa-arrow-right"></i>');
                         $gradingTd.next('td').text(savedClassText);
+
+                        // Update the Auto Suggestion cell from what the server just computed
+                        var $autoTd = $('td.auto-suggestion-cell[data-id="' + savedRowId + '"]');
+                        if (response.auto_classification === null || response.auto_classification === undefined) {
+                            $autoTd.html('<span class="text-muted">--</span>');
+                        } else {
+                            var autoHtml = response.auto_classification_label;
+                            if (response.is_indeterminate) {
+                                autoHtml += ' <span class="badge badge-warning" title="Verdict 1 tied between grades; weight did not clearly resolve it &mdash; please review">tied</span>';
+                            }
+                            $autoTd.html(autoHtml);
+                        }
 
                         // Update is_downgraded badge
                         var $downgradedTd = $gradingTd.closest('tr').find('.downgraded-cell');

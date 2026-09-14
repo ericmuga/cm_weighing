@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\QAGradingReportExport;
 use App\Exports\SlaughterGradingReportExport;
+use App\Models\CarcassGradingService;
 use App\Models\Helpers;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
@@ -68,7 +69,7 @@ class QAController extends Controller
         $title = "Grading V2";
 
         $grading_data = DB::table('qa_grading as a')
-            ->select('a.*', 'b.vendor_no', 'ct.description', 'c.settlement_weight', 'c.agg_no as slaughter_agg_no')
+            ->select('a.*', 'b.vendor_no', 'ct.description', 'c.settlement_weight', 'c.agg_no as slaughter_agg_no', 'c.classification_code as weigh_classification_code')
             ->join(DB::raw('(SELECT DISTINCT receipt_no, slaughter_date, vendor_no FROM receipts) as b'), function ($join) {
                 $join->on('a.receipt_no', '=', 'b.receipt_no')
                     ->on('a.slaughter_date', '=', 'b.slaughter_date');
@@ -144,7 +145,7 @@ class QAController extends Controller
                         ->on('b.item_code', '=', 'a.item_code');
                 })
                 ->leftJoin('receipts', 'a.receipt_no', '=', 'receipts.receipt_no')
-                ->select('a.settlement_weight', 'a.receipt_no', 'a.agg_no', 'a.item_code', 'b.classification', 'receipts.description as receipt_description')
+                ->select('a.settlement_weight', 'a.receipt_no', 'a.agg_no', 'a.item_code', 'a.classification_code as weigh_classification_code', 'b.classification', 'receipts.description as receipt_description')
                 ->get();
 
             foreach ($slaughter_data as $d) {
@@ -152,7 +153,7 @@ class QAController extends Controller
 
                 $class_type = $this->getClassificationCode($classification, $d->settlement_weight, $d->item_code);
 
-                $this->updateClassificationCode($d->receipt_no, $d->agg_no, $d->item_code, $class_type);
+                $this->updateClassificationCode($d->receipt_no, $d->agg_no, $d->item_code, $class_type, $d->weigh_classification_code);
             }
 
 
@@ -231,23 +232,45 @@ class QAController extends Controller
         return '**'; // Default case
     }
 
-    private function computeIsDowngraded(int $classification, string $classificationCode): ?int
+    /**
+     * A carcass is "downgraded" when the QA-decided classification's expected
+     * code family doesn't include the code the carcass was assessed at when it
+     * was weighed in — i.e. QA's final grade disagrees with (is lower/higher
+     * than) what intake expected. $referenceCode MUST be that independent,
+     * pre-QA weigh-time code (slaughter_data.classification_code) — comparing
+     * against a code generated from $classification itself is circular, since
+     * getClassificationCode()'s High Grade/Commercial branches cover every
+     * possible weight and its Premium/Poor C/lamb branches are fixed strings,
+     * so a self-generated code would always "match" and never flag a downgrade.
+     */
+    private function computeIsDowngraded(int $classification, ?string $referenceCode): ?int
     {
+        if ($referenceCode === null || $referenceCode === '' || $referenceCode === '--') {
+            return null;
+        }
+
         $matches = match ($classification) {
-            1 => $classificationCode === 'PG+170',
-            2 => in_array($classificationCode, ['STDB-119', 'STDA-149', 'FAQ+150', 'HG+160', 'HG+170']),
-            3 => in_array($classificationCode, ['CG-120', 'CG+120', 'CG+150', 'CG+160', 'CG+170']),
-            4 => $classificationCode === 'Poor C',
-            5 => $classificationCode === '1st Grade',
-            6 => $classificationCode === '2nd Grade',
-            7 => $classificationCode === 'Class R',
+            1 => $referenceCode === 'PG+170',
+            2 => in_array($referenceCode, ['STDB-119', 'STDA-149', 'FAQ+150', 'HG+160', 'HG+170']),
+            3 => in_array($referenceCode, ['CG-120', 'CG+120', 'CG+150', 'CG+160', 'CG+170']),
+            4 => $referenceCode === 'Poor C',
+            5 => $referenceCode === '1st Grade',
+            6 => $referenceCode === '2nd Grade',
+            7 => $referenceCode === 'Class R',
+            // FAQ and Standard (CarcassGradingService::FAQ/STANDARD) have no code
+            // of their own at weigh-in — getClassificationCode() only ever emits
+            // a High Grade- or Commercial-family code there. So a QA verdict of
+            // FAQ or Standard never matches what intake expected — always a
+            // downgrade, not "unresolved".
+            8 => false,
+            9 => false,
             default => null,
         };
 
         return $matches === null ? null : ($matches ? 0 : 1);
     }
 
-    private function updateClassificationCode(string $receipt_no, int $agg_no, string $item_code, string $class_type)
+    private function updateClassificationCode(string $receipt_no, int $agg_no, string $item_code, string $class_type, ?string $weighClassificationCode)
     {
         try {
             DB::table('qa_grading')
@@ -264,7 +287,7 @@ class QAController extends Controller
                 ->value('classification');
 
             if ($row) {
-                $isDowngraded = $this->computeIsDowngraded((int) $row, $class_type);
+                $isDowngraded = $this->computeIsDowngraded((int) $row, $weighClassificationCode);
                 if ($isDowngraded !== null) {
                     DB::table('qa_grading')
                         ->where('receipt_no', $receipt_no)
@@ -281,11 +304,59 @@ class QAController extends Controller
     public function updateGradingV2(Request $request, Helpers $helpers)
     {
         try {
-            DB::transaction(function () use ($request, $helpers) {
+            $autoGrading = [
+                'verdict1' => null,
+                'verdict2' => null,
+                'classification' => null,
+                'is_indeterminate' => false,
+            ];
+            $classificationCode = null;
+            $weighClassificationCode = null;
+
+            DB::transaction(function () use ($request, $helpers, &$autoGrading, &$classificationCode, &$weighClassificationCode) {
+                $existing = DB::table('qa_grading')->where('id', $request->item_id)->first();
+
+                $settlementWeight = null;
+                if ($existing) {
+                    $slaughterRow = DB::table('slaughter_data')
+                        ->where('agg_no', $existing->agg_no)
+                        ->where('receipt_no', $existing->receipt_no)
+                        ->where('item_code', $existing->item_code)
+                        ->whereDate('created_at', $existing->slaughter_date)
+                        ->first(['settlement_weight', 'classification_code']);
+
+                    $settlementWeight = $slaughterRow->settlement_weight ?? null;
+                    // The weigh-time code, independent of QA's decision — the
+                    // reference is_downgraded is checked against below.
+                    $weighClassificationCode = $slaughterRow->classification_code ?? null;
+                }
+
+                // The scorecard in "Grading template formulation (2).xlsx" only
+                // covers beef (BG1021); Lamb/Goat keep their existing manual flow.
+                if ($existing && CarcassGradingService::appliesTo($existing->item_code)) {
+                    $autoGrading = CarcassGradingService::compute([
+                        'dentition' => $request->dentition,
+                        'fat_cover' => $request->fat_cover,
+                        'fat_color' => $request->fat_color,
+                        'meat_color' => $request->meat_color,
+                        'bruising' => $request->bruising,
+                        'muscle' => $request->muscle,
+                    ], $settlementWeight !== null ? (float) $settlementWeight : null);
+                }
+
+                // Classification code (SKU string, e.g. "HG+170") used to only get
+                // filled in later by the separate "Generate Classifications" bulk
+                // step — computed here instead so is_downgraded below always has
+                // something to resolve against as soon as QA saves a grade.
+                if ($existing) {
+                    $classificationCode = $this->getClassificationCode($request->fat_group, $settlementWeight, $existing->item_code);
+                }
+
                 DB::table('qa_grading')
                     ->where('id', $request->item_id)
                     ->update([
                         'classification' => $request->fat_group,
+                        'classification_code' => $classificationCode,
                         'narration' => $request->narration,
                         'dentition' => $request->dentition,
                         'fat_cover' => $request->fat_cover,
@@ -294,17 +365,27 @@ class QAController extends Controller
                         'bruising' => $request->bruising,
                         'muscle_conformation' => $request->muscle,
                         'graded_by' => Auth::id(),
+                        // Shadow mode: record what the scorecard computed alongside
+                        // whatever QA actually saved, without overriding their choice.
+                        'verdict1' => $autoGrading['verdict1'],
+                        'verdict2' => $autoGrading['verdict2'],
+                        'auto_classification' => $autoGrading['classification'],
+                        'is_indeterminate' => $autoGrading['is_indeterminate'],
+                        'classification_source' => $autoGrading['classification'] !== null
+                            ? (((int) $request->fat_group === (int) $autoGrading['classification']) ? 'auto' : 'manual')
+                            : null,
                     ]);
 
                 $desc = 'new fat_group:' . $request->fat_group . ', narration: ' . $request->narration;
                 $helpers->insertChangeDataLogs('qa_grading', $request->item_id, '3', $desc);
             });
 
-            // Compute is_downgraded now that QA classification is saved
-            $classificationCode = DB::table('qa_grading')->where('id', $request->item_id)->value('classification_code');
+            // Compute is_downgraded against the independent weigh-time code, now
+            // that QA's classification is saved. computeIsDowngraded() treats a
+            // missing/'--' reference code as unresolved rather than a mismatch.
             $isDowngraded = null;
-            if ($classificationCode) {
-                $isDowngraded = $this->computeIsDowngraded((int) $request->fat_group, $classificationCode);
+            if ($weighClassificationCode) {
+                $isDowngraded = $this->computeIsDowngraded((int) $request->fat_group, $weighClassificationCode);
                 if ($isDowngraded !== null) {
                     DB::table('qa_grading')->where('id', $request->item_id)
                         ->update(['is_downgraded' => $isDowngraded]);
@@ -313,9 +394,14 @@ class QAController extends Controller
 
             if ($request->ajax()) {
                 return response()->json([
-                    'success'       => true,
-                    'message'       => "Carcass no. {$request->agg_no} graded successfully",
-                    'is_downgraded' => $isDowngraded,
+                    'success'          => true,
+                    'message'          => "Carcass no. {$request->agg_no} graded successfully",
+                    'is_downgraded'    => $isDowngraded,
+                    'auto_classification'      => $autoGrading['classification'],
+                    'auto_classification_label' => CarcassGradingService::label($autoGrading['classification']),
+                    'is_indeterminate' => $autoGrading['is_indeterminate'],
+                    'verdict1'         => $autoGrading['verdict1'],
+                    'verdict2'         => $autoGrading['verdict2'],
                 ]);
             }
 
@@ -344,7 +430,7 @@ class QAController extends Controller
         $meatColorMap  = [1 => 'Bright red', 2 => 'Dark meat'];
         $bruisingMap   = [0 => 'No Bruises', 1 => 'Mild', 2 => 'Extensive', 3 => 'Severely bruised', 4 => 'Cysts Bovis', 5 => 'Other discolouration'];
         $muscleMap     = [1 => 'Well finished', 2 => 'Fair', 3 => 'Poor'];
-        $classMap      = [1 => 'Premium', 2 => 'High Grade', 3 => 'Commercial', 4 => 'Poor C', 5 => '1st Grade', 6 => '2nd Grade', 7 => 'Class R'];
+        $classMap      = [1 => 'Premium', 2 => 'High Grade', 3 => 'Commercial', 4 => 'Poor C', 5 => '1st Grade', 6 => '2nd Grade', 7 => 'Class R', 8 => 'FAQ', 9 => 'Standard'];
 
         $rows = DB::table('qa_grading as a')
             ->join(DB::raw('(SELECT DISTINCT receipt_no, slaughter_date, vendor_no, vendor_name FROM receipts) as r'), function ($join) {
