@@ -23,6 +23,36 @@
             </div>
             <!-- /.card-header -->
             <div class="card-body">
+                @if(isset($unmatched_weighins) && $unmatched_weighins->isNotEmpty())
+                    <div class="alert alert-warning">
+                        <strong><i class="fas fa-exclamation-triangle"></i> {{ $unmatched_weighins->count() }} carcass(es) weighed today have no matching grading record.</strong>
+                        This usually means more animals were weighed against a receipt than its declared quantity — check the receipt's received_qty. These carcasses are weighed but cannot be graded until fixed.
+                        <div class="table-responsive mt-2">
+                            <table class="table table-sm table-bordered mb-0 bg-white">
+                                <thead>
+                                    <tr>
+                                        <th>Receipt No.</th>
+                                        <th>Agg No</th>
+                                        <th>Item Code</th>
+                                        <th>Vendor</th>
+                                        <th>Settlement Weight</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($unmatched_weighins as $row)
+                                        <tr>
+                                            <td>{{ $row->receipt_no }}</td>
+                                            <td>{{ $row->agg_no }}</td>
+                                            <td>{{ $row->item_code }}</td>
+                                            <td>{{ $row->vendor_no }} — {{ $row->vendor_name }}</td>
+                                            <td>{{ $row->settlement_weight !== null ? number_format($row->settlement_weight, 2) : '--' }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endif
                 <div class="hidden" hidden>{{ $i = 1 }}</div>
                 <div class="table-responsive">
                     <table id="example1" class="table table-bordered table-striped " width="100%">
@@ -64,7 +94,7 @@
                             @foreach($grading_data as $data)
                                 <tr>
                                     <td>{{ $data->id }}</td>
-                                    <td>{{ $data->slaughter_agg_no ?? '--' }}</td>
+                                    <td>{{ $data->agg_no }}</td>
                                     <td>{{ $data->receipt_no }}</td>
                                     <td>{{ $data->item_code }}</td>
                                     <td>{{ $data->description }}</td>
@@ -75,7 +105,7 @@
 
                                     @php
     $tdAttrs = 'class="gradingShow"'
-        .' data-agg_no="'.($data->slaughter_agg_no ?? '').'"'
+        .' data-agg_no="'.$data->agg_no.'"'
         .' data-item_code="'.$data->item_code.'"'
         .' data-id="'.$data->id.'"'
         .' data-settlement_weight="'.$data->settlement_weight.'"'

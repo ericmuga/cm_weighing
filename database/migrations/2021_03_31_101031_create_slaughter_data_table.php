@@ -15,7 +15,7 @@ class CreateSlaughterDataTable extends Migration
     {
         Schema::create('slaughter_data', function (Blueprint $table) {
             $table->id();
-            $table->string('agg_no', 20);
+            $table->integer('agg_no');
             $table->string('receipt_no', 20);
             $table->string('item_code', 20);
             $table->string('vendor_no', 20);

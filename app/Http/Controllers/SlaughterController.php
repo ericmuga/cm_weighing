@@ -490,6 +490,12 @@ class SlaughterController extends Controller
                 ->whereDate('slaughter_date', today())
                 ->update(['item_code' => $data['item_code']]);
 
+            // The weigh-in classification_code just became available for this
+            // carcass — if QA already graded it (grade came in before the
+            // weight), resolve is_downgraded now. Silent no-op if QA hasn't
+            // graded yet.
+            app(\App\Http\Controllers\QAController::class)->syncIsDowngraded($request->receipt_no, (int) $request->agg_no);
+
             //$helpers->publishToQueue($data, 'cm_slaughter.bc');
 
             Toastr::success('record added successfully', 'Success');
@@ -530,6 +536,13 @@ class SlaughterController extends Controller
 
                 $helpers->insertChangeDataLogs('slaughter_data', $request->item_id, '3', $desc);
             });
+
+            // classification_code may have just changed (weight/settlement
+            // corrected) — re-resolve is_downgraded against whatever QA grade
+            // already exists. Silent no-op if QA hasn't graded yet.
+            if ($currentData) {
+                app(\App\Http\Controllers\QAController::class)->syncIsDowngraded($currentData->receipt_no, (int) $currentData->agg_no);
+            }
 
             Toastr::success("record {$request->edit_item_name} updated successfully", 'Success');
             return redirect()->back();

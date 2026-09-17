@@ -76,16 +76,37 @@ class QAController extends Controller
             })
             ->leftJoin('carcass_types as ct', 'a.item_code', '=', 'ct.code')
             ->leftJoin('slaughter_data as c', function ($join) {
+                // Deliberately NOT matched on item_code: it's computed
+                // independently on each side (receipt-declared vs. what the
+                // weigh-in operator actually selects) and can legitimately
+                // differ when a carcass is reclassified at weigh-in. agg_no
+                // is already unique per receipt_no per day, so that pair
+                // alone is the correct — and more reliable — match key.
                 $join->on('a.agg_no', '=', 'c.agg_no')
                     ->on('a.receipt_no', '=', 'c.receipt_no')
-                    ->on('a.item_code', '=', 'c.item_code')
                     ->whereDate('c.created_at', '=', today());
             })
             ->where('a.slaughter_date', today())
             ->orderBy('a.created_at', 'asc')
             ->get();
 
-        return view('QA.grading-v2', compact('title', 'helpers', 'grading_data'));
+        // Weighed carcasses with no matching qa_grading placeholder at all —
+        // e.g. more animals were weighed against a receipt than its
+        // received_qty declared. These never appear in $grading_data above
+        // (it's driven FROM qa_grading), so they'd otherwise vanish silently.
+        $unmatched_weighins = DB::table('slaughter_data as sd')
+            ->whereDate('sd.created_at', today())
+            ->where('sd.deleted', '!=', 1)
+            ->leftJoin('qa_grading as qg', function ($join) {
+                $join->on('qg.agg_no', '=', 'sd.agg_no')
+                    ->on('qg.receipt_no', '=', 'sd.receipt_no')
+                    ->whereDate('qg.slaughter_date', '=', today());
+            })
+            ->whereNull('qg.id')
+            ->select('sd.receipt_no', 'sd.agg_no', 'sd.item_code', 'sd.vendor_no', 'sd.vendor_name', 'sd.settlement_weight')
+            ->get();
+
+        return view('QA.grading-v2', compact('title', 'helpers', 'grading_data', 'unmatched_weighins'));
     }
 
     public function updateGrading(Request $request, Helpers $helpers)
@@ -131,18 +152,19 @@ class QAController extends Controller
         }
 
         // if ($qa_graded->isNotEmpty()) {
-            // Combine receipt_no and agg_no into pairs
+            // Combine receipt_no and agg_no into pairs — not item_code, which is
+            // computed independently on each side (receipt-declared vs. what
+            // weigh-in actually selects) and can legitimately differ.
             $combined_pairs = $qa_graded->map(function ($item) {
-                return $item->receipt_no . '_' . $item->agg_no . '_' . $item->item_code;
+                return $item->receipt_no . '_' . $item->agg_no;
             });
 
             $slaughter_data = DB::table('slaughter_data as a')
                 ->whereDate('a.created_at', today())
-                ->whereIn(DB::raw("CONCAT(a.receipt_no, '_', a.agg_no, '_', a.item_code)"), $combined_pairs)
+                ->whereIn(DB::raw("CONCAT(a.receipt_no, '_', a.agg_no)"), $combined_pairs)
                 ->join('qa_grading as b', function ($join) {
                     $join->on('b.receipt_no', '=', 'a.receipt_no')
-                        ->on('b.agg_no', '=', 'a.agg_no')
-                        ->on('b.item_code', '=', 'a.item_code');
+                        ->on('b.agg_no', '=', 'a.agg_no');
                 })
                 ->leftJoin('receipts', 'a.receipt_no', '=', 'receipts.receipt_no')
                 ->select('a.settlement_weight', 'a.receipt_no', 'a.agg_no', 'a.item_code', 'a.classification_code as weigh_classification_code', 'b.classification', 'receipts.description as receipt_description')
@@ -153,7 +175,7 @@ class QAController extends Controller
 
                 $class_type = $this->getClassificationCode($classification, $d->settlement_weight, $d->item_code);
 
-                $this->updateClassificationCode($d->receipt_no, $d->agg_no, $d->item_code, $class_type, $d->weigh_classification_code);
+                $this->updateClassificationCode($d->receipt_no, $d->agg_no, $class_type, $d->weigh_classification_code);
             }
 
 
@@ -270,20 +292,59 @@ class QAController extends Controller
         return $matches === null ? null : ($matches ? 0 : 1);
     }
 
-    private function updateClassificationCode(string $receipt_no, int $agg_no, string $item_code, string $class_type, ?string $weighClassificationCode)
+    /**
+     * Recompute and persist is_downgraded for one carcass. Call this
+     * whenever either side of the comparison could have just changed — QA
+     * saving/changing a grade, or a weigh-in being recorded/edited — in
+     * whichever order they happen to occur. Silent (no-op, returns null)
+     * until BOTH the QA classification and the weigh-in classification_code
+     * exist; that's deliberate, not a bug: there's nothing to compare yet.
+     */
+    public function syncIsDowngraded(string $receipt_no, int $agg_no): ?int
+    {
+        $grading = DB::table('qa_grading')
+            ->where('receipt_no', $receipt_no)
+            ->where('agg_no', $agg_no)
+            ->orderByDesc('slaughter_date')
+            ->first(['id', 'classification', 'slaughter_date']);
+
+        if (!$grading || $grading->classification === null) {
+            return null; // QA hasn't graded this carcass yet
+        }
+
+        $weighClassificationCode = DB::table('slaughter_data')
+            ->where('receipt_no', $receipt_no)
+            ->where('agg_no', $agg_no)
+            ->whereDate('created_at', $grading->slaughter_date)
+            ->value('classification_code');
+
+        if (!$weighClassificationCode) {
+            return null; // not weighed yet
+        }
+
+        $isDowngraded = $this->computeIsDowngraded((int) $grading->classification, $weighClassificationCode);
+        if ($isDowngraded !== null) {
+            DB::table('qa_grading')->where('id', $grading->id)->update(['is_downgraded' => $isDowngraded]);
+        }
+
+        return $isDowngraded;
+    }
+
+    // Matched on receipt_no + agg_no only — not item_code, which is computed
+    // independently on each side and can legitimately differ if the carcass
+    // was reclassified at weigh-in (see the loosened joins above).
+    private function updateClassificationCode(string $receipt_no, int $agg_no, string $class_type, ?string $weighClassificationCode)
     {
         try {
             DB::table('qa_grading')
                 ->where('receipt_no', $receipt_no)
                 ->where('agg_no', $agg_no)
-                ->where('item_code', $item_code)
                 ->update(['classification_code' => $class_type]);
 
             // Compute is_downgraded if QA classification is already set
             $row = DB::table('qa_grading')
                 ->where('receipt_no', $receipt_no)
                 ->where('agg_no', $agg_no)
-                ->where('item_code', $item_code)
                 ->value('classification');
 
             if ($row) {
@@ -292,7 +353,6 @@ class QAController extends Controller
                     DB::table('qa_grading')
                         ->where('receipt_no', $receipt_no)
                         ->where('agg_no', $agg_no)
-                        ->where('item_code', $item_code)
                         ->update(['is_downgraded' => $isDowngraded]);
                 }
             }
@@ -311,24 +371,24 @@ class QAController extends Controller
                 'is_indeterminate' => false,
             ];
             $classificationCode = null;
-            $weighClassificationCode = null;
+            $receiptNo = null;
+            $aggNo = null;
 
-            DB::transaction(function () use ($request, $helpers, &$autoGrading, &$classificationCode, &$weighClassificationCode) {
+            DB::transaction(function () use ($request, $helpers, &$autoGrading, &$classificationCode, &$receiptNo, &$aggNo) {
                 $existing = DB::table('qa_grading')->where('id', $request->item_id)->first();
+                $receiptNo = $existing->receipt_no ?? null;
+                $aggNo = $existing->agg_no ?? null;
 
                 $settlementWeight = null;
                 if ($existing) {
-                    $slaughterRow = DB::table('slaughter_data')
+                    // Matched on agg_no + receipt_no only — not item_code, which
+                    // is computed independently on each side and can legitimately
+                    // differ if the carcass was reclassified at weigh-in.
+                    $settlementWeight = DB::table('slaughter_data')
                         ->where('agg_no', $existing->agg_no)
                         ->where('receipt_no', $existing->receipt_no)
-                        ->where('item_code', $existing->item_code)
                         ->whereDate('created_at', $existing->slaughter_date)
-                        ->first(['settlement_weight', 'classification_code']);
-
-                    $settlementWeight = $slaughterRow->settlement_weight ?? null;
-                    // The weigh-time code, independent of QA's decision — the
-                    // reference is_downgraded is checked against below.
-                    $weighClassificationCode = $slaughterRow->classification_code ?? null;
+                        ->value('settlement_weight');
                 }
 
                 // The scorecard in "Grading template formulation (2).xlsx" only
@@ -346,8 +406,7 @@ class QAController extends Controller
 
                 // Classification code (SKU string, e.g. "HG+170") used to only get
                 // filled in later by the separate "Generate Classifications" bulk
-                // step — computed here instead so is_downgraded below always has
-                // something to resolve against as soon as QA saves a grade.
+                // step — computed here instead so it's available immediately.
                 if ($existing) {
                     $classificationCode = $this->getClassificationCode($request->fat_group, $settlementWeight, $existing->item_code);
                 }
@@ -380,17 +439,9 @@ class QAController extends Controller
                 $helpers->insertChangeDataLogs('qa_grading', $request->item_id, '3', $desc);
             });
 
-            // Compute is_downgraded against the independent weigh-time code, now
-            // that QA's classification is saved. computeIsDowngraded() treats a
-            // missing/'--' reference code as unresolved rather than a mismatch.
-            $isDowngraded = null;
-            if ($weighClassificationCode) {
-                $isDowngraded = $this->computeIsDowngraded((int) $request->fat_group, $weighClassificationCode);
-                if ($isDowngraded !== null) {
-                    DB::table('qa_grading')->where('id', $request->item_id)
-                        ->update(['is_downgraded' => $isDowngraded]);
-                }
-            }
+            // Recompute is_downgraded now that QA's classification is saved —
+            // stays silent (null) if the weigh-in isn't recorded yet.
+            $isDowngraded = $receiptNo !== null ? $this->syncIsDowngraded($receiptNo, (int) $aggNo) : null;
 
             if ($request->ajax()) {
                 return response()->json([
