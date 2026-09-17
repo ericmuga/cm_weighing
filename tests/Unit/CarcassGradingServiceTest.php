@@ -39,6 +39,18 @@ class CarcassGradingServiceTest extends TestCase
         $this->assertTrue($light['is_indeterminate']);
     }
 
+    public function testPremiumWeightFloorIs200kgNotTheOld220kg()
+    {
+        // Verdict1=17 ties Premium and High Grade (see the test above), so
+        // weight alone decides which one wins — the sharpest place to pin
+        // down exactly where the Premium floor sits.
+        $attrs = ['dentition' => 3, 'fat_cover' => 1, 'fat_color' => 1, 'meat_color' => 1, 'bruising' => 0, 'muscle' => 1];
+
+        $this->assertSame(G::HIGHGRADE, G::compute($attrs, 199)['classification']); // just under the floor -> tier 4
+        $this->assertSame(G::PREMIUM, G::compute($attrs, 200)['classification']); // at the floor -> tier 5
+        $this->assertSame(G::PREMIUM, G::compute($attrs, 205)['classification']); // would've been High Grade under the old 220kg floor
+    }
+
     public function testFaqAndStandardShareAnIdenticalWorstCaseCombinationAndTieOnScoreTen()
     {
         // FAQ and Standard's worst-case profiles are the exact same attribute

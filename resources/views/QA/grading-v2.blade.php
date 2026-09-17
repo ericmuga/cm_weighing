@@ -409,8 +409,8 @@
             4: { tier: 0, min: 0,  max: 7  }  // Poor C
         };
         var WEIGHT_BANDS = [
-            { min: 220, tier: 5 },
-            { min: 170, tier: 4 },
+            { min: 200, tier: 5 }, // Premium: 200kg and up (was 220kg)
+            { min: 170, tier: 4 }, // High Grade: 170-199.9kg (was 170-219.9kg)
             { min: 150, tier: 3 },
             { min: 120, tier: 2 },
             { min: 0,   tier: 1 }
