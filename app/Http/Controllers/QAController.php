@@ -414,8 +414,8 @@ class QAController extends Controller
                 DB::table('qa_grading')
                     ->where('id', $request->item_id)
                     ->update([
-                        'classification' => $request->fat_group,
-                        'classification_code' => $classificationCode,
+                        'classification' => $request->fat_group, //qa grade
+                        'classification_code' => $classificationCode, //computed classification code
                         'narration' => $request->narration,
                         'dentition' => $request->dentition,
                         'fat_cover' => $request->fat_cover,
@@ -428,7 +428,11 @@ class QAController extends Controller
                         // whatever QA actually saved, without overriding their choice.
                         'verdict1' => $autoGrading['verdict1'],
                         'verdict2' => $autoGrading['verdict2'],
-                        'auto_classification' => $autoGrading['classification'],
+                        // Stored as the grade name itself (e.g. "High Grade"),
+                        // not the ID — reads directly, no LABELS lookup needed.
+                        'auto_classification' => $autoGrading['classification'] !== null
+                            ? CarcassGradingService::label($autoGrading['classification'])
+                            : null,
                         'is_indeterminate' => $autoGrading['is_indeterminate'],
                         'classification_source' => $autoGrading['classification'] !== null
                             ? (((int) $request->fat_group === (int) $autoGrading['classification']) ? 'auto' : 'manual')
@@ -476,11 +480,11 @@ class QAController extends Controller
         $to   = $request->to_date;
 
         $dentitionMap  = [1 => 'Full mouth', 2 => '3 pairs', 3 => '2 pairs', 4 => '1 pair', 5 => 'Milk Teeth'];
-        $fatCoverMap   = [1 => 'Good fat cover', 2 => 'Fair fat cover', 3 => 'Minimum/inadequate'];
-        $fatColorMap   = [1 => 'Creamish white', 2 => 'Deep yellow'];
-        $meatColorMap  = [1 => 'Bright red', 2 => 'Dark meat'];
-        $bruisingMap   = [0 => 'No Bruises', 1 => 'Mild', 2 => 'Extensive', 3 => 'Severely bruised', 4 => 'Cysts Bovis', 5 => 'Other discolouration'];
-        $muscleMap     = [1 => 'Well finished', 2 => 'Fair', 3 => 'Poor'];
+        $fatCoverMap   = [4 => 'Marbling', 1 => 'Good', 2 => 'Fair', 3 => 'Inadequate', 0 => 'None'];
+        $fatColorMap   = [1 => 'Cream white', 3 => 'Light yellow', 2 => 'Deep yellow'];
+        $meatColorMap  = [1 => 'Bright red', 2 => 'Dark'];
+        $bruisingMap   = [0 => 'No Bruises', 1 => 'Mild', 3 => 'Severe', 4 => 'Detained', 5 => 'Condemned'];
+        $muscleMap     = [1 => 'Well finished', 2 => 'Fairly conformed', 3 => 'Poorly conformed'];
         $classMap      = [1 => 'Premium', 2 => 'High Grade', 3 => 'Commercial', 4 => 'Poor C', 5 => '1st Grade', 6 => '2nd Grade', 7 => 'Class R', 8 => 'FAQ', 9 => 'Standard'];
 
         $rows = DB::table('qa_grading as a')

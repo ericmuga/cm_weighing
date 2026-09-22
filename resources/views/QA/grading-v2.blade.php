@@ -159,7 +159,7 @@
 
                                     <td class="auto-suggestion-cell" data-id="{{ $data->id }}">
                                         @if($data->auto_classification ?? null)
-                                            {{ \App\Models\CarcassGradingService::label($data->auto_classification) }}
+                                            {{ $data->auto_classification }}
                                             @if($data->is_indeterminate ?? false)
                                                 <span class="badge badge-warning" title="Verdict 1 tied between grades; weight didn't clearly resolve it &mdash; please review">tied</span>
                                             @endif
@@ -242,28 +242,28 @@
                             <label for="email" class="col-form-label">Fat Cover</label>
                             <select class="form-control select2 params" name="fat_cover" id="fat_cover">
                                 <option disabled selected> select an option </option>
-                                <option value="4">Marbling (heavy, well-marbled fat cover) </option>
-                                <option value="1">Good fat cover (to be 3 to 10mm (or more), evenly and well distributed </option>
-                                <option value="2">Fair fat cover(2-7mm) </option>
-                                <option value="3">Minimum/inadequate fat cover </option>
-                                <option value="0">None (no discernible fat cover) </option>
+                                <option value="4">Marbling</option>
+                                <option value="1">Good </option>
+                                <option value="2">Fair </option>
+                                <option value="3">inadequate </option>
+                                <option value="0">None </option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label for="email" class="col-form-label">Fat Color</label>
                             <select class="form-control select2 params" name="fat_color" id="fat_color">
                                 <option disabled selected> select an option </option>
-                                <option value="1">Creamish white fat </option>
-                                <option value="3">Light yellow fat </option>
-                                <option value="2">Deep yellow fat </option>
+                                <option value="1">Cream white </option>
+                                <option value="3">Light yellow </option>
+                                <option value="2">Deep yellow </option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label for="email" class="col-form-label">Meat Color</label>
                             <select class="form-control select2 params" name="meat_color" id="meat_color">
                                 <option disabled selected> select an option </option>
-                                <option value="1">Bright red colour </option>
-                                <option value="2">Dark meat colour </option>
+                                <option value="1">Bright red </option>
+                                <option value="2">Dark </option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -271,40 +271,26 @@
                             <select class="form-control select2 params" name="bruising" id="bruising">
                                 <option disabled selected> select an option </option>
                                 <option value="0">No Bruises </option>
-                                <option value="1">Mild Bruises </option>
-                                <option value="2">Extensive bruises </option>
-                                <option value="3">Severely bruised </option>
-                                <option value="4">Cysts Bovis infestation </option>
-                                <option value="5">Other strange discolouration </option>
+                                <option value="1">Mild </option>
+                                <option value="3">Severe </option>
+                                <option value="4">Detained</option>
+                                <option value="5">Condemned</option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label for="email" class="col-form-label">Muscles</label>
                             <select class="form-control select2 params" name="muscle" id="muscle">
                                 <option disabled selected> select an option </option>
-                                <option value="1">Well finished(good shape, well developed and thick flesh) </option>
-                                <option value="2">Fair muscle conformation </option>
-                                <option value="3">Poor muscle conformation </option>
+                                <option value="1">Well finished </option>
+                                <option value="2">Fairly conformed </option>
+                                <option value="3">Poorly conformed </option>
                             </select>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="email" class="col-form-label">Classification</label>
                         <select class="form-control select2 params" name="fat_group" id="fat_group" required>
-                            {{-- @if ()
-                                <option disabled selected> select an option </option>
-                                <option value="1"> Premium >170kg</option>
-                                <option value="2" selected="selected"> High Grade >170kg</option>
-                                <option value="5"> FAQ >150kg </option>
-                                <option value="6"> Standard >120Kg </option>
-                                <option value="7"> Standard below 120kg </option>
-                                <option value="3"> Commercial</option>
-                                <option value="4"> Poor Commercial</option>
-                            @else
-                               <option value="5"> Lamb 1st grade</option>
-                               <option value="6"> Lamb 2nd grade</option>
-                               <option value="7"> Lamb Class R</option>
-                            @endif --}}
+                            
                         </select>
                         <small id="autoGradeHint" class="form-text text-muted"></small>
                     </div>
@@ -420,7 +406,7 @@
             fat_cover:  { 4: 4, 1: 3, 2: 2, 3: 1, 0: 0 },
             fat_color:  { 1: 3, 3: 2, 2: 1 },
             meat_color: { 1: 2, 2: 1 },
-            bruising:   { 0: 3, 1: 2, 2: 1, 3: 1, 4: 0, 5: 1 },
+            bruising:   { 0: 3, 1: 2, 3: 1, 4: 1, 5: 0 },
             muscle:     { 1: 3, 2: 2, 3: 1 }
         };
         var LABELS = { 1: 'Premium', 2: 'High Grade', 8: 'FAQ', 9: 'Standard', 3: 'Commercial', 4: 'Poor C' };

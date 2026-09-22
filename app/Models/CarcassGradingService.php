@@ -73,14 +73,16 @@ class CarcassGradingService
      * Submitted option value => points, per attribute field. Values match the
      * existing dropdown option values in grading-v2.blade.php (unchanged, so
      * historical rows keep their meaning); fat_cover (0, 4) and fat_color (3)
-     * are the two option values added to complete the scorecard.
+     * are the two option values added to complete the scorecard. Bruising
+     * option 2 ("Extensive bruises") was retired from the form; 4 and 5 were
+     * repurposed to Detained/Condemned, per "Grading template formulation (2).xlsx".
      */
     public const POINTS = [
         'dentition'  => [1 => 1, 2 => 2, 3 => 3, 4 => 3, 5 => 3],
         'fat_cover'  => [4 => 4, 1 => 3, 2 => 2, 3 => 1, 0 => 0],
         'fat_color'  => [1 => 3, 3 => 2, 2 => 1],
         'meat_color' => [1 => 2, 2 => 1],
-        'bruising'   => [0 => 3, 1 => 2, 2 => 1, 3 => 1, 4 => 0, 5 => 1],
+        'bruising'   => [0 => 3, 1 => 2, 3 => 1, 4 => 1, 5 => 0],
         'muscle'     => [1 => 3, 2 => 2, 3 => 1],
     ];
 
