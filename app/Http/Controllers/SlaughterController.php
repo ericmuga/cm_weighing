@@ -490,10 +490,17 @@ class SlaughterController extends Controller
                 ->whereDate('slaughter_date', today())
                 ->update(['item_code' => $data['item_code']]);
 
+            // Settlement weight just became known — finalize the auto-grade
+            // suggestion (and qa_grading.classification_code) first, since
+            // syncIsDowngraded below reads qa_grading's state and must not
+            // run against a row that's mid-recompute. Silent no-op if QA
+            // hasn't graded yet.
+            app(\App\Http\Controllers\QAController::class)->recomputeAutoGrading($request->receipt_no, (int) $request->agg_no);
+
             // The weigh-in classification_code just became available for this
             // carcass — if QA already graded it (grade came in before the
-            // weight), resolve is_downgraded now. Silent no-op if QA hasn't
-            // graded yet.
+            // weight), resolve is_downgraded now, after recomputeAutoGrading
+            // has finished writing. Silent no-op if QA hasn't graded yet.
             app(\App\Http\Controllers\QAController::class)->syncIsDowngraded($request->receipt_no, (int) $request->agg_no);
 
             //$helpers->publishToQueue($data, 'cm_slaughter.bc');
@@ -537,10 +544,13 @@ class SlaughterController extends Controller
                 $helpers->insertChangeDataLogs('slaughter_data', $request->item_id, '3', $desc);
             });
 
-            // classification_code may have just changed (weight/settlement
-            // corrected) — re-resolve is_downgraded against whatever QA grade
-            // already exists. Silent no-op if QA hasn't graded yet.
+            // Weight/settlement may have just been corrected — finalize the
+            // auto-grade suggestion first, then re-resolve is_downgraded
+            // against whatever QA grade already exists, only once that
+            // recompute has finished writing. Silent no-op if QA hasn't
+            // graded yet.
             if ($currentData) {
+                app(\App\Http\Controllers\QAController::class)->recomputeAutoGrading($currentData->receipt_no, (int) $currentData->agg_no);
                 app(\App\Http\Controllers\QAController::class)->syncIsDowngraded($currentData->receipt_no, (int) $currentData->agg_no);
             }
 

@@ -251,6 +251,10 @@ class QAController extends Controller
             return 'Poor C';
         }
 
+        if ((int) $class_type === CarcassGradingService::CONDEMNED || (is_string($class_type) && str_contains($class_type, 'Condemned'))) {
+            return 'CONDEMNED';
+        }
+
         return '**'; // Default case
     }
 
@@ -330,6 +334,69 @@ class QAController extends Controller
         return $isDowngraded;
     }
 
+    /**
+     * Recompute and persist the system's auto-grade suggestion for one
+     * carcass once its settlement weight becomes known or changes — weight
+     * is now mandatory to finalize a beef auto-grade (see
+     * CarcassGradingService), so grading done before the weigh-in only
+     * produces a provisional, awaiting_weight suggestion until this runs.
+     * Call this alongside syncIsDowngraded() wherever slaughter_data's
+     * settlement_weight is written. Silent no-op if QA hasn't graded this
+     * carcass yet, or it isn't beef.
+     */
+    public function recomputeAutoGrading(string $receipt_no, int $agg_no): void
+    {
+        $grading = DB::table('qa_grading')
+            ->where('receipt_no', $receipt_no)
+            ->where('agg_no', $agg_no)
+            ->orderByDesc('slaughter_date')
+            ->first();
+
+        if (!$grading || !CarcassGradingService::appliesTo($grading->item_code)) {
+            return;
+        }
+
+        // Nothing graded yet — nothing to recompute.
+        if ($grading->dentition === null && $grading->fat_cover === null
+            && $grading->fat_color === null && $grading->meat_color === null
+            && $grading->bruising === null && $grading->muscle_conformation === null) {
+            return;
+        }
+
+        $settlementWeight = DB::table('slaughter_data')
+            ->where('agg_no', $agg_no)
+            ->where('receipt_no', $receipt_no)
+            ->whereDate('created_at', $grading->slaughter_date)
+            ->value('settlement_weight');
+
+        $autoGrading = CarcassGradingService::compute([
+            'dentition' => $grading->dentition,
+            'fat_cover' => $grading->fat_cover,
+            'fat_color' => $grading->fat_color,
+            'meat_color' => $grading->meat_color,
+            'bruising' => $grading->bruising,
+            'muscle' => $grading->muscle_conformation,
+        ], $settlementWeight !== null ? (float) $settlementWeight : null);
+
+        $classificationCode = $grading->classification !== null
+            ? $this->getClassificationCode($grading->classification, $settlementWeight, $grading->item_code)
+            : $grading->classification_code;
+
+        DB::table('qa_grading')->where('id', $grading->id)->update([
+            'verdict1' => $autoGrading['verdict1'],
+            'verdict2' => $autoGrading['verdict2'],
+            'auto_classification' => $autoGrading['classification'] !== null
+                ? CarcassGradingService::label($autoGrading['classification'])
+                : null,
+            'is_indeterminate' => $autoGrading['is_indeterminate'],
+            'awaiting_weight' => $autoGrading['awaiting_weight'],
+            'classification_code' => $classificationCode,
+            'classification_source' => ($grading->classification !== null && $autoGrading['classification'] !== null)
+                ? (((int) $grading->classification === (int) $autoGrading['classification']) ? 'auto' : 'manual')
+                : null,
+        ]);
+    }
+
     // Matched on receipt_no + agg_no only — not item_code, which is computed
     // independently on each side and can legitimately differ if the carcass
     // was reclassified at weigh-in (see the loosened joins above).
@@ -369,6 +436,7 @@ class QAController extends Controller
                 'verdict2' => null,
                 'classification' => null,
                 'is_indeterminate' => false,
+                'awaiting_weight' => false,
             ];
             $classificationCode = null;
             $receiptNo = null;
@@ -434,6 +502,7 @@ class QAController extends Controller
                             ? CarcassGradingService::label($autoGrading['classification'])
                             : null,
                         'is_indeterminate' => $autoGrading['is_indeterminate'],
+                        'awaiting_weight' => $autoGrading['awaiting_weight'],
                         'classification_source' => $autoGrading['classification'] !== null
                             ? (((int) $request->fat_group === (int) $autoGrading['classification']) ? 'auto' : 'manual')
                             : null,
@@ -455,6 +524,7 @@ class QAController extends Controller
                     'auto_classification'      => $autoGrading['classification'],
                     'auto_classification_label' => CarcassGradingService::label($autoGrading['classification']),
                     'is_indeterminate' => $autoGrading['is_indeterminate'],
+                    'awaiting_weight'  => $autoGrading['awaiting_weight'],
                     'verdict1'         => $autoGrading['verdict1'],
                     'verdict2'         => $autoGrading['verdict2'],
                 ]);
@@ -485,7 +555,7 @@ class QAController extends Controller
         $meatColorMap  = [1 => 'Bright red', 2 => 'Dark'];
         $bruisingMap   = [0 => 'No Bruises', 1 => 'Mild', 3 => 'Severe', 4 => 'Detained', 5 => 'Condemned'];
         $muscleMap     = [1 => 'Well finished', 2 => 'Fairly conformed', 3 => 'Poorly conformed'];
-        $classMap      = [1 => 'Premium', 2 => 'High Grade', 3 => 'Commercial', 4 => 'Poor C', 5 => '1st Grade', 6 => '2nd Grade', 7 => 'Class R', 8 => 'FAQ', 9 => 'Standard'];
+        $classMap      = [1 => 'Premium', 2 => 'High Grade', 3 => 'Commercial', 4 => 'Poor C', 5 => '1st Grade', 6 => '2nd Grade', 7 => 'Class R', 8 => 'FAQ', 9 => 'Standard', 10 => 'Condemned'];
 
         $rows = DB::table('qa_grading as a')
             ->join(DB::raw('(SELECT DISTINCT receipt_no, slaughter_date, vendor_no, vendor_name FROM receipts) as r'), function ($join) {

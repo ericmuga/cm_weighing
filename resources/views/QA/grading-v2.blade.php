@@ -159,9 +159,15 @@
 
                                     <td class="auto-suggestion-cell" data-id="{{ $data->id }}">
                                         @if($data->auto_classification ?? null)
-                                            {{ $data->auto_classification }}
-                                            @if($data->is_indeterminate ?? false)
-                                                <span class="badge badge-warning" title="Verdict 1 tied between grades; weight didn't clearly resolve it &mdash; please review">tied</span>
+                                            @if(($data->auto_classification) === 'Condemned')
+                                                <span class="text-danger font-weight-bold">{{ $data->auto_classification }}</span>
+                                            @else
+                                                {{ $data->auto_classification }}
+                                            @endif
+                                            @if($data->awaiting_weight ?? false)
+                                                <span class="badge badge-info" title="Provisional &mdash; settlement weight isn't recorded yet; weight can only lower this grade, never raise it">awaiting weight</span>
+                                            @elseif($data->is_indeterminate ?? false)
+                                                <span class="badge badge-warning" title="Could not be auto-graded with confidence &mdash; please review">flagged</span>
                                             @endif
                                         @else
                                             <span class="text-muted">--</span>
@@ -395,12 +401,13 @@
             4: { tier: 0, min: 0,  max: 7  }  // Poor C
         };
         var WEIGHT_BANDS = [
-            { min: 200, tier: 5 }, // Premium: 200kg and up (was 220kg)
-            { min: 170, tier: 4 }, // High Grade: 170-199.9kg (was 170-219.9kg)
-            { min: 150, tier: 3 },
-            { min: 120, tier: 2 },
-            { min: 0,   tier: 1 }
+            { min: 200, tier: 5 }, // Premium: 200-300kg
+            { min: 170, tier: 4 }, // High Grade: 170-199.9kg
+            { min: 150, tier: 3 }, // FAQ: 150-169.9kg
+            { min: 120, tier: 2 }, // Standard: 120-149.9kg
+            { min: 0,   tier: 1 }  // Commercial: below 120kg
         ];
+        var MAX_WEIGHT = 300; // Premium's band has an upper bound; above it, falls off the defined bands.
         var POINTS = {
             dentition:  { 1: 1, 2: 2, 3: 3, 4: 3, 5: 3 },
             fat_cover:  { 4: 4, 1: 3, 2: 2, 3: 1, 0: 0 },
@@ -409,7 +416,10 @@
             bruising:   { 0: 3, 1: 2, 3: 1, 4: 1, 5: 0 },
             muscle:     { 1: 3, 2: 2, 3: 1 }
         };
-        var LABELS = { 1: 'Premium', 2: 'High Grade', 8: 'FAQ', 9: 'Standard', 3: 'Commercial', 4: 'Poor C' };
+        var LABELS = { 1: 'Premium', 2: 'High Grade', 8: 'FAQ', 9: 'Standard', 3: 'Commercial', 4: 'Poor C', 10: 'Condemned' };
+        // Hard-override option values — bypass verdict1/verdict2 scoring
+        // entirely (see resolveOverride below).
+        var FAT_COVER_NONE = 0, BRUISING_DETAINED = 4, BRUISING_CONDEMNED = 5, MUSCLE_POOR = 3, CONDEMNED = 10;
 
         function scoreAttributes(attrs) {
             var total = 0, missing = [];
@@ -424,6 +434,7 @@
         }
 
         function weightTier(weight) {
+            if (weight > MAX_WEIGHT) return null; // falls off the defined weight bands
             for (var i = 0; i < WEIGHT_BANDS.length; i++) {
                 if (weight >= WEIGHT_BANDS[i].min) return WEIGHT_BANDS[i].tier;
             }
@@ -438,12 +449,43 @@
             return found;
         }
 
+        function intOrNull(v) {
+            return (v === undefined || v === null || v === '') ? null : parseInt(v, 10);
+        }
+
+        // Hard overrides — unconditional, don't need weight, worst-first so
+        // the most severe one wins when several apply at once.
+        function resolveOverride(attrs) {
+            var bruising = intOrNull(attrs.bruising);
+            var muscle = intOrNull(attrs.muscle);
+            var fatCover = intOrNull(attrs.fat_cover);
+
+            if (bruising === BRUISING_CONDEMNED) return CONDEMNED;
+            if (bruising === BRUISING_DETAINED || muscle === MUSCLE_POOR) return 4; // Poor C
+            if (fatCover === FAT_COVER_NONE) return 3; // Commercial
+            return null;
+        }
+
         function compute(attrs, weight) {
             var scored = scoreAttributes(attrs);
             var result = {
                 verdict1: scored.verdict1, verdict2: null, classification: null,
-                is_indeterminate: false, candidates: [], missing: scored.missing
+                is_indeterminate: false, awaiting_weight: false, is_override: false,
+                candidates: [], missing: scored.missing
             };
+
+            var hasWeight = !!weight && weight > 0;
+            var wTier = hasWeight ? weightTier(weight) : null;
+            if (hasWeight && wTier !== null && scored.verdict1 !== null) {
+                result.verdict2 = scored.verdict1 + wTier;
+            }
+
+            var override = resolveOverride(attrs);
+            if (override !== null) {
+                result.classification = override;
+                result.is_override = true;
+                return result;
+            }
 
             if (scored.verdict1 === null) return result;
 
@@ -462,23 +504,27 @@
                 return result;
             }
 
-            // Weight is only needed to break a tie between overlapping grade
-            // bands — an unambiguous verdict1 resolves on its own.
-            var hasWeight = !!weight && weight > 0;
-            var wTier = hasWeight ? weightTier(weight) : null;
-            if (hasWeight) result.verdict2 = scored.verdict1 + wTier;
-
-            if (candidates.length === 1) {
-                var grade = candidates[0];
-                if (hasWeight && wTier < GRADE_BANDS[grade].tier) grade = gradeForTier(wTier);
-                result.classification = grade;
+            // Weight is now mandatory to finalize a normal-path grade —
+            // without it (or if it's out of the defined bands), offer the
+            // best-case candidate as a provisional suggestion only.
+            if (!hasWeight) {
+                result.classification = candidates[0];
+                result.awaiting_weight = true;
                 return result;
             }
 
-            // Tied bands: weight is the only thing that can break the tie — if
-            // it isn't known yet, leave classification null (candidates still
-            // lists the tie) rather than guessing.
-            if (!hasWeight) return result;
+            if (wTier === null) {
+                result.classification = candidates[0];
+                result.is_indeterminate = true;
+                return result;
+            }
+
+            if (candidates.length === 1) {
+                var grade = candidates[0];
+                if (wTier < GRADE_BANDS[grade].tier) grade = gradeForTier(wTier);
+                result.classification = grade;
+                return result;
+            }
 
             var supported = candidates.filter(function (g) { return GRADE_BANDS[g].tier <= wTier; });
             if (supported.length) {
@@ -487,9 +533,10 @@
                 return result;
             }
 
-            var ranked = candidates.slice().sort(function (a, b) { return GRADE_BANDS[a].tier - GRADE_BANDS[b].tier; });
-            result.classification = ranked[0];
-            result.is_indeterminate = true;
+            // Weight rules out every tied candidate (it's below all of them)
+            // — weight is the supreme verdict, so it resolves the grade
+            // directly. Decisive, not ambiguous — no is_indeterminate flag.
+            result.classification = gradeForTier(wTier);
             return result;
         }
 
@@ -562,13 +609,37 @@
 
             $('#fat_group').val(result.classification).trigger('change');
 
+            if (result.classification === 10) { // Condemned
+                $('#autoGradeHint').removeClass('text-muted').removeClass('text-warning').addClass('text-danger')
+                    .text('⚠ Condemned — bruising is marked Condemned. This carcass is recorded as condemned, not graded.');
+                return;
+            }
+
+            if (result.is_override) {
+                $('#autoGradeHint').removeClass('text-muted').removeClass('text-warning').addClass('text-info')
+                    .text('Auto-computed: ' + CarcassGrading.LABELS[result.classification] +
+                        ' — forced by a hard rule (Detained / poorly conformed muscle / no fat cover), regardless of the point score.');
+                return;
+            }
+
+            if (result.awaiting_weight) {
+                $('#autoGradeHint').removeClass('text-muted').addClass('text-warning')
+                    .text('Suggested: ' + CarcassGrading.LABELS[result.classification] + ' (Verdict 1: ' + result.verdict1 +
+                        ') — provisional; settlement weight is still needed to finalize the grade (weight can only lower it further).');
+                return;
+            }
+
             var hint = 'Auto-computed: ' + CarcassGrading.LABELS[result.classification] +
                 ' (Verdict 1: ' + result.verdict1 + ', Verdict 2: ' + result.verdict2 + ')';
             if (result.is_indeterminate) {
-                var others = result.candidates
-                    .filter(function (g) { return g !== result.classification; })
-                    .map(function (g) { return CarcassGrading.LABELS[g]; });
-                hint += '. ⚠ Tied with ' + others.join(', ') + ' — weight did not clearly resolve it; please review.';
+                if (result.candidates.length) {
+                    var others = result.candidates
+                        .filter(function (g) { return g !== result.classification; })
+                        .map(function (g) { return CarcassGrading.LABELS[g]; });
+                    hint += '. ⚠ Tied with ' + others.join(', ') + ' — weight did not clearly resolve it; please review.';
+                } else {
+                    hint += '. ⚠ Weight is outside the expected range — please review.';
+                }
                 $('#autoGradeHint').removeClass('text-muted').addClass('text-warning');
             } else {
                 $('#autoGradeHint').removeClass('text-warning').addClass('text-muted');
@@ -616,6 +687,7 @@
                 $('#fat_group').append('<option value="9">Standard</option>');
                 $('#fat_group').append('<option value="3">Commercial</option>');
                 $('#fat_group').append('<option value="4">Poor C</option>');
+                $('#fat_group').append('<option value="10">Condemned</option>');
             } else {
                 $('#fat_group').append('<option value="5">Lamb 1st grade</option>');
                 $('#fat_group').append('<option value="6">Lamb 2nd grade</option>');
@@ -693,9 +765,13 @@
                         if (response.auto_classification === null || response.auto_classification === undefined) {
                             $autoTd.html('<span class="text-muted">--</span>');
                         } else {
-                            var autoHtml = response.auto_classification_label;
-                            if (response.is_indeterminate) {
-                                autoHtml += ' <span class="badge badge-warning" title="Verdict 1 tied between grades; weight did not clearly resolve it &mdash; please review">tied</span>';
+                            var autoHtml = response.auto_classification_label === 'Condemned'
+                                ? '<span class="text-danger font-weight-bold">Condemned</span>'
+                                : response.auto_classification_label;
+                            if (response.awaiting_weight) {
+                                autoHtml += ' <span class="badge badge-info" title="Provisional &mdash; settlement weight isn\'t recorded yet; weight can only lower this grade, never raise it">awaiting weight</span>';
+                            } else if (response.is_indeterminate) {
+                                autoHtml += ' <span class="badge badge-warning" title="Could not be auto-graded with confidence &mdash; please review">flagged</span>';
                             }
                             $autoTd.html(autoHtml);
                         }
