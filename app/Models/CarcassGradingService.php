@@ -74,7 +74,7 @@ class CarcassGradingService
     private const GRADE_BANDS = [
         self::PREMIUM    => ['tier' => 5, 'min' => 17, 'max' => 18],
         self::HIGHGRADE  => ['tier' => 4, 'min' => 13, 'max' => 17],
-        self::FAQ        => ['tier' => 3, 'min' => 10, 'max' => 15],
+        self::FAQ        => ['tier' => 3, 'min' => 10, 'max' => 16],
         self::STANDARD   => ['tier' => 2, 'min' => 10, 'max' => 16],
         self::COMMERCIAL => ['tier' => 1, 'min' => 8,  'max' => 14],
         // Poor C has no weight determinant of its own in the sheet — Commercial's
