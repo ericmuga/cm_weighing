@@ -395,7 +395,7 @@
         var GRADE_BANDS = {
             1: { tier: 5, min: 17, max: 18 }, // Premium
             2: { tier: 4, min: 13, max: 17 }, // High Grade
-            8: { tier: 3, min: 10, max: 15 }, // FAQ
+            8: { tier: 3, min: 10, max: 16 }, // FAQ
             9: { tier: 2, min: 10, max: 16 }, // Standard
             3: { tier: 1, min: 8,  max: 14 }, // Commercial
             4: { tier: 0, min: 0,  max: 7  }  // Poor C
@@ -419,7 +419,9 @@
         var LABELS = { 1: 'Premium', 2: 'High Grade', 8: 'FAQ', 9: 'Standard', 3: 'Commercial', 4: 'Poor C', 10: 'Condemned' };
         // Hard-override option values — bypass verdict1/verdict2 scoring
         // entirely (see resolveOverride below).
-        var FAT_COVER_NONE = 0, BRUISING_DETAINED = 4, BRUISING_CONDEMNED = 5, MUSCLE_POOR = 3, CONDEMNED = 10;
+        var FAT_COVER_NONE = 0, FAT_COVER_INADEQUATE = 3, FAT_COLOR_DEEP_YELLOW = 2,
+            BRUISING_MILD = 1, BRUISING_SEVERE = 3, BRUISING_DETAINED = 4, BRUISING_CONDEMNED = 5,
+            MUSCLE_POOR = 3, CONDEMNED = 10;
 
         function scoreAttributes(attrs) {
             var total = 0, missing = [];
@@ -459,10 +461,12 @@
             var bruising = intOrNull(attrs.bruising);
             var muscle = intOrNull(attrs.muscle);
             var fatCover = intOrNull(attrs.fat_cover);
+            var fatColor = intOrNull(attrs.fat_color);
 
             if (bruising === BRUISING_CONDEMNED) return CONDEMNED;
-            if (bruising === BRUISING_DETAINED || muscle === MUSCLE_POOR) return 4; // Poor C
-            if (fatCover === FAT_COVER_NONE) return 3; // Commercial
+            if (bruising === BRUISING_DETAINED || bruising === BRUISING_SEVERE || muscle === MUSCLE_POOR) return 4; // Poor C
+            if (fatCover === FAT_COVER_NONE || fatCover === FAT_COVER_INADEQUATE
+                || fatColor === FAT_COLOR_DEEP_YELLOW || bruising === BRUISING_MILD) return 3; // Commercial
             return null;
         }
 

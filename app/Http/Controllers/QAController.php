@@ -562,11 +562,17 @@ class QAController extends Controller
                 $join->on('a.receipt_no', '=', 'r.receipt_no')
                      ->on('a.slaughter_date', '=', 'r.slaughter_date');
             })
+            // Deliberately NOT matched on item_code — see gradeV2()'s join for why.
+            ->leftJoin('slaughter_data as sd', function ($join) {
+                $join->on('sd.agg_no', '=', 'a.agg_no')
+                     ->on('sd.receipt_no', '=', 'a.receipt_no')
+                     ->on(DB::raw('DATE(sd.created_at)'), '=', 'a.slaughter_date');
+            })
             ->whereBetween(DB::raw('CAST(a.slaughter_date AS DATE)'), [$from, $to])
             ->orderBy('a.receipt_no')->orderBy('a.agg_no')
             ->select('r.vendor_no', 'r.vendor_name', 'a.receipt_no', 'a.agg_no',
-                     'a.dentition', 'a.fat_cover', 'a.fat_color', 'a.meat_color',
-                     'a.bruising', 'a.muscle_conformation', 'a.classification',
+                     'sd.settlement_weight', 'a.dentition', 'a.fat_cover', 'a.fat_color',
+                     'a.meat_color', 'a.bruising', 'a.muscle_conformation', 'a.classification',
                      'a.classification_code', 'a.narration')
             ->get()
             ->map(fn($row) => [
@@ -574,6 +580,7 @@ class QAController extends Controller
                 $row->vendor_name,
                 $row->receipt_no,
                 $row->agg_no,
+                $row->settlement_weight !== null ? number_format($row->settlement_weight, 2) : '--',
                 $dentitionMap[$row->dentition]         ?? '--',
                 $fatCoverMap[$row->fat_cover]          ?? '--',
                 $fatColorMap[$row->fat_color]          ?? '--',

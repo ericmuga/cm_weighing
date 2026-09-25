@@ -31,11 +31,12 @@ namespace App\Models;
  *     a single grade even with weight applied, is flagged (is_indeterminate)
  *     for QA to review rather than guessed at.
  *   - A handful of attribute values are hard overrides that bypass verdict1/
- *     verdict2 scoring entirely (see resolveOverride()): fat cover = None,
- *     bruising = Detained/Condemned, and muscle = Poorly conformed. These
- *     don't need weight and apply unconditionally; when more than one is
- *     true at once the worst outcome wins (Condemned beats Poor C beats
- *     Commercial).
+ *     verdict2 scoring entirely (see resolveOverride()): bruising = Condemned
+ *     (-> Condemned); bruising = Detained/Severe or muscle = Poorly conformed
+ *     (-> Poor C); fat cover = None/Inadequate, fat colour = Deep yellow, or
+ *     bruising = Mild (-> Commercial). These don't need weight and apply
+ *     unconditionally; when more than one is true at once the worst outcome
+ *     wins (Condemned beats Poor C beats Commercial).
  */
 class CarcassGradingService
 {
@@ -62,10 +63,14 @@ class CarcassGradingService
     // Option values (see grading-v2.blade.php) that trigger a hard override
     // per "Grading template formulation (2).xlsx"'s additional rules, rather
     // than feeding into the normal verdict1/verdict2 scoring.
-    private const FAT_COVER_NONE     = 0;
-    private const BRUISING_DETAINED  = 4;
-    private const BRUISING_CONDEMNED = 5;
-    private const MUSCLE_POOR        = 3;
+    private const FAT_COVER_NONE        = 0;
+    private const FAT_COVER_INADEQUATE  = 3;
+    private const FAT_COLOR_DEEP_YELLOW = 2;
+    private const BRUISING_MILD         = 1;
+    private const BRUISING_SEVERE       = 3;
+    private const BRUISING_DETAINED     = 4;
+    private const BRUISING_CONDEMNED    = 5;
+    private const MUSCLE_POOR           = 3;
 
     /**
      * Grade => tier (also the weight tier it requires) and Verdict 1 band.
@@ -251,24 +256,31 @@ class CarcassGradingService
      * Hard overrides, per "Grading template formulation (2).xlsx"'s
      * additional rules — unconditional, don't need weight, and checked
      * worst-first so the most severe one wins when several are true at once:
-     * a condemned carcass beats Poor C (detained or poorly conformed
-     * muscle), which beats a fat-cover-driven Commercial.
+     * a condemned carcass beats Poor C (detained, severely bruised, or
+     * poorly conformed muscle), which beats Commercial (no/inadequate fat
+     * cover, deep yellow fat colour, or mild bruising).
      */
     private static function resolveOverride(array $attributes): ?int
     {
         $bruising = self::intOrNull($attributes['bruising'] ?? null);
         $muscle = self::intOrNull($attributes['muscle'] ?? null);
         $fatCover = self::intOrNull($attributes['fat_cover'] ?? null);
+        $fatColor = self::intOrNull($attributes['fat_color'] ?? null);
 
         if ($bruising === self::BRUISING_CONDEMNED) {
             return self::CONDEMNED;
         }
 
-        if ($bruising === self::BRUISING_DETAINED || $muscle === self::MUSCLE_POOR) {
+        if ($bruising === self::BRUISING_DETAINED
+            || $bruising === self::BRUISING_SEVERE
+            || $muscle === self::MUSCLE_POOR) {
             return self::POOR_C;
         }
 
-        if ($fatCover === self::FAT_COVER_NONE) {
+        if ($fatCover === self::FAT_COVER_NONE
+            || $fatCover === self::FAT_COVER_INADEQUATE
+            || $fatColor === self::FAT_COLOR_DEEP_YELLOW
+            || $bruising === self::BRUISING_MILD) {
             return self::COMMERCIAL;
         }
 

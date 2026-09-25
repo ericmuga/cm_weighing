@@ -20,6 +20,7 @@ class QAGradingReportExport implements FromCollection, WithHeadings
             'Vendor Name',
             'Receipt No',
             'Carcass No (Agg)',
+            'Settlement Weight',
             'Dentition',
             'Fat Cover',
             'Fat Color',
