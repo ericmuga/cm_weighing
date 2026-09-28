@@ -290,7 +290,7 @@ class SlaughterController extends Controller
                     'weights'       => $groupWeights,
                 ];
 
-                info('Publishing offals data for ' . $dateKey . ': ' . json_encode($data));
+                // info('Publishing offals data for ' . $dateKey . ': ' . json_encode($data));
                 // Write this date group to BC database
                 $this->writeToDb($data);
 
