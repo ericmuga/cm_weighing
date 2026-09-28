@@ -566,7 +566,7 @@ class QAController extends Controller
             ->leftJoin('slaughter_data as sd', function ($join) {
                 $join->on('sd.agg_no', '=', 'a.agg_no')
                      ->on('sd.receipt_no', '=', 'a.receipt_no')
-                     ->on(DB::raw('DATE(sd.created_at)'), '=', 'a.slaughter_date');
+                     ->on(DB::raw('CAST(sd.created_at AS DATE)'), '=', 'a.slaughter_date');
             })
             ->whereBetween(DB::raw('CAST(a.slaughter_date AS DATE)'), [$from, $to])
             ->orderBy('a.receipt_no')->orderBy('a.agg_no')
