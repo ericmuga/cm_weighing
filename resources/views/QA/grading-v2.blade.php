@@ -340,6 +340,11 @@
                             <label>To Date</label>
                             <input type="date" class="form-control" name="to_date" required>
                         </div>
+                        <div class="form-group col-md-12">
+                            <label>Vendor No <em>(optional)</em></label>
+                            <input type="text" class="form-control" name="vendor_no" placeholder="e.g. BT00995, BT01137">
+                            <small class="form-text text-muted">Leave blank for all vendors. Separate multiple vendor numbers with commas.</small>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -372,6 +377,11 @@
                             <label>To Date</label>
                             <input type="date" class="form-control" name="to_date" required>
                         </div>
+                        <div class="form-group col-md-12">
+                            <label>Vendor No <em>(optional)</em></label>
+                            <input type="text" class="form-control" name="vendor_no" placeholder="e.g. BT00995, BT01137">
+                            <small class="form-text text-muted">Leave blank for all vendors. Separate multiple vendor numbers with commas.</small>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -394,7 +404,7 @@
     var CarcassGrading = (function () {
         var GRADE_BANDS = {
             1: { tier: 5, min: 17, max: 18 }, // Premium
-            2: { tier: 4, min: 13, max: 17 }, // High Grade
+            2: { tier: 4, min: 16, max: 17 }, // High Grade
             8: { tier: 3, min: 10, max: 16 }, // FAQ
             9: { tier: 2, min: 10, max: 16 }, // Standard
             3: { tier: 1, min: 8,  max: 14 }, // Commercial

@@ -29,6 +29,7 @@ class QAGradingReportExport implements FromCollection, WithHeadings
             'Muscles',
             'QA Grade',
             'Weight Classification',
+            'System Grade',
             'Narration',
         ];
     }

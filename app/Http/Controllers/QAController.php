@@ -548,6 +548,7 @@ class QAController extends Controller
     {
         $from = $request->from_date;
         $to   = $request->to_date;
+        $vendorNos = $this->parseVendorNos($request->vendor_no);
 
         $dentitionMap  = [1 => 'Full mouth', 2 => '3 pairs', 3 => '2 pairs', 4 => '1 pair', 5 => 'Milk Teeth'];
         $fatCoverMap   = [4 => 'Marbling', 1 => 'Good', 2 => 'Fair', 3 => 'Inadequate', 0 => 'None'];
@@ -569,11 +570,12 @@ class QAController extends Controller
                      ->on(DB::raw('CAST(sd.created_at AS DATE)'), '=', 'a.slaughter_date');
             })
             ->whereBetween(DB::raw('CAST(a.slaughter_date AS DATE)'), [$from, $to])
+            ->when($vendorNos, fn ($q) => $q->whereIn('r.vendor_no', $vendorNos))
             ->orderBy('a.receipt_no')->orderBy('a.agg_no')
             ->select('r.vendor_no', 'r.vendor_name', 'a.receipt_no', 'a.agg_no',
                      'sd.settlement_weight', 'a.dentition', 'a.fat_cover', 'a.fat_color',
                      'a.meat_color', 'a.bruising', 'a.muscle_conformation', 'a.classification',
-                     'a.classification_code', 'a.narration')
+                     'a.classification_code', 'a.auto_classification', 'a.narration')
             ->get()
             ->map(fn($row) => [
                 $row->vendor_no,
@@ -589,6 +591,9 @@ class QAController extends Controller
                 $muscleMap[$row->muscle_conformation]  ?? '--',
                 $classMap[$row->classification]        ?? '--',
                 $row->classification_code              ?? '--',
+                // System (auto-computed) grade, shown alongside QA's own call
+                // for now — kept until QA vs. system grading is streamlined.
+                $row->auto_classification              ?? '--',
                 $row->narration                        ?? '',
             ]);
 
@@ -597,10 +602,31 @@ class QAController extends Controller
         return Excel::download(new QAGradingReportExport, "QA-Grading-Report-{$from}-to-{$to}.xlsx");
     }
 
+    /**
+     * Parses a free-text, comma-separated vendor number filter (e.g.
+     * "BT00995, BT01137") into a clean array, or null when nothing was
+     * entered — the caller then skips the whereIn filter entirely.
+     */
+    private function parseVendorNos(?string $raw): ?array
+    {
+        if (!$raw) {
+            return null;
+        }
+
+        $vendorNos = collect(explode(',', $raw))
+            ->map(fn ($v) => trim($v))
+            ->filter()
+            ->values()
+            ->all();
+
+        return $vendorNos ?: null;
+    }
+
     public function slaughterGradingReportExport(Request $request)
     {
         $from = $request->from_date;
         $to   = $request->to_date;
+        $vendorNos = $this->parseVendorNos($request->vendor_no);
 
         // Pre-aggregate CDW per (receipt_no, item_code) to prevent row multiplication
         // when joined against qa_grading's many rows.
@@ -626,6 +652,7 @@ class QAController extends Controller
                 }
             )
             ->whereBetween(DB::raw('CAST(a.slaughter_date AS DATE)'), [$from, $to])
+            ->when($vendorNos, fn ($q) => $q->whereIn('r.vendor_no', $vendorNos))
             ->groupBy('r.vendor_no', 'r.vendor_name', 'a.receipt_no', 'r.received_qty')
             ->orderBy('a.receipt_no')
             ->select(
@@ -634,8 +661,11 @@ class QAController extends Controller
                 DB::raw('MAX(sd.cdw) AS total_cdw'),            // unique per receipt after pre-agg
                 DB::raw('SUM(CASE WHEN a.classification = 1 THEN 1 ELSE 0 END) as premium'),
                 DB::raw('SUM(CASE WHEN a.classification = 2 THEN 1 ELSE 0 END) as high_grade'),
+                DB::raw('SUM(CASE WHEN a.classification = 8 THEN 1 ELSE 0 END) as faq'),
+                DB::raw('SUM(CASE WHEN a.classification = 9 THEN 1 ELSE 0 END) as standard'),
                 DB::raw('SUM(CASE WHEN a.classification = 3 THEN 1 ELSE 0 END) as commercial'),
                 DB::raw('SUM(CASE WHEN a.classification = 4 THEN 1 ELSE 0 END) as poor_c'),
+                DB::raw('SUM(CASE WHEN a.classification = 10 THEN 1 ELSE 0 END) as condemned'),
                 DB::raw('SUM(CASE WHEN a.classification = 5 THEN 1 ELSE 0 END) as first_grade'),
                 DB::raw('SUM(CASE WHEN a.classification = 6 THEN 1 ELSE 0 END) as second_grade'),
                 DB::raw('SUM(CASE WHEN a.classification = 7 THEN 1 ELSE 0 END) as class_r'),
@@ -645,7 +675,8 @@ class QAController extends Controller
             ->map(fn($row) => [
                 $row->vendor_no, $row->vendor_name, $row->receipt_no,
                 $row->received_qty, $row->total_cdw,
-                $row->premium, $row->high_grade, $row->commercial, $row->poor_c,
+                $row->premium, $row->high_grade, $row->faq, $row->standard,
+                $row->commercial, $row->poor_c, $row->condemned,
                 $row->first_grade, $row->second_grade, $row->class_r,
                 $row->downgraded_count,
             ]);
