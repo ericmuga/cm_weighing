@@ -575,7 +575,8 @@ class QAController extends Controller
             ->select('r.vendor_no', 'r.vendor_name', 'a.receipt_no', 'a.agg_no',
                      'sd.settlement_weight', 'a.dentition', 'a.fat_cover', 'a.fat_color',
                      'a.meat_color', 'a.bruising', 'a.muscle_conformation', 'a.classification',
-                     'a.classification_code', 'a.auto_classification', 'a.narration')
+                     'a.classification_code', 'a.auto_classification', 'a.verdict1', 'a.verdict2',
+                     'a.narration')
             ->get()
             ->map(fn($row) => [
                 $row->vendor_no,
@@ -594,7 +595,12 @@ class QAController extends Controller
                 // System (auto-computed) grade, shown alongside QA's own call
                 // for now — kept until QA vs. system grading is streamlined.
                 $row->auto_classification              ?? '--',
-                $row->narration                        ?? '',
+                // Raw scorecard scores behind the system grade — verdict1 is
+                // the visual-attribute point sum, verdict2 adds the weight
+                // tier. Requested by UAT to help trace HighGrade/FAQ ties.
+                $row->verdict1                          ?? '--',
+                $row->verdict2                          ?? '--',
+                $row->narration                         ?? '',
             ]);
 
         Session::put('qa_grading_export_data', $rows);

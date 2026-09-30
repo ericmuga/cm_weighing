@@ -30,6 +30,8 @@ class QAGradingReportExport implements FromCollection, WithHeadings
             'QA Grade',
             'Weight Classification',
             'System Grade',
+            'Verdict 1',
+            'Verdict 2',
             'Narration',
         ];
     }
