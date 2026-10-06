@@ -575,7 +575,7 @@ class QAController extends Controller
             ->select('r.vendor_no', 'r.vendor_name', 'a.receipt_no', 'a.agg_no',
                      'sd.settlement_weight', 'a.dentition', 'a.fat_cover', 'a.fat_color',
                      'a.meat_color', 'a.bruising', 'a.muscle_conformation', 'a.classification',
-                     'a.classification_code', 'a.auto_classification', 'a.verdict1', 'a.verdict2',
+                     'sd.classification_code as weigh_classification_code', 'a.auto_classification', 'a.verdict1', 'a.verdict2',
                      'a.narration')
             ->get()
             ->map(fn($row) => [
@@ -591,7 +591,10 @@ class QAController extends Controller
                 $bruisingMap[$row->bruising]           ?? '--',
                 $muscleMap[$row->muscle_conformation]  ?? '--',
                 $classMap[$row->classification]        ?? '--',
-                $row->classification_code              ?? '--',
+                // Weigh-in code (slaughter_data), same source as grading-v2's
+                // "Weight Classification" column — not qa_grading's QA-derived
+                // code, which is '--'/'**' until regenerated after weigh-in.
+                $row->weigh_classification_code        ?? '--',
                 // System (auto-computed) grade, shown alongside QA's own call
                 // for now — kept until QA vs. system grading is streamlined.
                 $row->auto_classification              ?? '--',
