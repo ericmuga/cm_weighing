@@ -1094,9 +1094,13 @@
                         $('#classification_code').val('HG+160');
                         break;
 
-                    case (s_weight >= 170 && s_weight < 400):
+                    case (s_weight >= 170 && s_weight < 200):
                         // code block
                         $('#classification_code').val('HG+170');
+                        break;
+
+                    case (s_weight >= 200 && s_weight < 400):
+                        $('#classification_code').val('PG+200');
                         break;
 
                     default:
@@ -1219,10 +1223,14 @@
                         $('#edit_classification_code').val('HG+160');
                         break;
                 
-                    case (s_weight >= 170 && s_weight < 400):
+                    case (s_weight >= 170 && s_weight < 200):
                         // code block
                         $('#edit_classification_code').val('HG+170');
-                        break;                    
+                        break;
+
+                    case (s_weight >= 200 && s_weight < 400):
+                        $('#edit_classification_code').val('PG+200');
+                        break;
 
                     default:
                         $('#edit_classification_code').val('**');

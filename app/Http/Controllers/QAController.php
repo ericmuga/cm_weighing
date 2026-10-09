@@ -244,7 +244,7 @@ class QAController extends Controller
         }
 
         if ((int) $class_type === 1) { // Premium
-            return $settlement_weight > 170 ? 'PG+170' : '**';
+            return $settlement_weight >= 200 ? 'PG+200' : '**';
         }
 
         if ((int) $class_type === 4) { // Poor C
@@ -275,25 +275,59 @@ class QAController extends Controller
             return null;
         }
 
-        $matches = match ($classification) {
-            1 => $referenceCode === 'PG+170',
-            2 => in_array($referenceCode, ['STDB-119', 'STDA-149', 'FAQ+150', 'HG+160', 'HG+170']),
-            3 => in_array($referenceCode, ['CG-120', 'CG+120', 'CG+150', 'CG+160', 'CG+170']),
-            4 => $referenceCode === 'Poor C',
-            5 => $referenceCode === '1st Grade',
-            6 => $referenceCode === '2nd Grade',
-            7 => $referenceCode === 'Class R',
-            // FAQ and Standard (CarcassGradingService::FAQ/STANDARD) have no code
-            // of their own at weigh-in — getClassificationCode() only ever emits
-            // a High Grade- or Commercial-family code there. So a QA verdict of
-            // FAQ or Standard never matches what intake expected — always a
-            // downgrade, not "unresolved".
-            8 => false,
-            9 => false,
-            default => null,
-        };
+        // Lamb grades have no ranking against the beef families — exact match only.
+        $lambCodes = [5 => '1st Grade', 6 => '2nd Grade', 7 => 'Class R'];
+        if (isset($lambCodes[$classification])) {
+            return $referenceCode === $lambCodes[$classification] ? 0 : 1;
+        }
 
-        return $matches === null ? null : ($matches ? 0 : 1);
+        // Beef: only a QA grade BELOW what intake expected is a downgrade. A
+        // QA grade at or above it (e.g. Premium on a carcass weighed in as
+        // HG+170) is not — the old family-equality check flagged those too.
+        $qaRank = self::BEEF_GRADE_RANK[$classification] ?? null;
+        $weighRank = $this->weighCodeRank($referenceCode);
+        if ($qaRank === null || $weighRank === null) {
+            return null;
+        }
+
+        return $qaRank < $weighRank ? 1 : 0;
+    }
+
+    /**
+     * QA classification id => rank, best first. FAQ and Standard sit between
+     * High Grade and Commercial, matching CarcassGradingService's tiers.
+     */
+    private const BEEF_GRADE_RANK = [
+        1  => 5, // Premium
+        2  => 4, // High Grade
+        8  => 3, // FAQ
+        9  => 2, // Standard
+        3  => 1, // Commercial
+        4  => 0, // Poor C
+        10 => -1, // Condemned
+    ];
+
+    /**
+     * Rank of the grade family a weigh-in code was assessed under. The whole
+     * High Grade intake family (STDB-119 .. HG+170) ranks as High Grade, as
+     * before — the weight suffix doesn't change what intake bought it as.
+     */
+    private function weighCodeRank(string $code): ?int
+    {
+        if (str_starts_with($code, 'PG+')) {
+            return 5;
+        }
+        if (in_array($code, ['STDB-119', 'STDA-149', 'FAQ+150', 'HG+160', 'HG+170'], true)) {
+            return 4;
+        }
+        if (str_starts_with($code, 'CG')) {
+            return 1;
+        }
+        if ($code === 'Poor C') {
+            return 0;
+        }
+
+        return null;
     }
 
     /**
