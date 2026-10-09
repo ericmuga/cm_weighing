@@ -1,13 +1,32 @@
 @extends('layouts.QA_master')
 
 @section('content')
+<style>
+    .qa-metric {
+        display: flex; flex-direction: column; justify-content: center;
+        height: 100%; padding: .6rem .9rem;
+        background: #fff; border: 1px solid #e3e6ea; border-left: 4px solid var(--qa-accent);
+        border-radius: .4rem; color: inherit; text-decoration: none;
+        transition: box-shadow .15s ease, transform .15s ease;
+    }
+    a.qa-metric:hover { color: inherit; text-decoration: none; box-shadow: 0 2px 8px rgba(0,0,0,.08); transform: translateY(-1px); }
+    .qa-metric.active { background: color-mix(in srgb, var(--qa-accent) 8%, #fff); box-shadow: 0 0 0 1px var(--qa-accent); }
+    .qa-metric-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .03em; color: #6c757d; }
+    .qa-metric-label i { color: var(--qa-accent); }
+    .qa-metric-value { font-size: 1.6rem; font-weight: 600; line-height: 1.2; color: #343a40; }
+    .qa-metric-total      { --qa-accent: #6c757d; }
+    .qa-metric-graded     { --qa-accent: #28a745; }
+    .qa-metric-pending    { --qa-accent: #ffc107; }
+    .qa-metric-downgraded { --qa-accent: #dc3545; }
+    .qa-metrics-progress  { height: 4px; }
+</style>
 <div class="container-fluid">
     <div class="card">
             <div class="card-header row align-items-center">
                 <div class="col-lg-8">
                     <h1 class="card-title">Grading Work Sheet V2 | <span id="subtext-h1-title"><small> showing
-                                <strong>Today's</strong>
-                                entries</small></span></h1>
+                                <strong>{{ $todayOnly ? "Today's" : "Yesterday's & Today's" }}</strong>
+                                {{ $status ? $status : '' }} entries</small></span></h1>
                 </div>
                 <div class="col-lg-4 text-right">
                     <button type="button" class="btn btn-outline-success btn-sm mr-1" id="btn-qa-report">
@@ -23,9 +42,61 @@
             </div>
             <!-- /.card-header -->
             <div class="card-body">
+                @php
+                    $gradedPct = $metrics['total'] > 0 ? round($metrics['graded'] / $metrics['total'] * 100) : 0;
+                    $filterUrl = fn ($s) => route('qa_grading_v2', array_filter(['status' => $s, 'day' => 'today']));
+                @endphp
+                <div class="qa-metrics mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small text-uppercase font-weight-bold">
+                            <i class="far fa-calendar-alt mr-1"></i> Today &middot; {{ $helpers->dateToHumanFormat(today()) }}
+                        </span>
+                        <span class="text-muted small"><span id="metric-pct">{{ $gradedPct }}</span>% graded</span>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 col-md-3 mb-2">
+                            <a href="{{ $filterUrl(null) }}" class="qa-metric qa-metric-total {{ $todayOnly && !$status ? 'active' : '' }}">
+                                <span class="qa-metric-label">Total carcasses</span>
+                                <span class="qa-metric-value" id="metric-total">{{ $metrics['total'] }}</span>
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3 mb-2">
+                            <a href="{{ $filterUrl('graded') }}" class="qa-metric qa-metric-graded {{ $todayOnly && $status === 'graded' ? 'active' : '' }}">
+                                <span class="qa-metric-label"><i class="fas fa-check-circle"></i> Graded</span>
+                                <span class="qa-metric-value" id="metric-graded">{{ $metrics['graded'] }}</span>
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3 mb-2">
+                            <a href="{{ $filterUrl('pending') }}" class="qa-metric qa-metric-pending {{ $todayOnly && $status === 'pending' ? 'active' : '' }}">
+                                <span class="qa-metric-label"><i class="fas fa-hourglass-half"></i> Pending</span>
+                                <span class="qa-metric-value" id="metric-pending">{{ $metrics['pending'] }}</span>
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3 mb-2">
+                            <div class="qa-metric qa-metric-downgraded">
+                                <span class="qa-metric-label"><i class="fas fa-arrow-down"></i> Downgraded</span>
+                                <span class="qa-metric-value" id="metric-downgraded">{{ $metrics['downgraded'] }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress qa-metrics-progress">
+                        <div class="progress-bar bg-success" id="metric-progress" role="progressbar"
+                            style="width: {{ $gradedPct }}%" aria-valuenow="{{ $gradedPct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+
+                @if($status || $todayOnly)
+                    <div class="mb-3">
+                        <span class="badge badge-light border px-2 py-1">
+                            Filter: {{ $todayOnly ? 'Today' : 'Last 2 days' }}{{ $status ? ' · ' . ucfirst($status) : '' }}
+                        </span>
+                        <a href="{{ route('qa_grading_v2') }}" class="small ml-2"><i class="fas fa-times"></i> Clear filter</a>
+                    </div>
+                @endif
+
                 @if(isset($unmatched_weighins) && $unmatched_weighins->isNotEmpty())
                     <div class="alert alert-warning">
-                        <strong><i class="fas fa-exclamation-triangle"></i> {{ $unmatched_weighins->count() }} carcass(es) weighed today have no matching grading record.</strong>
+                        <strong><i class="fas fa-exclamation-triangle"></i> {{ $unmatched_weighins->count() }} carcass(es) weighed {{ $todayOnly ? 'today' : 'in the last 2 days' }} have no matching grading record.</strong>
                         This usually means more animals were weighed against a receipt than its declared quantity — check the receipt's received_qty. These carcasses are weighed but cannot be graded until fixed.
                         <div class="table-responsive mt-2">
                             <table class="table table-sm table-bordered mb-0 bg-white">
@@ -36,6 +107,7 @@
                                         <th>Item Code</th>
                                         <th>Vendor</th>
                                         <th>Settlement Weight</th>
+                                        <th>Weighed On</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -46,6 +118,7 @@
                                             <td>{{ $row->item_code }}</td>
                                             <td>{{ $row->vendor_no }} — {{ $row->vendor_name }}</td>
                                             <td>{{ $row->settlement_weight !== null ? number_format($row->settlement_weight, 2) : '--' }}</td>
+                                            <td>{{ $helpers->shortDateTime($row->created_at) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -92,7 +165,9 @@
                         </tfoot>
                         <tbody>
                             @foreach($grading_data as $data)
-                                <tr>
+                                <tr data-today="{{ \Carbon\Carbon::parse($data->slaughter_date)->isToday() ? 1 : 0 }}"
+                                    data-graded="{{ $data->graded_by !== null ? 1 : 0 }}"
+                                    data-downgraded="{{ $data->is_downgraded == 1 ? 1 : 0 }}">
                                     <td>{{ $data->id }}</td>
                                     <td>{{ $data->agg_no }}</td>
                                     <td>{{ $data->receipt_no }}</td>
@@ -182,7 +257,7 @@
                                         <td class="downgraded-cell"><span class="badge badge-danger">Yes</span></td>
                                     @endif
 
-                                    <td>{{ $helpers->shortDateTime($data->updated_at) }}</td>
+                                    <td>{{ date('d-m-Y', strtotime($data->slaughter_date)) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -800,6 +875,8 @@
                             $downgradedTd.html('<span class="badge badge-danger">Yes</span>');
                         }
 
+                        updateMetrics($gradingTd.closest('tr'), response.is_downgraded === 1);
+
                         $('#gradingShow').modal('hide');
                         $btn.prop('disabled', false).html(originalBtnHtml);
                         toastr.success(response.message, 'Saved');
@@ -816,6 +893,36 @@
             }
         });
     });
+
+    // Keep today's metrics bar in step with an AJAX save, without a reload.
+    // Only today's rows count; yesterday's rows don't affect today's numbers.
+    const updateMetrics = ($row, isDowngraded) => {
+        if (!$row.length || $row.attr('data-today') !== '1') {
+            return;
+        }
+
+        var bump = function (id, delta) {
+            var $el = $('#' + id);
+            $el.text(Math.max(0, (parseInt($el.text(), 10) || 0) + delta));
+        };
+
+        if ($row.attr('data-graded') !== '1') {
+            $row.attr('data-graded', '1');
+            bump('metric-graded', 1);
+            bump('metric-pending', -1);
+        }
+
+        var wasDowngraded = $row.attr('data-downgraded') === '1';
+        if (wasDowngraded !== isDowngraded) {
+            $row.attr('data-downgraded', isDowngraded ? '1' : '0');
+            bump('metric-downgraded', isDowngraded ? 1 : -1);
+        }
+
+        var total = parseInt($('#metric-total').text(), 10) || 0;
+        var pct = total > 0 ? Math.round(parseInt($('#metric-graded').text(), 10) / total * 100) : 0;
+        $('#metric-pct').text(pct);
+        $('#metric-progress').css('width', pct + '%').attr('aria-valuenow', pct);
+    };
 
     const setUserMessage = (field_succ, field_err, message_succ, message_err) => {
         document.getElementById(field_succ).innerHTML = message_succ;

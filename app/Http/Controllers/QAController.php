@@ -37,10 +37,9 @@ class QAController extends Controller
             ->where('deleted', '!=', 1)
             ->count();
 
-        $graded = DB::table('slaughter_data')
+        $graded = DB::table('qa_grading')
             ->whereDate('created_at', today())
-            ->where('deleted', '!=', 1)
-            ->where('fat_group', '!=', null)
+            ->where('graded_by', '!=', null)
             ->count();
 
         return view('QA.dashboard', compact('title', 'helpers', 'lined_up', 'slaughtered', 'graded'));
@@ -64,9 +63,15 @@ class QAController extends Controller
         return view('QA.grading', compact('title', 'helpers', 'slaughter_data', 'classifications'));
     }
 
-    public function gradeV2(Helpers $helpers)
+    public function gradeV2(Request $request, Helpers $helpers)
     {
         $title = "Grading V2";
+
+        // Worksheet covers yesterday + today so QA can finish carcasses that
+        // spilled over; ?day=today narrows it back to today only.
+        $status = in_array($request->query('status'), ['graded', 'pending'], true) ? $request->query('status') : null;
+        $todayOnly = $request->query('day') === 'today';
+        $fromDate = $todayOnly ? today() : today()->subDay();
 
         $grading_data = DB::table('qa_grading as a')
             ->select('a.*', 'b.vendor_no', 'ct.description', 'c.settlement_weight', 'c.agg_no as slaughter_agg_no', 'c.classification_code as weigh_classification_code')
@@ -84,29 +89,48 @@ class QAController extends Controller
                 // alone is the correct — and more reliable — match key.
                 $join->on('a.agg_no', '=', 'c.agg_no')
                     ->on('a.receipt_no', '=', 'c.receipt_no')
-                    ->whereDate('c.created_at', '=', today());
+                    ->on(DB::raw('CAST(c.created_at AS DATE)'), '=', 'a.slaughter_date');
             })
-            ->where('a.slaughter_date', today())
+            ->whereDate('a.slaughter_date', '>=', $fromDate)
+            ->whereDate('a.slaughter_date', '<=', today())
+            ->when($status === 'graded', fn ($q) => $q->whereNotNull('a.graded_by'))
+            ->when($status === 'pending', fn ($q) => $q->whereNull('a.graded_by'))
+            ->orderBy('a.slaughter_date', 'desc')
             ->orderBy('a.created_at', 'asc')
             ->get();
+
+        // Metrics bar is always today's numbers, regardless of the filters above.
+        $todayStats = DB::table('qa_grading')
+            ->whereDate('slaughter_date', today())
+            ->selectRaw('COUNT(*) as total,
+                SUM(CASE WHEN graded_by IS NOT NULL THEN 1 ELSE 0 END) as graded,
+                SUM(CASE WHEN is_downgraded = 1 THEN 1 ELSE 0 END) as downgraded')
+            ->first();
+        $metrics = [
+            'total' => (int) $todayStats->total,
+            'graded' => (int) $todayStats->graded,
+            'pending' => (int) $todayStats->total - (int) $todayStats->graded,
+            'downgraded' => (int) $todayStats->downgraded,
+        ];
 
         // Weighed carcasses with no matching qa_grading placeholder at all —
         // e.g. more animals were weighed against a receipt than its
         // received_qty declared. These never appear in $grading_data above
         // (it's driven FROM qa_grading), so they'd otherwise vanish silently.
         $unmatched_weighins = DB::table('slaughter_data as sd')
-            ->whereDate('sd.created_at', today())
+            ->whereDate('sd.created_at', '>=', $fromDate)
+            ->whereDate('sd.created_at', '<=', today())
             ->where('sd.deleted', '!=', 1)
             ->leftJoin('qa_grading as qg', function ($join) {
                 $join->on('qg.agg_no', '=', 'sd.agg_no')
                     ->on('qg.receipt_no', '=', 'sd.receipt_no')
-                    ->whereDate('qg.slaughter_date', '=', today());
+                    ->on('qg.slaughter_date', '=', DB::raw('CAST(sd.created_at AS DATE)'));
             })
             ->whereNull('qg.id')
-            ->select('sd.receipt_no', 'sd.agg_no', 'sd.item_code', 'sd.vendor_no', 'sd.vendor_name', 'sd.settlement_weight')
+            ->select('sd.receipt_no', 'sd.agg_no', 'sd.item_code', 'sd.vendor_no', 'sd.vendor_name', 'sd.settlement_weight', 'sd.created_at')
             ->get();
 
-        return view('QA.grading-v2', compact('title', 'helpers', 'grading_data', 'unmatched_weighins'));
+        return view('QA.grading-v2', compact('title', 'helpers', 'grading_data', 'unmatched_weighins', 'metrics', 'status', 'todayOnly'));
     }
 
     public function updateGrading(Request $request, Helpers $helpers)
