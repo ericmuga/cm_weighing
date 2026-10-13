@@ -237,49 +237,58 @@ class QAController extends Controller
                 break;
         }
 
-        // Beef codes only — BG1900 (lamb) and BG1202 (goat) already returned above
-
-        if ((is_string($class_type) && str_contains($class_type, 'High Grade')) || (int) $class_type === 2) {
-            if ($settlement_weight < 120) {
-                return 'STDB-119';
-            } elseif ($settlement_weight < 150) {
-                return 'STDA-149';
-            } elseif ($settlement_weight < 160) {
-                return 'FAQ+150';
-            } elseif ($settlement_weight < 170) {
-                return 'HG+160';
-            }
-
-            return 'HG+170';
+        // Beef codes only — BG1900 (lamb) and BG1202 (goat) already returned above.
+        // runGradingClasses() can pass the receipt description instead of a grade id.
+        if (is_string($class_type) && !is_numeric($class_type)) {
+            $class_type = match (true) {
+                str_contains($class_type, 'High Grade') => 2,
+                str_contains($class_type, 'Comm')       => 3,
+                str_contains($class_type, 'Condemned')  => CarcassGradingService::CONDEMNED,
+                default                                 => null,
+            };
         }
 
-        if ((is_string($class_type) && str_contains($class_type, 'Comm')) || (int) $class_type === 3) {
-            if ($settlement_weight < 120) {
-                return 'CG-120';
-            } elseif ($settlement_weight < 150) {
-                return 'CG+120';
-            } elseif ($settlement_weight < 160) {
-                return 'CG+150';
-            } elseif ($settlement_weight < 170) {
-                return 'CG+160';
-            }
-
-            return 'CG+170';
+        $qaRank = self::BEEF_GRADE_RANK[(int) $class_type] ?? null;
+        if ($class_type === null || $qaRank === null) {
+            return '**';
         }
 
-        if ((int) $class_type === 1) { // Premium
-            return $settlement_weight >= 200 ? 'PG+200' : '**';
+        // Poor C and Condemned come from QA alone — weight doesn't apply.
+        if ($qaRank <= 0) {
+            return self::BEEF_CODE_BY_RANK[$qaRank];
         }
 
-        if ((int) $class_type === 4) { // Poor C
-            return 'Poor C';
+        $weightRank = $this->beefWeightRank((float) $settlement_weight);
+        if ($weightRank === null) {
+            return '**'; // above the top band — needs checking
         }
 
-        if ((int) $class_type === CarcassGradingService::CONDEMNED || (is_string($class_type) && str_contains($class_type, 'Condemned'))) {
-            return 'CONDEMNED';
-        }
+        // Weight can only pull the code down, never up: a Premium carcass
+        // under 200kg gets the code its weight supports.
+        return self::BEEF_CODE_BY_RANK[min($qaRank, $weightRank)];
+    }
 
-        return '**'; // Default case
+    /** Beef weight classes, same as weigh.blade.php's beefWeightClass(). */
+    private const BEEF_CODE_BY_RANK = [
+        5  => 'PG+200',  // 200-300kg
+        4  => 'HG+170',  // 170-199.9kg
+        3  => 'FAQ+150', // 150-169.9kg
+        2  => 'STD+120', // 120-149.9kg
+        1  => 'COMM',    // below 120kg
+        0  => 'POORC',   // QA grade only, no weight band
+        -1 => 'CONDEMNED',
+    ];
+
+    private function beefWeightRank(float $weight): ?int
+    {
+        return match (true) {
+            $weight > 300  => null,
+            $weight >= 200 => 5,
+            $weight >= 170 => 4,
+            $weight >= 150 => 3,
+            $weight >= 120 => 2,
+            default        => 1,
+        };
     }
 
     /**
@@ -332,26 +341,24 @@ class QAController extends Controller
     ];
 
     /**
-     * Rank of the grade family a weigh-in code was assessed under. The whole
-     * High Grade intake family (STDB-119 .. HG+170) ranks as High Grade, as
-     * before — the weight suffix doesn't change what intake bought it as.
+     * Rank of the weight band a weigh-in code stands for. Covers the current
+     * codes plus the retired ones (STDB-119, STDA-149, HG+160, CG*, FAQ+160)
+     * so older carcasses still resolve if they're re-synced.
      */
     private function weighCodeRank(string $code): ?int
     {
-        if (str_starts_with($code, 'PG+')) {
-            return 5;
-        }
-        if (in_array($code, ['STDB-119', 'STDA-149', 'FAQ+150', 'HG+160', 'HG+170'], true)) {
-            return 4;
-        }
-        if (str_starts_with($code, 'CG')) {
-            return 1;
-        }
-        if ($code === 'Poor C') {
-            return 0;
+        $rank = array_search($code, self::BEEF_CODE_BY_RANK, true);
+        if ($rank !== false) {
+            return $rank;
         }
 
-        return null;
+        return match (true) {
+            $code === 'STDA-149'                                 => 2,
+            in_array($code, ['HG+160', 'FAQ+160'], true)         => 3,
+            $code === 'STDB-119', str_starts_with($code, 'CG')   => 1,
+            $code === 'Poor C'                                   => 0,
+            default                                              => null,
+        };
     }
 
     /**

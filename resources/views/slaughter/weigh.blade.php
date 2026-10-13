@@ -1071,110 +1071,42 @@
                         $('#classification_code').val('**');
                 }
 
-            } else if (item_code == 'BG1005' || item_code == 'BG1006' || item_code == 'BG1007' || item_code ==
-                'BG1008' ||
-                item_code == 'BG1009') {
-                // High Grade 
-                switch (true) {
-                    case (s_weight < 120):
-                        // code block
-                        $('#classification_code').val('STDB-119');
-                        break;
-
-                    case (s_weight >= 120 && s_weight < 150):
-                        // code block
-                        $('#classification_code').val('STDA-149');
-                        break;
-
-                    case (s_weight >= 150 && s_weight < 160):
-                        $('#classification_code').val('FAQ+150');
-                        break;
-
-                    case (s_weight >= 160 && s_weight < 170):
-                        $('#classification_code').val('HG+160');
-                        break;
-
-                    case (s_weight >= 170 && s_weight < 200):
-                        // code block
-                        $('#classification_code').val('HG+170');
-                        break;
-
-                    case (s_weight >= 200 && s_weight < 400):
-                        $('#classification_code').val('PG+200');
-                        break;
-
-                    default:
-                        $('#classification_code').val('**');
-                }
-            } else if (item_code == 'BG1011' || item_code == 'BG1012' || item_code == 'BG1013' || item_code ==
-                'BG1014') {
-                // comm-beef
-                switch (true) {
-                    case (s_weight < 120):
-                        $('#classification_code').val('CG-120');
-                        break;
-
-                    case (s_weight >= 120 && s_weight < 150):
-                        $('#classification_code').val('CG-150');
-                        break;
-
-                    case (s_weight >= 150 && s_weight < 160):
-                        $('#classification_code').val('CG+150');
-                        break;
-
-                    case (s_weight >= 160 && s_weight < 170):
-                        $('#classification_code').val('CG+160');
-                        break;
-
-                    case (s_weight >= 170 && s_weight < 400):
-                        $('#classification_code').val('CG+170');
-                        break;
-
-                    default:
-                        $('#classification_code').val('**');
-                }
-
-            } else if (item_code == 'BG1016') {
-                // CMFAQ
-                switch (true) {
-                    case (s_weight >= 150 && s_weight < 160):
-                        $('#classification_code').val('FAQ+150');
-                        break;
-
-                    case (s_weight >= 160):
-                        $('#classification_code').val('FAQ+160');
-                        break;
-
-                    default:
-                        $('#classification_code').val('**');
-                }
-
-            } else if (item_code == 'BG1018') {
-                // CMSTD
-                switch (true) {
-                    case (s_weight >= 120 && s_weight <= 149):
-                        $('#classification_code').val('STDA-149');
-                        break;
-
-                    case (s_weight <= 119):
-                        $('#classification_code').val('STDB-119');
-                        break;
-
-                    default:
-                        $('#classification_code').val('**');
-                }
+            } else {
+                // everything that isn't lamb/goat is beef
+                $('#classification_code').val(beefWeightClass(s_weight));
             }
         }
 
+    }
+
+    // Beef weight classes, same for every beef item. Poor C has no weight
+    // band — it only comes from QA grading, never from weigh-in.
+    function beefWeightClass(s_weight) {
+        s_weight = parseFloat(s_weight);
+
+        if (s_weight > 300) {
+            return '**'; // above the top band — needs checking
+        } else if (s_weight >= 200) {
+            return 'PG+200';
+        } else if (s_weight >= 170) {
+            return 'HG+170';
+        } else if (s_weight >= 150) {
+            return 'FAQ+150';
+        } else if (s_weight >= 120) {
+            return 'STD+120';
+        }
+
+        return 'COMM';
     }
 
     function getClassificationCodeEdit(s_weight) {
         $('#edit_classification_code').val('--');
 
         var code = $('#edit_item_code').val();
-        var item_code = transformToLivestockCode(code);
+        // Codes the map doesn't know are still beef, so fall back to the raw code.
+        var item_code = transformToLivestockCode(code) || code;
 
-        if (s_weight > 1 && item_code != '') {
+        if (s_weight > 1 && item_code) {
             if (item_code == 'BG1101' || item_code == 'BG1201') {
                 // lamb/goat classes
                 switch (true) {
@@ -1200,98 +1132,9 @@
                         $('#edit_classification_code').val('**');
                 }
 
-            } else if (item_code == 'BG1005' || item_code == 'BG1006' || item_code == 'BG1007' || item_code ==
-                'BG1008' ||
-                item_code == 'BG1009') {
-                // High Grade 
-                switch (true) {
-                    case (s_weight < 120):
-                        // code block
-                        $('#edit_classification_code').val('STDB-119');
-                        break;
-
-                    case (s_weight >= 120 && s_weight < 150):
-                        // code block
-                        $('#edit_classification_code').val('STDA-149');
-                        break;
-
-                    case (s_weight >= 150 && s_weight < 160):
-                        $('#edit_classification_code').val('FAQ+150');
-                        break;
-
-                    case (s_weight >= 160 && s_weight < 170):
-                        $('#edit_classification_code').val('HG+160');
-                        break;
-                
-                    case (s_weight >= 170 && s_weight < 200):
-                        // code block
-                        $('#edit_classification_code').val('HG+170');
-                        break;
-
-                    case (s_weight >= 200 && s_weight < 400):
-                        $('#edit_classification_code').val('PG+200');
-                        break;
-
-                    default:
-                        $('#edit_classification_code').val('**');
-                }
-            } else if (item_code == 'BG1011' || item_code == 'BG1012' || item_code == 'BG1013' || item_code ==
-                'BG1014') {
-                // comm-beef
-                switch (true) {
-                    case (s_weight < 120):
-                        $('#edit_classification_code').val('CG-120');
-                        break;
-
-                    case (s_weight >= 120 && s_weight < 150):
-                        $('#edit_classification_code').val('CG+150');
-                        break;
-
-                    case (s_weight >= 150 && s_weight < 160):
-                        $('#edit_classification_code').val('CG+150');
-                        break;
-
-                    case (s_weight >= 160 && s_weight < 170):
-                        $('#edit_classification_code').val('CG+160');
-                        break;
-
-                    case (s_weight >= 170 && s_weight < 400):
-                        $('#edit_classification_code').val('CG+170');
-                        break;
-
-                    default:
-                        $('#edit_classification_code').val('**');
-                }
-
-            } else if (item_code == 'BG1016') {
-                // CMFAQ
-                switch (true) {
-                    case (s_weight >= 150 && s_weight < 160):
-                        $('#edit_classification_code').val('FAQ+150');
-                        break;
-
-                    case (s_weight >= 160):
-                        $('#edit_classification_code').val('FAQ+160');
-                        break;
-
-                    default:
-                        $('#edit_classification_code').val('**');
-                }
-
-            } else if (item_code == 'BG1018') {
-                // CMSTD
-                switch (true) {
-                    case (s_weight >= 120 && s_weight <= 149):
-                        $('#edit_classification_code').val('STDA-149');
-                        break;
-
-                    case (s_weight <= 119):
-                        $('#edit_classification_code').val('STDB-119');
-                        break;
-
-                    default:
-                        $('#edit_classification_code').val('**');
-                }
+            } else {
+                // everything that isn't lamb/goat is beef
+                $('#edit_classification_code').val(beefWeightClass(s_weight));
             }
         }
 
