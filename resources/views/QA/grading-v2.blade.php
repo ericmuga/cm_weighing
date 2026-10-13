@@ -479,7 +479,7 @@
     var CarcassGrading = (function () {
         var GRADE_BANDS = {
             1: { tier: 5, min: 17, max: 18 }, // Premium
-            2: { tier: 4, min: 16, max: 17 }, // High Grade
+            2: { tier: 4, min: 14, max: 17 }, // High Grade
             8: { tier: 3, min: 10, max: 16 }, // FAQ
             9: { tier: 2, min: 10, max: 16 }, // Standard
             3: { tier: 1, min: 8,  max: 14 }, // Commercial
