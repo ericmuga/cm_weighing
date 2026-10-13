@@ -1049,17 +1049,7 @@
                 switch (true) {
                     case (item_code == 'BG1101'):
                         // lamb
-                        if (s_weight > 30) {
-                            $('#classification_code').val('LAMB-STD');
-
-                        } else if (s_weight >= 14 && s_weight < 30) {
-                            $('#classification_code').val('LAMB-PMX');
-
-                        } else if (s_weight >= 11 && s_weight < 14) {
-                            $('#classification_code').val('LAMB-STD');
-                        } else if (s_weight < 11 ) {
-                            $('#classification_code').val('LAMB-RTS');
-                        }
+                        $('#classification_code').val(lambWeightClass(s_weight));
                         break;
 
                     case (item_code == 'BG1201'):
@@ -1099,6 +1089,22 @@
         return 'COMM';
     }
 
+    // Lamb weight classes: Class 1 = 14-30kg, Class 2 = 11-13.9kg or above
+    // 30kg, Class R = below 11kg.
+    function lambWeightClass(s_weight) {
+        s_weight = parseFloat(s_weight);
+
+        if (s_weight > 30) {
+            return 'LAMB-STD';
+        } else if (s_weight >= 14) {
+            return 'LAMB-PMX';
+        } else if (s_weight >= 11) {
+            return 'LAMB-STD';
+        }
+
+        return 'LAMB-RTS';
+    }
+
     function getClassificationCodeEdit(s_weight) {
         $('#edit_classification_code').val('--');
 
@@ -1112,15 +1118,7 @@
                 switch (true) {
                     case (item_code == 'BG1101'):
                         // lamb
-                        if (s_weight > 25) {
-                            $('#edit_classification_code').val('LAMB-STD');
-
-                        } else if (s_weight >= 14 && s_weight < 25) {
-                            $('#edit_classification_code').val('LAMB-PRM');
-
-                        } else if (s_weight >= 11 && s_weight < 14) {
-                            $('#edit_classification_code').val('LAMB-STD');
-                        }
+                        $('#edit_classification_code').val(lambWeightClass(s_weight));
                         break;
 
                     case (item_code == 'BG1201'):

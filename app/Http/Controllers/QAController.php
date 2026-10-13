@@ -6,6 +6,7 @@ use App\Exports\QAGradingReportExport;
 use App\Exports\SlaughterGradingReportExport;
 use App\Models\CarcassGradingService;
 use App\Models\Helpers;
+use App\Models\LambGradingService;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -219,15 +220,7 @@ class QAController extends Controller
         switch ($item_code) {
             //lamb
             case 'BG1900':
-                if ($settlement_weight < 11) {
-                    return 'Class R';
-                } elseif ($settlement_weight < 14) {
-                    return '2nd Grade';
-                } elseif ($settlement_weight <= 30) {
-                    return '1st Grade';
-                } else {
-                    return '2nd Grade';
-                }
+                return $this->lambClassificationCode($class_type, (float) $settlement_weight);
 
             //Goat
             case 'BG1202':
@@ -279,6 +272,58 @@ class QAController extends Controller
         -1 => 'CONDEMNED',
     ];
 
+    /** Lamb weigh-in codes, same as weigh.blade.php's lambWeightClass(). */
+    private const LAMB_CODE_BY_RANK = [
+        3 => 'LAMB-PMX', // Class 1: 14-30kg
+        2 => 'LAMB-STD', // Class 2: 11-13.9kg, or above 30kg
+        1 => 'LAMB-RTS', // Class R: below 11kg
+        0 => 'CONDEMNED',
+    ];
+
+    /** QA lamb classification id => rank, best first. */
+    private const LAMB_GRADE_RANK = [
+        LambGradingService::CLASS_1   => 3,
+        LambGradingService::CLASS_2   => 2,
+        LambGradingService::CLASS_R   => 1,
+        LambGradingService::CONDEMNED => 0,
+    ];
+
+    private function lambWeightRank(float $weight): int
+    {
+        return match (true) {
+            $weight > 30  => 2,
+            $weight >= 14 => 3,
+            $weight >= 11 => 2,
+            default       => 1,
+        };
+    }
+
+    /**
+     * QA's lamb code: QA's grade, pulled down to what the weight allows (same
+     * rule as beef). Ungraded carcasses just get their weight's code.
+     */
+    private function lambClassificationCode($class_type, float $weight): string
+    {
+        $weightRank = $this->lambWeightRank($weight);
+        $qaRank = is_numeric($class_type) ? (self::LAMB_GRADE_RANK[(int) $class_type] ?? null) : null;
+
+        if ($qaRank === 0) {
+            return self::LAMB_CODE_BY_RANK[0]; // condemned — weight doesn't apply
+        }
+
+        return self::LAMB_CODE_BY_RANK[$qaRank === null ? $weightRank : min($qaRank, $weightRank)];
+    }
+
+    /** CarcassGradingService (beef) or LambGradingService, or null when neither scorecard applies. */
+    private function scorecardFor(?string $itemCode): ?string
+    {
+        return match (true) {
+            CarcassGradingService::appliesTo($itemCode) => CarcassGradingService::class,
+            LambGradingService::appliesTo($itemCode)    => LambGradingService::class,
+            default                                     => null,
+        };
+    }
+
     private function beefWeightRank(float $weight): ?int
     {
         return match (true) {
@@ -308,17 +353,19 @@ class QAController extends Controller
             return null;
         }
 
-        // Lamb grades have no ranking against the beef families — exact match only.
-        $lambCodes = [5 => '1st Grade', 6 => '2nd Grade', 7 => 'Class R'];
-        if (isset($lambCodes[$classification])) {
-            return $referenceCode === $lambCodes[$classification] ? 0 : 1;
+        // Only a QA grade BELOW what intake expected is a downgrade. A QA
+        // grade at or above it (e.g. Premium on a carcass weighed in as
+        // HG+170) is not. The weigh-in code tells us lamb vs beef, since
+        // Condemned (10) is shared by both.
+        if (str_starts_with($referenceCode, 'LAMB-')) {
+            $qaRank = self::LAMB_GRADE_RANK[$classification] ?? null;
+            // LAMB-PRM was the old edit screen's name for LAMB-PMX.
+            $weighRank = $referenceCode === 'LAMB-PRM' ? 3 : array_search($referenceCode, self::LAMB_CODE_BY_RANK, true);
+            $weighRank = $weighRank === false ? null : $weighRank;
+        } else {
+            $qaRank = self::BEEF_GRADE_RANK[$classification] ?? null;
+            $weighRank = $this->weighCodeRank($referenceCode);
         }
-
-        // Beef: only a QA grade BELOW what intake expected is a downgrade. A
-        // QA grade at or above it (e.g. Premium on a carcass weighed in as
-        // HG+170) is not — the old family-equality check flagged those too.
-        $qaRank = self::BEEF_GRADE_RANK[$classification] ?? null;
-        $weighRank = $this->weighCodeRank($referenceCode);
         if ($qaRank === null || $weighRank === null) {
             return null;
         }
@@ -417,7 +464,8 @@ class QAController extends Controller
             ->orderByDesc('slaughter_date')
             ->first();
 
-        if (!$grading || !CarcassGradingService::appliesTo($grading->item_code)) {
+        $scorecard = $grading ? $this->scorecardFor($grading->item_code) : null;
+        if (!$scorecard) {
             return;
         }
 
@@ -434,7 +482,7 @@ class QAController extends Controller
             ->whereDate('created_at', $grading->slaughter_date)
             ->value('settlement_weight');
 
-        $autoGrading = CarcassGradingService::compute([
+        $autoGrading = $scorecard::compute([
             'dentition' => $grading->dentition,
             'fat_cover' => $grading->fat_cover,
             'fat_color' => $grading->fat_color,
@@ -451,7 +499,7 @@ class QAController extends Controller
             'verdict1' => $autoGrading['verdict1'],
             'verdict2' => $autoGrading['verdict2'],
             'auto_classification' => $autoGrading['classification'] !== null
-                ? CarcassGradingService::label($autoGrading['classification'])
+                ? $scorecard::label($autoGrading['classification'])
                 : null,
             'is_indeterminate' => $autoGrading['is_indeterminate'],
             'awaiting_weight' => $autoGrading['awaiting_weight'],
@@ -507,7 +555,9 @@ class QAController extends Controller
             $receiptNo = null;
             $aggNo = null;
 
-            DB::transaction(function () use ($request, $helpers, &$autoGrading, &$classificationCode, &$receiptNo, &$aggNo) {
+            $scorecard = null;
+
+            DB::transaction(function () use ($request, $helpers, &$autoGrading, &$classificationCode, &$receiptNo, &$aggNo, &$scorecard) {
                 $existing = DB::table('qa_grading')->where('id', $request->item_id)->first();
                 $receiptNo = $existing->receipt_no ?? null;
                 $aggNo = $existing->agg_no ?? null;
@@ -524,10 +574,11 @@ class QAController extends Controller
                         ->value('settlement_weight');
                 }
 
-                // The scorecard in "Grading template formulation (2).xlsx" only
-                // covers beef (BG1021); Lamb/Goat keep their existing manual flow.
-                if ($existing && CarcassGradingService::appliesTo($existing->item_code)) {
-                    $autoGrading = CarcassGradingService::compute([
+                // Beef (BG1021) and lamb (BG1900) have scorecards; goat keeps
+                // the manual flow.
+                $scorecard = $existing ? $this->scorecardFor($existing->item_code) : null;
+                if ($scorecard) {
+                    $autoGrading = $scorecard::compute([
                         'dentition' => $request->dentition,
                         'fat_cover' => $request->fat_cover,
                         'fat_color' => $request->fat_color,
@@ -564,7 +615,7 @@ class QAController extends Controller
                         // Stored as the grade name itself (e.g. "High Grade"),
                         // not the ID — reads directly, no LABELS lookup needed.
                         'auto_classification' => $autoGrading['classification'] !== null
-                            ? CarcassGradingService::label($autoGrading['classification'])
+                            ? $scorecard::label($autoGrading['classification'])
                             : null,
                         'is_indeterminate' => $autoGrading['is_indeterminate'],
                         'awaiting_weight' => $autoGrading['awaiting_weight'],
@@ -587,7 +638,7 @@ class QAController extends Controller
                     'message'          => "Carcass no. {$request->agg_no} graded successfully",
                     'is_downgraded'    => $isDowngraded,
                     'auto_classification'      => $autoGrading['classification'],
-                    'auto_classification_label' => CarcassGradingService::label($autoGrading['classification']),
+                    'auto_classification_label' => $scorecard ? $scorecard::label($autoGrading['classification']) : '--',
                     'is_indeterminate' => $autoGrading['is_indeterminate'],
                     'awaiting_weight'  => $autoGrading['awaiting_weight'],
                     'verdict1'         => $autoGrading['verdict1'],

@@ -228,6 +228,8 @@
                                         <td>FAQ</td>
                                     @elseif($data->classification == 9)
                                         <td>Standard</td>
+                                    @elseif($data->classification == 10)
+                                        <td class="text-danger font-weight-bold">Condemned</td>
                                     @else
                                         <td>---</td>
                                     @endif
@@ -629,8 +631,105 @@
             return result;
         }
 
-        return { compute: compute, LABELS: LABELS };
+        return {
+            compute: compute, LABELS: LABELS,
+            OVERRIDE_HINT: 'forced by a hard rule (Detained / poorly conformed muscle / no fat cover)'
+        };
     })();
+
+    // Mirrors app/Models/LambGradingService.php — lamb (BG1900) only. Keep in
+    // sync with it; the server is authoritative on save.
+    var LambGrading = (function () {
+        // Verdict 2 bands, best first — Class 2 wins its 15-17 overlap with Class R.
+        var GRADE_BANDS = [
+            { grade: 5, min: 21, max: 23 }, // Class 1
+            { grade: 6, min: 15, max: 20 }, // Class 2
+            { grade: 7, min: 8,  max: 17 }  // Class R
+        ];
+        var POINTS = {
+            fat_cover:  { 1: 3, 2: 2, 3: 1 },
+            bruising:   { 0: 3, 1: 2, 3: 1, 4: 1, 5: 0 },
+            fat_color:  { 1: 3, 3: 2, 2: 1 },
+            meat_color: { 1: 2, 2: 1 },
+            muscle:     { 1: 3, 2: 2, 3: 1 }
+        };
+        var LABELS = { 5: '1st Grade', 6: '2nd Grade', 7: 'Class R', 10: 'Condemned' };
+        var MIN_WEIGHT = 11, MAX_WEIGHT = 30;
+
+        function intOrNull(v) {
+            return (v === undefined || v === null || v === '') ? null : parseInt(v, 10);
+        }
+
+        function weightPoints(weight) {
+            if (weight > MAX_WEIGHT) return null; // hard rule, no points
+            if (weight >= 14) return 9;
+            if (weight >= MIN_WEIGHT) return 6;
+            return 3;
+        }
+
+        function resolveOverride(attrs, weight) {
+            var bruising = intOrNull(attrs.bruising);
+            if (bruising === 5) return 10; // Condemned
+            if (bruising === 3 || bruising === 4 || intOrNull(attrs.fat_color) === 2
+                || intOrNull(attrs.muscle) === 3 || (weight !== null && weight < MIN_WEIGHT)) return 7; // Class R
+            if (weight !== null && weight > MAX_WEIGHT) return 6; // Class 2
+            return null;
+        }
+
+        function gradeForScore(score, result) {
+            GRADE_BANDS.forEach(function (b) {
+                if (score >= b.min && score <= b.max) result.candidates.push(b.grade);
+            });
+            if (!result.candidates.length) {
+                result.is_indeterminate = true;
+                return 7;
+            }
+            return result.candidates[0];
+        }
+
+        function compute(attrs, weight) {
+            var total = 0, missing = [];
+            Object.keys(POINTS).forEach(function (field) {
+                var val = intOrNull(attrs[field]);
+                if (val === null || !(val in POINTS[field])) { missing.push(field); return; }
+                total += POINTS[field][val];
+            });
+            var verdict1 = missing.length ? null : total;
+            var hasWeight = !!weight && weight > 0;
+            var wPoints = hasWeight ? weightPoints(weight) : null;
+
+            var result = {
+                verdict1: verdict1,
+                verdict2: (verdict1 !== null && wPoints !== null) ? verdict1 + wPoints : null,
+                classification: null, is_indeterminate: false, awaiting_weight: false,
+                is_override: false, candidates: [], missing: missing
+            };
+
+            var override = resolveOverride(attrs, hasWeight ? weight : null);
+            if (override !== null) {
+                result.classification = override;
+                result.is_override = true;
+                return result;
+            }
+            if (verdict1 === null) return result;
+
+            if (!hasWeight) {
+                result.classification = gradeForScore(verdict1 + 9, result);
+                result.awaiting_weight = true;
+                return result;
+            }
+
+            result.classification = gradeForScore(result.verdict2, result);
+            return result;
+        }
+
+        return {
+            compute: compute, LABELS: LABELS,
+            OVERRIDE_HINT: 'forced by a hard rule (Severe/Detained bruising, deep yellow fat, poor muscle, or weight under 11kg / over 30kg)'
+        };
+    })();
+
+    var GRADERS = { BG1021: CarcassGrading, BG1900: LambGrading };
 
     $(document).ready(function () {
 
@@ -660,14 +759,16 @@
             $('.btn-prevent-multiple-submits').prop('disabled', false);
         });
 
-        // Live grade preview — beef (BG1021) only. Recomputes on every
-        // attribute change and auto-fills Classification; QA can still pick a
-        // different value afterwards before saving.
+        // Live grade preview — beef (BG1021) and lamb (BG1900). Recomputes on
+        // every attribute change and auto-fills Classification; QA can still
+        // pick a different value afterwards before saving.
         function updateAutoGradePreview() {
-            if (currentItemCode !== 'BG1021') {
+            var grader = GRADERS[currentItemCode];
+            if (!grader) {
                 $('#autoGradeHint').text('');
                 return;
             }
+            var attrCount = currentItemCode === 'BG1900' ? 5 : 6;
 
             var attrs = {
                 dentition: $('#dentition').val(),
@@ -678,18 +779,18 @@
                 muscle: $('#muscle').val()
             };
 
-            var result = CarcassGrading.compute(attrs, currentSettlementWeight);
+            var result = grader.compute(attrs, currentSettlementWeight);
 
             if (result.classification === null) {
                 if (result.verdict1 === null) {
                     $('#autoGradeHint').removeClass('text-warning').addClass('text-muted')
-                        .text('Select all 6 attributes to see the auto-computed grade.');
+                        .text('Select all ' + attrCount + ' attributes to see the auto-computed grade.');
                     return;
                 }
 
                 // Only reachable when verdict1 ties between candidates and
                 // settlement weight isn't known yet to break it.
-                var tied = result.candidates.map(function (g) { return CarcassGrading.LABELS[g]; });
+                var tied = result.candidates.map(function (g) { return grader.LABELS[g]; });
                 $('#autoGradeHint').removeClass('text-muted').addClass('text-warning')
                     .text('Tied between ' + tied.join(', ') + ' (Verdict 1: ' + result.verdict1 +
                         ') — settlement weight is needed to break the tie.');
@@ -706,25 +807,25 @@
 
             if (result.is_override) {
                 $('#autoGradeHint').removeClass('text-muted').removeClass('text-warning').addClass('text-info')
-                    .text('Auto-computed: ' + CarcassGrading.LABELS[result.classification] +
-                        ' — forced by a hard rule (Detained / poorly conformed muscle / no fat cover), regardless of the point score.');
+                    .text('Auto-computed: ' + grader.LABELS[result.classification] +
+                        ' — ' + grader.OVERRIDE_HINT + ', regardless of the point score.');
                 return;
             }
 
             if (result.awaiting_weight) {
                 $('#autoGradeHint').removeClass('text-muted').addClass('text-warning')
-                    .text('Suggested: ' + CarcassGrading.LABELS[result.classification] + ' (Verdict 1: ' + result.verdict1 +
+                    .text('Suggested: ' + grader.LABELS[result.classification] + ' (Verdict 1: ' + result.verdict1 +
                         ') — provisional; settlement weight is still needed to finalize the grade (weight can only lower it further).');
                 return;
             }
 
-            var hint = 'Auto-computed: ' + CarcassGrading.LABELS[result.classification] +
+            var hint = 'Auto-computed: ' + grader.LABELS[result.classification] +
                 ' (Verdict 1: ' + result.verdict1 + ', Verdict 2: ' + result.verdict2 + ')';
             if (result.is_indeterminate) {
                 if (result.candidates.length) {
                     var others = result.candidates
                         .filter(function (g) { return g !== result.classification; })
-                        .map(function (g) { return CarcassGrading.LABELS[g]; });
+                        .map(function (g) { return grader.LABELS[g]; });
                     hint += '. ⚠ Tied with ' + others.join(', ') + ' — weight did not clearly resolve it; please review.';
                 } else {
                     hint += '. ⚠ Weight is outside the expected range — please review.';
@@ -781,6 +882,17 @@
                 $('#fat_group').append('<option value="5">Lamb 1st grade</option>');
                 $('#fat_group').append('<option value="6">Lamb 2nd grade</option>');
                 $('#fat_group').append('<option value="7">Lamb Class R</option>');
+                if (item_code === 'BG1900') {
+                    $('#fat_group').append('<option value="10">Condemned</option>');
+                }
+            }
+
+            // Lamb's scorecard has no dentition, and no Marbling/None fat cover.
+            var isLamb = item_code === 'BG1900';
+            $('#dentition').closest('.col-md-2').toggle(!isLamb);
+            $('#fat_cover option[value="4"], #fat_cover option[value="0"]').prop('disabled', isLamb);
+            if (isLamb) {
+                savedDentition = '';
             }
 
             // Re-init select2 on fat_group (dynamic options), then pre-select saved value
