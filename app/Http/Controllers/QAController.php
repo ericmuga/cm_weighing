@@ -145,6 +145,11 @@ class QAController extends Controller
             'graded' => (int) $todayStats->graded,
             'pending' => (int) $todayStats->total - (int) $todayStats->graded,
             'downgraded' => (int) $todayStats->downgraded,
+            // Carcasses actually weighed that day (vs total = receipt placeholders)
+            'weighed' => DB::table('slaughter_data')
+                ->whereDate('created_at', $metricsDate)
+                ->where('deleted', '!=', 1)
+                ->count(),
         ];
 
         // Weighed carcasses with no matching qa_grading placeholder at all —

@@ -19,6 +19,13 @@
     .qa-metric-pending    { --qa-accent: #ffc107; }
     .qa-metric-downgraded { --qa-accent: #dc3545; }
     .qa-metrics-progress  { height: 4px; }
+    .qa-metric-sub {
+        margin-left: .6rem; padding-left: .6rem; border-left: 1px solid #dee2e6;
+        font-size: .85rem; font-weight: 500; color: #495057; white-space: nowrap;
+    }
+    .qa-metric-sub i { color: #17a2b8; font-size: .75rem; margin-right: .15rem; }
+    .qa-metric-weighbar { display: flex; height: 3px; margin-top: .35rem; background: #eef0f2; }
+    .qa-metric-weighbar .progress-bar { background: #17a2b8; }
     .qa-metrics-date input[type="date"] { width: auto; }
 </style>
 <div class="container-fluid">
@@ -40,6 +47,7 @@
             <div class="card-body">
                 @php
                     $gradedPct = $metrics['total'] > 0 ? round($metrics['graded'] / $metrics['total'] * 100) : 0;
+                    $weighedPct = $metrics['total'] > 0 ? min(100, round($metrics['weighed'] / $metrics['total'] * 100)) : 0;
                     $filterUrl = fn ($s) => route('qa_grading_v2', array_filter(['status' => $s, 'date' => $metricsDate->toDateString()]));
                     $dayLabel = $metricsDate->isToday() ? 'Today' : $helpers->dateToHumanFormat($metricsDate);
                 @endphp
@@ -66,7 +74,15 @@
                         <div class="col-6 col-md-3 mb-2">
                             <a href="{{ $filterUrl(null) }}" class="qa-metric qa-metric-total {{ $singleDay && !$status ? 'active' : '' }}">
                                 <span class="qa-metric-label">Total carcasses</span>
-                                <span class="qa-metric-value" id="metric-total">{{ $metrics['total'] }}</span>
+                                <span class="d-flex align-items-baseline flex-wrap">
+                                    <span class="qa-metric-value" id="metric-total">{{ $metrics['total'] }}</span>
+                                    <span class="qa-metric-sub" title="Carcasses weighed on this day">
+                                        <i class="fas fa-weight-hanging"></i> {{ $metrics['weighed'] }} weighed
+                                    </span>
+                                </span>
+                                <span class="progress qa-metric-weighbar" title="{{ $weighedPct }}% weighed">
+                                    <span class="progress-bar" style="width: {{ $weighedPct }}%"></span>
+                                </span>
                             </a>
                         </div>
                         <div class="col-6 col-md-3 mb-2">
