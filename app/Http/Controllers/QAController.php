@@ -23,27 +23,55 @@ class QAController extends Controller
         $this->middleware('auth');
     }
 
-    public function index(Helpers $helpers)
+    public function index(Request $request, Helpers $helpers)
     {
         $title = "dashboard";
 
-        $lined_up = Cache::remember('lined_up', now()->addMinutes(120), function () {
+        // Today by default; ?date=YYYY-MM-DD shows a past day.
+        $date = $this->selectedDate($request) ?? today();
+
+        // Cached per date — the old single 'lined_up' key served one day's
+        // figure for every date.
+        $lined_up = Cache::remember('lined_up_' . $date->toDateString(), now()->addMinutes(120), function () use ($date) {
             return DB::table('receipts')
-                ->whereDate('slaughter_date', today())
+                ->whereDate('slaughter_date', $date)
                 ->sum('receipts.received_qty');
         });
 
         $slaughtered = DB::table('slaughter_data')
-            ->whereDate('created_at', today())
+            ->whereDate('created_at', $date)
             ->where('deleted', '!=', 1)
             ->count();
 
+        // By slaughter_date, the same as the grading worksheet the "More info" link opens.
         $graded = DB::table('qa_grading')
-            ->whereDate('created_at', today())
-            ->where('graded_by', '!=', null)
+            ->whereDate('slaughter_date', $date)
+            ->whereNotNull('graded_by')
             ->count();
 
-        return view('QA.dashboard', compact('title', 'helpers', 'lined_up', 'slaughtered', 'graded'));
+        return view('QA.dashboard', compact('title', 'helpers', 'lined_up', 'slaughtered', 'graded', 'date'));
+    }
+
+    /** A valid, non-future ?date=YYYY-MM-DD, or null when absent/invalid. */
+    private function selectedDate(Request $request): ?\Carbon\Carbon
+    {
+        $raw = $request->query('date');
+        if (!is_string($raw) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw)) {
+            return null;
+        }
+
+        try {
+            $date = \Carbon\Carbon::createFromFormat('Y-m-d', $raw)->startOfDay();
+        } catch (\Exception $e) {
+            return null;
+        }
+
+        // Carbon rolls impossible dates over (2026-02-30 -> 2026-03-02); reject them.
+        if ($date->format('Y-m-d') !== $raw) {
+            return null;
+        }
+
+        return $date->greaterThan(today()) ? today() : $date;
     }
 
     public function grade(Helpers $helpers)
@@ -69,10 +97,14 @@ class QAController extends Controller
         $title = "Grading V2";
 
         // Worksheet covers yesterday + today so QA can finish carcasses that
-        // spilled over; ?day=today narrows it back to today only.
+        // spilled over. ?date=YYYY-MM-DD (from the dashboard) shows that one
+        // day; the older ?day=today means the same for today.
         $status = in_array($request->query('status'), ['graded', 'pending'], true) ? $request->query('status') : null;
-        $todayOnly = $request->query('day') === 'today';
-        $fromDate = $todayOnly ? today() : today()->subDay();
+        $selectedDate = $this->selectedDate($request) ?? ($request->query('day') === 'today' ? today() : null);
+        $singleDay = $selectedDate !== null;
+        $metricsDate = $selectedDate ?? today();
+        $fromDate = $selectedDate ?? today()->subDay();
+        $toDate = $selectedDate ?? today();
 
         $grading_data = DB::table('qa_grading as a')
             ->select('a.*', 'b.vendor_no', 'ct.description', 'c.settlement_weight', 'c.agg_no as slaughter_agg_no', 'c.classification_code as weigh_classification_code')
@@ -93,16 +125,17 @@ class QAController extends Controller
                     ->on(DB::raw('CAST(c.created_at AS DATE)'), '=', 'a.slaughter_date');
             })
             ->whereDate('a.slaughter_date', '>=', $fromDate)
-            ->whereDate('a.slaughter_date', '<=', today())
+            ->whereDate('a.slaughter_date', '<=', $toDate)
             ->when($status === 'graded', fn ($q) => $q->whereNotNull('a.graded_by'))
             ->when($status === 'pending', fn ($q) => $q->whereNull('a.graded_by'))
             ->orderBy('a.slaughter_date', 'desc')
             ->orderBy('a.created_at', 'asc')
             ->get();
 
-        // Metrics bar is always today's numbers, regardless of the filters above.
+        // Metrics bar is one day's numbers (the selected day, else today),
+        // regardless of the status filter.
         $todayStats = DB::table('qa_grading')
-            ->whereDate('slaughter_date', today())
+            ->whereDate('slaughter_date', $metricsDate)
             ->selectRaw('COUNT(*) as total,
                 SUM(CASE WHEN graded_by IS NOT NULL THEN 1 ELSE 0 END) as graded,
                 SUM(CASE WHEN is_downgraded = 1 THEN 1 ELSE 0 END) as downgraded')
@@ -120,7 +153,7 @@ class QAController extends Controller
         // (it's driven FROM qa_grading), so they'd otherwise vanish silently.
         $unmatched_weighins = DB::table('slaughter_data as sd')
             ->whereDate('sd.created_at', '>=', $fromDate)
-            ->whereDate('sd.created_at', '<=', today())
+            ->whereDate('sd.created_at', '<=', $toDate)
             ->where('sd.deleted', '!=', 1)
             ->leftJoin('qa_grading as qg', function ($join) {
                 $join->on('qg.agg_no', '=', 'sd.agg_no')
@@ -131,7 +164,7 @@ class QAController extends Controller
             ->select('sd.receipt_no', 'sd.agg_no', 'sd.item_code', 'sd.vendor_no', 'sd.vendor_name', 'sd.settlement_weight', 'sd.created_at')
             ->get();
 
-        return view('QA.grading-v2', compact('title', 'helpers', 'grading_data', 'unmatched_weighins', 'metrics', 'status', 'todayOnly'));
+        return view('QA.grading-v2', compact('title', 'helpers', 'grading_data', 'unmatched_weighins', 'metrics', 'status', 'singleDay', 'metricsDate'));
     }
 
     public function updateGrading(Request $request, Helpers $helpers)

@@ -19,16 +19,12 @@
     .qa-metric-pending    { --qa-accent: #ffc107; }
     .qa-metric-downgraded { --qa-accent: #dc3545; }
     .qa-metrics-progress  { height: 4px; }
+    .qa-metrics-date input[type="date"] { width: auto; }
 </style>
 <div class="container-fluid">
     <div class="card">
             <div class="card-header row align-items-center">
-                <div class="col-lg-8">
-                    <h1 class="card-title">Grading Work Sheet V2 | <span id="subtext-h1-title"><small> showing
-                                <strong>{{ $todayOnly ? "Today's" : "Yesterday's & Today's" }}</strong>
-                                {{ $status ? $status : '' }} entries</small></span></h1>
-                </div>
-                <div class="col-lg-4 text-right">
+                <div class="col-12 text-right">
                     <button type="button" class="btn btn-outline-success btn-sm mr-1" id="btn-qa-report">
                         <i class="fas fa-file-excel"></i> QA Report
                     </button>
@@ -44,30 +40,43 @@
             <div class="card-body">
                 @php
                     $gradedPct = $metrics['total'] > 0 ? round($metrics['graded'] / $metrics['total'] * 100) : 0;
-                    $filterUrl = fn ($s) => route('qa_grading_v2', array_filter(['status' => $s, 'day' => 'today']));
+                    $filterUrl = fn ($s) => route('qa_grading_v2', array_filter(['status' => $s, 'date' => $metricsDate->toDateString()]));
+                    $dayLabel = $metricsDate->isToday() ? 'Today' : $helpers->dateToHumanFormat($metricsDate);
                 @endphp
                 <div class="qa-metrics mb-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-muted small text-uppercase font-weight-bold">
-                            <i class="far fa-calendar-alt mr-1"></i> Today &middot; {{ $helpers->dateToHumanFormat(today()) }}
-                        </span>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+                        {{-- Today by default; picking a date reloads the bar (and table) for that day --}}
+                        <form method="GET" action="{{ route('qa_grading_v2') }}" class="form-inline qa-metrics-date">
+                            @if($status)
+                                <input type="hidden" name="status" value="{{ $status }}">
+                            @endif
+                            <span class="text-muted small text-uppercase font-weight-bold mr-2">
+                                <i class="far fa-calendar-alt mr-1"></i>{{ $metricsDate->isToday() ? 'Today' : 'Showing' }}
+                            </span>
+                            <input type="date" name="date" class="form-control form-control-sm"
+                                value="{{ $metricsDate->toDateString() }}" max="{{ today()->toDateString() }}"
+                                onchange="this.form.submit()" aria-label="Metrics date">
+                            @unless($metricsDate->isToday())
+                                <a href="{{ route('qa_grading_v2', array_filter(['status' => $status])) }}" class="btn btn-sm btn-link">Back to today</a>
+                            @endunless
+                        </form>
                         <span class="text-muted small"><span id="metric-pct">{{ $gradedPct }}</span>% graded</span>
                     </div>
                     <div class="row">
                         <div class="col-6 col-md-3 mb-2">
-                            <a href="{{ $filterUrl(null) }}" class="qa-metric qa-metric-total {{ $todayOnly && !$status ? 'active' : '' }}">
+                            <a href="{{ $filterUrl(null) }}" class="qa-metric qa-metric-total {{ $singleDay && !$status ? 'active' : '' }}">
                                 <span class="qa-metric-label">Total carcasses</span>
                                 <span class="qa-metric-value" id="metric-total">{{ $metrics['total'] }}</span>
                             </a>
                         </div>
                         <div class="col-6 col-md-3 mb-2">
-                            <a href="{{ $filterUrl('graded') }}" class="qa-metric qa-metric-graded {{ $todayOnly && $status === 'graded' ? 'active' : '' }}">
+                            <a href="{{ $filterUrl('graded') }}" class="qa-metric qa-metric-graded {{ $singleDay && $status === 'graded' ? 'active' : '' }}">
                                 <span class="qa-metric-label"><i class="fas fa-check-circle"></i> Graded</span>
                                 <span class="qa-metric-value" id="metric-graded">{{ $metrics['graded'] }}</span>
                             </a>
                         </div>
                         <div class="col-6 col-md-3 mb-2">
-                            <a href="{{ $filterUrl('pending') }}" class="qa-metric qa-metric-pending {{ $todayOnly && $status === 'pending' ? 'active' : '' }}">
+                            <a href="{{ $filterUrl('pending') }}" class="qa-metric qa-metric-pending {{ $singleDay && $status === 'pending' ? 'active' : '' }}">
                                 <span class="qa-metric-label"><i class="fas fa-hourglass-half"></i> Pending</span>
                                 <span class="qa-metric-value" id="metric-pending">{{ $metrics['pending'] }}</span>
                             </a>
@@ -85,10 +94,10 @@
                     </div>
                 </div>
 
-                @if($status || $todayOnly)
+                @if($status || $singleDay)
                     <div class="mb-3">
                         <span class="badge badge-light border px-2 py-1">
-                            Filter: {{ $todayOnly ? 'Today' : 'Last 2 days' }}{{ $status ? ' · ' . ucfirst($status) : '' }}
+                            Filter: {{ $singleDay ? $dayLabel : 'Last 2 days' }}{{ $status ? ' · ' . ucfirst($status) : '' }}
                         </span>
                         <a href="{{ route('qa_grading_v2') }}" class="small ml-2"><i class="fas fa-times"></i> Clear filter</a>
                     </div>
@@ -96,7 +105,7 @@
 
                 @if(isset($unmatched_weighins) && $unmatched_weighins->isNotEmpty())
                     <div class="alert alert-warning">
-                        <strong><i class="fas fa-exclamation-triangle"></i> {{ $unmatched_weighins->count() }} carcass(es) weighed {{ $todayOnly ? 'today' : 'in the last 2 days' }} have no matching grading record.</strong>
+                        <strong><i class="fas fa-exclamation-triangle"></i> {{ $unmatched_weighins->count() }} carcass(es) weighed {{ !$singleDay ? 'in the last 2 days' : ($metricsDate->isToday() ? 'today' : 'on ' . $dayLabel) }} have no matching grading record.</strong>
                         This usually means more animals were weighed against a receipt than its declared quantity — check the receipt's received_qty. These carcasses are weighed but cannot be graded until fixed.
                         <div class="table-responsive mt-2">
                             <table class="table table-sm table-bordered mb-0 bg-white">
@@ -127,6 +136,10 @@
                     </div>
                 @endif
                 <div class="hidden" hidden>{{ $i = 1 }}</div>
+                {{-- Sits right above the table it describes, below the metrics bar --}}
+                <h1 class="card-title mb-2 float-none">Grading Work Sheet V2 | <span id="subtext-h1-title"><small> showing
+                            <strong>{{ !$singleDay ? "Yesterday's & Today's" : ($metricsDate->isToday() ? "Today's" : $helpers->dateToHumanFormat($metricsDate)) }}</strong>
+                            {{ $status ? $status : '' }} entries</small></span></h1>
                 <div class="table-responsive">
                     <table id="example1" class="table table-bordered table-striped " width="100%">
                         <thead>
@@ -165,7 +178,8 @@
                         </tfoot>
                         <tbody>
                             @foreach($grading_data as $data)
-                                <tr data-today="{{ \Carbon\Carbon::parse($data->slaughter_date)->isToday() ? 1 : 0 }}"
+                                {{-- data-today = "counts toward the metrics bar's day" (today, or the selected date) --}}
+                                <tr data-today="{{ \Carbon\Carbon::parse($data->slaughter_date)->isSameDay($metricsDate) ? 1 : 0 }}"
                                     data-graded="{{ $data->graded_by !== null ? 1 : 0 }}"
                                     data-downgraded="{{ $data->is_downgraded == 1 ? 1 : 0 }}">
                                     <td>{{ $data->id }}</td>
