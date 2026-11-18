@@ -9,15 +9,17 @@ namespace App\Models;
  *
  *   - Verdict 1: points for 5 visual attributes (Fat Cover, Bruising,
  *     Fat Colour, Meat Colour, Muscle conformation) — no dentition. Max 14.
- *   - Verdict 2: Verdict 1 + weight points (14-30kg = 9, 11-13.9kg = 6,
- *     below 11kg = 3). The grade bands are on Verdict 2:
- *     Class 1 = 21..23, Class 2 = 15..20, Class R = 8..17.
+ *   - Verdict 2: Verdict 1 + weight points. Defaults: 15-35kg = 9,
+ *     11-14.9kg = 6, below 11kg = 3. The grade bands are on Verdict 2,
+ *     defaults Class 1 = 21..23, Class 2 = 15..20, Class R = 8..17.
  *   - Class 2 and Class R overlap at 15..17. Class R only reaches that high
  *     with the below-11kg weight, which is already a hard rule for R, so the
  *     overlap resolves to Class 2.
  *   - Hard rules, worst first: Condemned bruising -> Condemned; Severe or
  *     Detained bruising, Deep yellow fat, Poorly conformed muscle, or under
- *     11kg -> Class R; over 30kg -> Class 2.
+ *     the minimum weight -> Class R; over the maximum weight -> Class 2.
+ *   - All weights, points and bands are editable in QA > Settings
+ *     (GradingSetting); the numbers above are the defaults.
  *
  * Returns the same shape as CarcassGradingService::compute() so callers can
  * treat both the same way.
@@ -44,15 +46,21 @@ class LambGradingService
     private const BRUISING_CONDEMNED    = 5;
     private const MUSCLE_POOR           = 3;
 
-    /** Verdict 2 bands, best first. Class 2 wins the 15..17 overlap with Class R. */
-    private const GRADE_BANDS = [
-        self::CLASS_1 => ['min' => 21, 'max' => 23],
-        self::CLASS_2 => ['min' => 15, 'max' => 20],
-        self::CLASS_R => ['min' => 8,  'max' => 17],
-    ];
+    /**
+     * Verdict 2 bands, best first (Class 2 wins any overlap with Class R).
+     * Weight bands, weight points and these score bands come from
+     * GradingSetting (QA > Settings).
+     */
+    private static function gradeBands(): array
+    {
+        $s = GradingSetting::all();
 
-    private const MIN_WEIGHT = 11; // below this -> Class R
-    private const MAX_WEIGHT = 30; // above this -> Class 2
+        return [
+            self::CLASS_1 => ['min' => $s['lamb_band_c1_min'], 'max' => $s['lamb_band_c1_max']],
+            self::CLASS_2 => ['min' => $s['lamb_band_c2_min'], 'max' => $s['lamb_band_c2_max']],
+            self::CLASS_R => ['min' => $s['lamb_band_r_min'],  'max' => $s['lamb_band_r_max']],
+        ];
+    }
 
     /**
      * Submitted option value => points. Option values match the beef form's
@@ -107,7 +115,7 @@ class LambGradingService
         // Without weight, suggest what the best weight band would give —
         // provisional until the weigh-in is recorded.
         if (!$hasWeight) {
-            $result['classification'] = self::gradeForScore($verdict1 + 9, $result);
+            $result['classification'] = self::gradeForScore($verdict1 + (int) GradingSetting::get('lamb_points_class1'), $result);
             $result['awaiting_weight'] = true;
 
             return $result;
@@ -138,11 +146,11 @@ class LambGradingService
             || $bruising === self::BRUISING_DETAINED
             || $fatColor === self::FAT_COLOR_DEEP_YELLOW
             || $muscle === self::MUSCLE_POOR
-            || ($weight !== null && $weight < self::MIN_WEIGHT)) {
+            || ($weight !== null && $weight < GradingSetting::get('lamb_min_weight'))) {
             return self::CLASS_R;
         }
 
-        if ($weight !== null && $weight > self::MAX_WEIGHT) {
+        if ($weight !== null && $weight > GradingSetting::get('lamb_max_weight')) {
             return self::CLASS_2;
         }
 
@@ -152,7 +160,7 @@ class LambGradingService
     /** Best band containing the score; records every matching band as candidates. */
     private static function gradeForScore(int $score, array &$result): int
     {
-        foreach (self::GRADE_BANDS as $grade => $band) {
+        foreach (self::gradeBands() as $grade => $band) {
             if ($score >= $band['min'] && $score <= $band['max']) {
                 $result['candidates'][] = $grade;
             }
@@ -171,17 +179,19 @@ class LambGradingService
 
     private static function weightPoints(float $weight): ?int
     {
-        if ($weight > self::MAX_WEIGHT) {
+        $s = GradingSetting::all();
+
+        if ($weight > $s['lamb_max_weight']) {
             return null; // hard rule (Class 2), no points on the sheet
         }
-        if ($weight >= 14) {
-            return 9;
+        if ($weight >= $s['lamb_class1_min_weight']) {
+            return (int) $s['lamb_points_class1'];
         }
-        if ($weight >= self::MIN_WEIGHT) {
-            return 6;
+        if ($weight >= $s['lamb_min_weight']) {
+            return (int) $s['lamb_points_class2'];
         }
 
-        return 3;
+        return (int) $s['lamb_points_below_min'];
     }
 
     private static function intOrNull($value): ?int

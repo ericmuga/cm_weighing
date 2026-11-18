@@ -34,6 +34,18 @@
                             <i class="fas fa-file-excel text-success mr-1"></i> Slaughter Grading Report</a></li>
                     </ul>
                 </li>
+                {{-- Only for usernames in GRADING_SETTINGS_USERS --}}
+                @if(\App\Models\GradingSetting::canEdit(auth()->user()->username ?? null))
+                    <li class="nav-item dropdown">
+                        <a id="dropdownSettings" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                            class="nav-link dropdown-toggle"><i class="fas fa-cog mr-1"></i>Settings</a>
+                        <ul aria-labelledby="dropdownSettings" class="dropdown-menu border-0 shadow">
+                            @foreach(\App\Models\GradingSetting::PAGES as $settingsPage => $settingsLabel)
+                                <li><a href="{{ route('qa_settings', $settingsPage) }}" class="dropdown-item">{{ $settingsLabel }} grading</a></li>
+                            @endforeach
+                        </ul>
+                    </li>
+                @endif
             </ul>
 
             <!-- SEARCH FORM -->

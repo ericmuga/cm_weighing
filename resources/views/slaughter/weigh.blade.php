@@ -1069,36 +1069,46 @@
 
     }
 
-    // Beef weight classes, same for every beef item. Poor C has no weight
-    // band — it only comes from QA grading, never from weigh-in.
+    // Weight bands from QA > Settings (beef and lamb pages).
+    var GRADING_WEIGHTS = @json(\Illuminate\Support\Arr::only(\App\Models\GradingSetting::all(), [
+        'beef_max_weight', 'beef_premium_min_weight', 'beef_highgrade_min_weight', 'beef_faq_min_weight', 'beef_standard_min_weight',
+        'lamb_min_weight', 'lamb_class1_min_weight', 'lamb_max_weight',
+    ]));
+
+    // Beef weight classes, same for every beef item (defaults: PG 200-300,
+    // HG 170, FAQ 150, STD 120, COMM below). Poor C has no weight band — it
+    // only comes from QA grading, never from weigh-in. The codes keep their
+    // names even if the kg values are changed in settings.
     function beefWeightClass(s_weight) {
+        var W = GRADING_WEIGHTS;
         s_weight = parseFloat(s_weight);
 
-        if (s_weight > 300) {
+        if (s_weight > W.beef_max_weight) {
             return '**'; // above the top band — needs checking
-        } else if (s_weight >= 200) {
+        } else if (s_weight >= W.beef_premium_min_weight) {
             return 'PG+200';
-        } else if (s_weight >= 170) {
+        } else if (s_weight >= W.beef_highgrade_min_weight) {
             return 'HG+170';
-        } else if (s_weight >= 150) {
+        } else if (s_weight >= W.beef_faq_min_weight) {
             return 'FAQ+150';
-        } else if (s_weight >= 120) {
+        } else if (s_weight >= W.beef_standard_min_weight) {
             return 'STD+120';
         }
 
         return 'COMM';
     }
 
-    // Lamb weight classes: Class 1 = 14-30kg, Class 2 = 11-13.9kg or above
-    // 30kg, Class R = below 11kg.
+    // Lamb weight classes (defaults: Class 1 = 15-35kg, Class 2 = 11-14.9kg
+    // or above 35kg, Class R = below 11kg).
     function lambWeightClass(s_weight) {
+        var W = GRADING_WEIGHTS;
         s_weight = parseFloat(s_weight);
 
-        if (s_weight > 30) {
+        if (s_weight > W.lamb_max_weight) {
             return 'LAMB-STD';
-        } else if (s_weight >= 14) {
+        } else if (s_weight >= W.lamb_class1_min_weight) {
             return 'LAMB-PMX';
-        } else if (s_weight >= 11) {
+        } else if (s_weight >= W.lamb_min_weight) {
             return 'LAMB-STD';
         }
 
