@@ -670,11 +670,13 @@
     // Mirrors app/Models/LambGradingService.php — lamb (BG1900) only. Keep in
     // sync with it; the server is authoritative on save.
     var LambGrading = (function () {
-        // Verdict 2 bands, best first — Class 2 wins its 15-17 overlap with Class R.
+        // Weights, points and bands from QA > Settings (GradingSetting).
+        var S = @json(\App\Models\GradingSetting::all());
+        // Verdict 2 bands, best first — Class 2 wins any overlap with Class R.
         var GRADE_BANDS = [
-            { grade: 5, min: 21, max: 23 }, // Class 1
-            { grade: 6, min: 15, max: 20 }, // Class 2
-            { grade: 7, min: 8,  max: 17 }  // Class R
+            { grade: 5, min: S.lamb_band_c1_min, max: S.lamb_band_c1_max }, // Class 1
+            { grade: 6, min: S.lamb_band_c2_min, max: S.lamb_band_c2_max }, // Class 2
+            { grade: 7, min: S.lamb_band_r_min,  max: S.lamb_band_r_max }   // Class R
         ];
         var POINTS = {
             fat_cover:  { 1: 3, 2: 2, 3: 1 },
@@ -684,7 +686,7 @@
             muscle:     { 1: 3, 2: 2, 3: 1 }
         };
         var LABELS = { 5: '1st Grade', 6: '2nd Grade', 7: 'Class R', 10: 'Condemned' };
-        var MIN_WEIGHT = 11, MAX_WEIGHT = 30;
+        var MIN_WEIGHT = S.lamb_min_weight, CLASS1_MIN_WEIGHT = S.lamb_class1_min_weight, MAX_WEIGHT = S.lamb_max_weight;
 
         function intOrNull(v) {
             return (v === undefined || v === null || v === '') ? null : parseInt(v, 10);
@@ -692,9 +694,9 @@
 
         function weightPoints(weight) {
             if (weight > MAX_WEIGHT) return null; // hard rule, no points
-            if (weight >= 14) return 9;
-            if (weight >= MIN_WEIGHT) return 6;
-            return 3;
+            if (weight >= CLASS1_MIN_WEIGHT) return S.lamb_points_class1;
+            if (weight >= MIN_WEIGHT) return S.lamb_points_class2;
+            return S.lamb_points_below_min;
         }
 
         function resolveOverride(attrs, weight) {
@@ -744,7 +746,7 @@
             if (verdict1 === null) return result;
 
             if (!hasWeight) {
-                result.classification = gradeForScore(verdict1 + 9, result);
+                result.classification = gradeForScore(verdict1 + S.lamb_points_class1, result);
                 result.awaiting_weight = true;
                 return result;
             }
@@ -755,7 +757,8 @@
 
         return {
             compute: compute, LABELS: LABELS,
-            OVERRIDE_HINT: 'forced by a hard rule (Severe/Detained bruising, deep yellow fat, poor muscle, or weight under 11kg / over 30kg)'
+            OVERRIDE_HINT: 'forced by a hard rule (Severe/Detained bruising, deep yellow fat, poor muscle, or weight under '
+                + MIN_WEIGHT + 'kg / over ' + MAX_WEIGHT + 'kg)'
         };
     })();
 

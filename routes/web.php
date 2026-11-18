@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ButcheryController;
+use App\Http\Controllers\GradingSettingsController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\QAController;
 use App\Http\Controllers\SlaughterController;
@@ -67,6 +68,9 @@ Route::prefix('QA')->group(function () {
     Route::post('update/grade/v2', [QAController::class, 'updateGradingV2'])->name('qa_update_grading_v2');
     Route::post('reports/qa-grading', [QAController::class, 'qaGradingReportExport'])->name('qa_grading_report_export');
     Route::post('reports/slaughter-grading', [QAController::class, 'slaughterGradingReportExport'])->name('slaughter_grading_report_export');
+    // Access limited to GRADING_SETTINGS_USERS inside the controller
+    Route::get('/settings', [GradingSettingsController::class, 'index'])->name('qa_settings');
+    Route::post('/settings', [GradingSettingsController::class, 'update'])->name('qa_settings_update');
 });
 /* -------------------------------- End Slaughter ------------------------------------------------ */
 

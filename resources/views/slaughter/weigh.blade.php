@@ -1089,16 +1089,18 @@
         return 'COMM';
     }
 
-    // Lamb weight classes: Class 1 = 14-30kg, Class 2 = 11-13.9kg or above
-    // 30kg, Class R = below 11kg.
+    // Lamb weight classes from QA > Settings (defaults: Class 1 = 15-35kg,
+    // Class 2 = 11-14.9kg or above 35kg, Class R = below 11kg).
+    var LAMB_WEIGHTS = @json(\Illuminate\Support\Arr::only(\App\Models\GradingSetting::all(), ['lamb_min_weight', 'lamb_class1_min_weight', 'lamb_max_weight']));
+
     function lambWeightClass(s_weight) {
         s_weight = parseFloat(s_weight);
 
-        if (s_weight > 30) {
+        if (s_weight > LAMB_WEIGHTS.lamb_max_weight) {
             return 'LAMB-STD';
-        } else if (s_weight >= 14) {
+        } else if (s_weight >= LAMB_WEIGHTS.lamb_class1_min_weight) {
             return 'LAMB-PMX';
-        } else if (s_weight >= 11) {
+        } else if (s_weight >= LAMB_WEIGHTS.lamb_min_weight) {
             return 'LAMB-STD';
         }
 

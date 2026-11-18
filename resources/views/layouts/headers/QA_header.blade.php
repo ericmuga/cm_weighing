@@ -34,6 +34,12 @@
                             <i class="fas fa-file-excel text-success mr-1"></i> Slaughter Grading Report</a></li>
                     </ul>
                 </li>
+                {{-- Only for usernames in GRADING_SETTINGS_USERS --}}
+                @if(\App\Models\GradingSetting::canEdit(auth()->user()->username ?? null))
+                    <li class="nav-item">
+                        <a href="{{ route('qa_settings') }}" class="nav-link"><i class="fas fa-cog mr-1"></i>Settings</a>
+                    </li>
+                @endif
             </ul>
 
             <!-- SEARCH FORM -->

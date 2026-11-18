@@ -6,6 +6,7 @@ use App\Exports\QAGradingReportExport;
 use App\Exports\SlaughterGradingReportExport;
 use App\Models\CarcassGradingService;
 use App\Models\Helpers;
+use App\Models\GradingSetting;
 use App\Models\LambGradingService;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
@@ -312,8 +313,8 @@ class QAController extends Controller
 
     /** Lamb weigh-in codes, same as weigh.blade.php's lambWeightClass(). */
     private const LAMB_CODE_BY_RANK = [
-        3 => 'LAMB-PMX', // Class 1: 14-30kg
-        2 => 'LAMB-STD', // Class 2: 11-13.9kg, or above 30kg
+        3 => 'LAMB-PMX', // Class 1: 15-35kg by default
+        2 => 'LAMB-STD', // Class 2: 11-14.9kg, or above 35kg
         1 => 'LAMB-RTS', // Class R: below 11kg
         0 => 'CONDEMNED',
     ];
@@ -326,13 +327,16 @@ class QAController extends Controller
         LambGradingService::CONDEMNED => 0,
     ];
 
+    /** Weight bands from QA > Settings (GradingSetting); weigh.blade.php uses the same values. */
     private function lambWeightRank(float $weight): int
     {
+        $s = GradingSetting::all();
+
         return match (true) {
-            $weight > 30  => 2,
-            $weight >= 14 => 3,
-            $weight >= 11 => 2,
-            default       => 1,
+            $weight > $s['lamb_max_weight']         => 2,
+            $weight >= $s['lamb_class1_min_weight'] => 3,
+            $weight >= $s['lamb_min_weight']        => 2,
+            default                                 => 1,
         };
     }
 
