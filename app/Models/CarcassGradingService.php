@@ -74,32 +74,46 @@ class CarcassGradingService
 
     /**
      * Grade => tier (also the weight tier it requires) and Verdict 1 band.
-     * Ranked best (tier 5) to worst (tier 0).
+     * Ranked best (tier 5) to worst (tier 0). Bands come from GradingSetting
+     * (QA > Settings > Beef).
+     *
+     * Poor C has no weight determinant of its own in the sheet — Commercial's
+     * (tier 1, below the Standard weight) is satisfied by any real weight, so
+     * at a shared boundary score Commercial always wins on the merits; Poor C
+     * is reached only when the visual score alone is below Commercial's floor.
      */
-    private const GRADE_BANDS = [
-        self::PREMIUM    => ['tier' => 5, 'min' => 17, 'max' => 18],
-        self::HIGHGRADE  => ['tier' => 4, 'min' => 14, 'max' => 17],
-        self::FAQ        => ['tier' => 3, 'min' => 10, 'max' => 16],
-        self::STANDARD   => ['tier' => 2, 'min' => 10, 'max' => 16],
-        self::COMMERCIAL => ['tier' => 1, 'min' => 8,  'max' => 14],
-        // Poor C has no weight determinant of its own in the sheet — Commercial's
-        // (tier 1, "below 120kg") is satisfied by any real weight, so at the
-        // shared boundary score of 8 Commercial always wins on the merits; Poor C
-        // is reached only when the visual score alone is below Commercial's floor.
-        self::POOR_C     => ['tier' => 0, 'min' => 0,  'max' => 7],
-    ];
+    private static function gradeBands(): array
+    {
+        $s = GradingSetting::all();
 
-    /** Carcass weight (kg, inclusive lower bound) => tier. Checked highest first. */
-    private const WEIGHT_BANDS = [
-        ['min' => 200, 'tier' => 5], // Premium: 200-300kg
-        ['min' => 170, 'tier' => 4], // High Grade: 170-199.9kg
-        ['min' => 150, 'tier' => 3], // FAQ: 150-169.9kg
-        ['min' => 120, 'tier' => 2], // Standard: 120-149.9kg
-        ['min' => 0,   'tier' => 1], // Commercial: below 120kg
-    ];
+        return [
+            self::PREMIUM    => ['tier' => 5, 'min' => $s['beef_band_premium_min'],    'max' => $s['beef_band_premium_max']],
+            self::HIGHGRADE  => ['tier' => 4, 'min' => $s['beef_band_highgrade_min'],  'max' => $s['beef_band_highgrade_max']],
+            self::FAQ        => ['tier' => 3, 'min' => $s['beef_band_faq_min'],        'max' => $s['beef_band_faq_max']],
+            self::STANDARD   => ['tier' => 2, 'min' => $s['beef_band_standard_min'],   'max' => $s['beef_band_standard_max']],
+            self::COMMERCIAL => ['tier' => 1, 'min' => $s['beef_band_commercial_min'], 'max' => $s['beef_band_commercial_max']],
+            self::POOR_C     => ['tier' => 0, 'min' => $s['beef_band_poorc_min'],      'max' => $s['beef_band_poorc_max']],
+        ];
+    }
 
-    /** Premium's weight band has an upper bound; above it the carcass falls off the defined bands entirely. */
-    private const MAX_WEIGHT = 300;
+    /**
+     * Carcass weight (kg, inclusive lower bound) => tier, checked highest
+     * first. Defaults: Premium 200-300, High Grade 170-199.9, FAQ 150-169.9,
+     * Standard 120-149.9, Commercial below 120. Above beef_max_weight the
+     * carcass falls off the defined bands entirely.
+     */
+    private static function weightBands(): array
+    {
+        $s = GradingSetting::all();
+
+        return [
+            ['min' => $s['beef_premium_min_weight'],   'tier' => 5],
+            ['min' => $s['beef_highgrade_min_weight'], 'tier' => 4],
+            ['min' => $s['beef_faq_min_weight'],       'tier' => 3],
+            ['min' => $s['beef_standard_min_weight'],  'tier' => 2],
+            ['min' => 0,                               'tier' => 1],
+        ];
+    }
 
     /**
      * Submitted option value => points, per attribute field. Values match the
@@ -177,13 +191,14 @@ class CarcassGradingService
             return $result;
         }
 
+        $bands = self::gradeBands();
         $candidates = [];
-        foreach (self::GRADE_BANDS as $grade => $band) {
+        foreach ($bands as $grade => $band) {
             if ($verdict1 >= $band['min'] && $verdict1 <= $band['max']) {
                 $candidates[] = $grade;
             }
         }
-        usort($candidates, fn ($a, $b) => self::GRADE_BANDS[$b]['tier'] <=> self::GRADE_BANDS[$a]['tier']);
+        usort($candidates, fn ($a, $b) => $bands[$b]['tier'] <=> $bands[$a]['tier']);
         $result['candidates'] = $candidates;
 
         if (empty($candidates)) {
@@ -216,7 +231,7 @@ class CarcassGradingService
         if (count($candidates) === 1) {
             $grade = $candidates[0];
             // Weight can only ever pull the grade down, never up.
-            if ($weightTier < self::GRADE_BANDS[$grade]['tier']) {
+            if ($weightTier < $bands[$grade]['tier']) {
                 $grade = self::gradeForTier($weightTier);
             }
             $result['classification'] = $grade;
@@ -228,11 +243,11 @@ class CarcassGradingService
         // only downward: pick the best one the actual weight tier supports.
         $supported = array_values(array_filter(
             $candidates,
-            fn ($grade) => self::GRADE_BANDS[$grade]['tier'] <= $weightTier
+            fn ($grade) => $bands[$grade]['tier'] <= $weightTier
         ));
 
         if ($supported) {
-            usort($supported, fn ($a, $b) => self::GRADE_BANDS[$b]['tier'] <=> self::GRADE_BANDS[$a]['tier']);
+            usort($supported, fn ($a, $b) => $bands[$b]['tier'] <=> $bands[$a]['tier']);
             $result['classification'] = $supported[0];
 
             return $result;
@@ -319,13 +334,13 @@ class CarcassGradingService
 
     private static function weightTier(float $weight): ?int
     {
-        if ($weight > self::MAX_WEIGHT) {
+        if ($weight > GradingSetting::get('beef_max_weight')) {
             // Heavier than Premium's band allows — falls off the defined
             // weight bands entirely, flag for QA review rather than guess.
             return null;
         }
 
-        foreach (self::WEIGHT_BANDS as $band) {
+        foreach (self::weightBands() as $band) {
             if ($weight >= $band['min']) {
                 return $band['tier'];
             }
@@ -336,7 +351,7 @@ class CarcassGradingService
 
     private static function gradeForTier(int $tier): int
     {
-        foreach (self::GRADE_BANDS as $grade => $band) {
+        foreach (self::gradeBands() as $grade => $band) {
             if ($band['tier'] === $tier) {
                 return $grade;
             }

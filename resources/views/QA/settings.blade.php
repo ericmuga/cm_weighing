@@ -12,17 +12,30 @@
 
 @section('content-header')
 <div class="container-fluid">
-    <h1 class="card-title"> Grading Settings | <small class="text-muted">parameters used by the auto-grading scorecards and weigh-in codes</small></h1>
+    <h1 class="card-title"> {{ $title }} | <small class="text-muted">parameters used by the auto-grading scorecard and weigh-in codes</small></h1>
 </div>
 <hr>
 @endsection
 
 @section('content')
 <div class="container-fluid">
+    <ul class="nav nav-tabs mb-3">
+        @foreach(\App\Models\GradingSetting::PAGES as $tabPage => $tabLabel)
+            <li class="nav-item">
+                <a class="nav-link {{ $tabPage === $page ? 'active' : '' }}" href="{{ route('qa_settings', $tabPage) }}">{{ $tabLabel }}</a>
+            </li>
+        @endforeach
+    </ul>
+
     <div class="alert alert-light border small mb-3">
         <i class="fas fa-info-circle text-info mr-1"></i>
         Changes apply to grading and weigh-ins saved <strong>after</strong> you save here; records already
         graded keep their result until they are graded again. Every change is logged with your username.
+        @if($page === 'beef')
+            <br><i class="fas fa-tag text-info mr-1"></i>
+            Weigh-in codes keep their names (PG+200, HG+170, FAQ+150, STD+120, COMM) even if the kg values change.
+            Point values per attribute and the hard rules (Condemned, Poor C, Commercial) are fixed in the scorecard.
+        @endif
     </div>
 
     @if($errors->any())
@@ -31,7 +44,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('qa_settings_update') }}" id="gs-form">
+    <form method="POST" action="{{ route('qa_settings_update', $page) }}" id="gs-form">
         @csrf
         <div class="row">
             @foreach($groups as $group => $fields)
@@ -64,7 +77,7 @@
 
         <div class="text-right mb-4">
             <span class="text-muted small mr-2" id="gs-dirty"></span>
-            <a href="{{ route('qa_settings') }}" class="btn btn-sm btn-outline-secondary">Discard changes</a>
+            <a href="{{ route('qa_settings', $page) }}" class="btn btn-sm btn-outline-secondary">Discard changes</a>
             <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-save mr-1"></i> Save settings</button>
         </div>
     </form>

@@ -21,37 +21,42 @@ class GradingSettingsController extends Controller
         $this->middleware('auth');
     }
 
-    public function index(Helpers $helpers)
+    public function index(Helpers $helpers, string $page = 'beef')
     {
         $this->authorizeEditor();
 
-        $title = 'Grading Settings';
+        $title = GradingSetting::PAGES[$page] . ' Grading Settings';
+        $keys = GradingSetting::keysFor($page);
         $values = GradingSetting::all();
         $groups = [];
-        foreach (GradingSetting::DEFINITIONS as $key => [$default, $label, $unit, $group]) {
+        foreach ($keys as $key) {
+            [$default, $label, $unit, $group] = GradingSetting::DEFINITIONS[$key];
             $groups[$group][$key] = compact('default', 'label', 'unit') + ['value' => $values[$key]];
         }
 
         $changes = DB::table('grading_setting_changes')
+            ->whereIn('key', $keys)
             ->orderByDesc('created_at')
             ->limit(20)
             ->get();
 
-        return view('QA.settings', compact('title', 'helpers', 'groups', 'changes'));
+        return view('QA.settings', compact('title', 'helpers', 'groups', 'changes', 'page'));
     }
 
-    public function update(Request $request)
+    public function update(Request $request, string $page)
     {
         $this->authorizeEditor();
 
+        // Only this page's keys are posted; the rest keep their current values
+        // so the cross-field checks still see a full set.
         $rules = [];
-        foreach (array_keys(GradingSetting::DEFINITIONS) as $key) {
+        foreach (GradingSetting::keysFor($page) as $key) {
             $rules[$key] = 'required|numeric|min:0|max:1000';
         }
         $validated = $request->validate($rules);
 
         $values = array_map('floatval', $validated);
-        $errors = GradingSetting::validateValues($values);
+        $errors = GradingSetting::validateValues($values + GradingSetting::all());
         if ($errors) {
             return back()->withErrors($errors)->withInput();
         }
@@ -66,7 +71,7 @@ class GradingSettingsController extends Controller
             Toastr::info('No changes to save.', 'Settings');
         }
 
-        return redirect()->route('qa_settings');
+        return redirect()->route('qa_settings', $page);
     }
 
     private function authorizeEditor(): void

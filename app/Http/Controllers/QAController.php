@@ -366,15 +366,18 @@ class QAController extends Controller
         };
     }
 
+    /** Weight bands from QA > Settings > Beef; weigh.blade.php uses the same values. */
     private function beefWeightRank(float $weight): ?int
     {
+        $s = GradingSetting::all();
+
         return match (true) {
-            $weight > 300  => null,
-            $weight >= 200 => 5,
-            $weight >= 170 => 4,
-            $weight >= 150 => 3,
-            $weight >= 120 => 2,
-            default        => 1,
+            $weight > $s['beef_max_weight']            => null,
+            $weight >= $s['beef_premium_min_weight']   => 5,
+            $weight >= $s['beef_highgrade_min_weight'] => 4,
+            $weight >= $s['beef_faq_min_weight']       => 3,
+            $weight >= $s['beef_standard_min_weight']  => 2,
+            default                                    => 1,
         };
     }
 

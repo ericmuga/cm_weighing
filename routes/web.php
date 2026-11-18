@@ -69,8 +69,8 @@ Route::prefix('QA')->group(function () {
     Route::post('reports/qa-grading', [QAController::class, 'qaGradingReportExport'])->name('qa_grading_report_export');
     Route::post('reports/slaughter-grading', [QAController::class, 'slaughterGradingReportExport'])->name('slaughter_grading_report_export');
     // Access limited to GRADING_SETTINGS_USERS inside the controller
-    Route::get('/settings', [GradingSettingsController::class, 'index'])->name('qa_settings');
-    Route::post('/settings', [GradingSettingsController::class, 'update'])->name('qa_settings_update');
+    Route::get('/settings/{page?}', [GradingSettingsController::class, 'index'])->where('page', 'beef|lamb')->name('qa_settings');
+    Route::post('/settings/{page}', [GradingSettingsController::class, 'update'])->where('page', 'beef|lamb')->name('qa_settings_update');
 });
 /* -------------------------------- End Slaughter ------------------------------------------------ */
 

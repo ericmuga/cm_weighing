@@ -11,19 +11,47 @@ use Illuminate\Support\Facades\Log;
  * grading_settings table. Any key without a row uses DEFAULTS, so grading
  * keeps working on an empty (or missing) table.
  *
- * Used by LambGradingService (PHP), the grading-v2 live preview (JS, via
- * all()), the weigh-in screen's lamb weigh codes and QAController's lamb
- * weight rank — all read the same values, so they can't drift apart.
+ * Used by CarcassGradingService / LambGradingService (PHP), the grading-v2
+ * live preview (JS, via all()), the weigh-in screen's weigh codes and
+ * QAController's weight ranks — all read the same values, so they can't
+ * drift apart.
  */
 class GradingSetting
 {
     private const CACHE_KEY = 'grading_settings_v1';
+
+    /** Settings pages; a key belongs to the page its prefix names (beef_*, lamb_*). */
+    public const PAGES = ['beef' => 'Beef', 'lamb' => 'Lamb'];
+
+    /** Request-level copy so grading loops don't hit the cache store per lookup. */
+    private static ?array $memo = null;
 
     /**
      * key => [default, label, unit, group]. Order here is the order on the
      * settings page.
      */
     public const DEFINITIONS = [
+        // Beef weight bands (kg) — lower bound of each grade's weight band
+        'beef_premium_min_weight'   => [200, 'Premium starts at', 'kg', 'Beef weight bands'],
+        'beef_max_weight'           => [300, 'Premium ends at — above this needs QA review', 'kg', 'Beef weight bands'],
+        'beef_highgrade_min_weight' => [170, 'High Grade starts at', 'kg', 'Beef weight bands'],
+        'beef_faq_min_weight'       => [150, 'FAQ starts at', 'kg', 'Beef weight bands'],
+        'beef_standard_min_weight'  => [120, 'Standard starts at — below this is Commercial', 'kg', 'Beef weight bands'],
+
+        // Beef Verdict 1 score bands
+        'beef_band_premium_min'     => [17, 'Premium — lowest score', 'pts', 'Beef score bands (Verdict 1)'],
+        'beef_band_premium_max'     => [18, 'Premium — highest score', 'pts', 'Beef score bands (Verdict 1)'],
+        'beef_band_highgrade_min'   => [14, 'High Grade — lowest score', 'pts', 'Beef score bands (Verdict 1)'],
+        'beef_band_highgrade_max'   => [17, 'High Grade — highest score', 'pts', 'Beef score bands (Verdict 1)'],
+        'beef_band_faq_min'         => [10, 'FAQ — lowest score', 'pts', 'Beef score bands (Verdict 1)'],
+        'beef_band_faq_max'         => [16, 'FAQ — highest score', 'pts', 'Beef score bands (Verdict 1)'],
+        'beef_band_standard_min'    => [10, 'Standard — lowest score', 'pts', 'Beef score bands (Verdict 1)'],
+        'beef_band_standard_max'    => [16, 'Standard — highest score', 'pts', 'Beef score bands (Verdict 1)'],
+        'beef_band_commercial_min'  => [8,  'Commercial — lowest score', 'pts', 'Beef score bands (Verdict 1)'],
+        'beef_band_commercial_max'  => [14, 'Commercial — highest score', 'pts', 'Beef score bands (Verdict 1)'],
+        'beef_band_poorc_min'       => [0,  'Poor C — lowest score', 'pts', 'Beef score bands (Verdict 1)'],
+        'beef_band_poorc_max'       => [7,  'Poor C — highest score', 'pts', 'Beef score bands (Verdict 1)'],
+
         // Lamb weight bands (kg)
         'lamb_min_weight'        => [11, 'Minimum weight — below this is Class R', 'kg', 'Lamb weight bands'],
         'lamb_class1_min_weight' => [15, 'Class 1 starts at', 'kg', 'Lamb weight bands'],
@@ -46,6 +74,10 @@ class GradingSetting
     /** @return array<string, float> every key, stored value or default */
     public static function all(): array
     {
+        if (self::$memo !== null) {
+            return self::$memo;
+        }
+
         $stored = Cache::rememberForever(self::CACHE_KEY, function () {
             try {
                 return DB::table('grading_settings')->pluck('value', 'key')->all();
@@ -62,7 +94,16 @@ class GradingSetting
             $values[$key] = array_key_exists($key, $stored) ? (float) $stored[$key] : (float) $default;
         }
 
-        return $values;
+        return self::$memo = $values;
+    }
+
+    /** Keys shown on one settings page (beef / lamb). */
+    public static function keysFor(string $page): array
+    {
+        return array_values(array_filter(
+            array_keys(self::DEFINITIONS),
+            fn ($key) => str_starts_with($key, $page . '_')
+        ));
     }
 
     public static function get(string $key): float
@@ -107,6 +148,7 @@ class GradingSetting
         });
 
         Cache::forget(self::CACHE_KEY);
+        self::$memo = null;
 
         return $changed;
     }
@@ -131,6 +173,30 @@ class GradingSetting
         foreach (self::DEFINITIONS as $key => [, , $unit]) {
             if ($unit === 'pts' && floor($v[$key]) != $v[$key]) {
                 $errors[$key] = 'Must be a whole number.';
+            }
+        }
+
+        // Beef weight bands must climb: Standard < FAQ < High Grade < Premium <= ceiling.
+        $beefSteps = [
+            'beef_standard_min_weight'  => 'Standard',
+            'beef_faq_min_weight'       => 'FAQ',
+            'beef_highgrade_min_weight' => 'High Grade',
+            'beef_premium_min_weight'   => 'Premium',
+        ];
+        $prevKey = null;
+        foreach ($beefSteps as $key => $name) {
+            if ($prevKey !== null && $v[$key] <= $v[$prevKey]) {
+                $errors[$key] = "$name must start above {$beefSteps[$prevKey]}.";
+            }
+            $prevKey = $key;
+        }
+        if ($v['beef_max_weight'] < $v['beef_premium_min_weight']) {
+            $errors['beef_max_weight'] = 'Premium must end at or above where it starts.';
+        }
+        foreach (['premium' => 'Premium', 'highgrade' => 'High Grade', 'faq' => 'FAQ',
+                  'standard' => 'Standard', 'commercial' => 'Commercial', 'poorc' => 'Poor C'] as $band => $name) {
+            if ($v["beef_band_{$band}_min"] > $v["beef_band_{$band}_max"]) {
+                $errors["beef_band_{$band}_max"] = "$name highest score must be at least its lowest score.";
             }
         }
 

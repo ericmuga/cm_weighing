@@ -508,23 +508,27 @@
     // both in sync if the scorecard in "Grading template formulation (2).xlsx"
     // ever changes; the server recomputes and is authoritative on save, this
     // is purely for the live preview in the modal.
+    // Weights, points and bands from QA > Settings (GradingSetting), shared by both scorecards.
+    var GRADING_SETTINGS = @json(\App\Models\GradingSetting::all());
+
     var CarcassGrading = (function () {
+        var S = GRADING_SETTINGS;
         var GRADE_BANDS = {
-            1: { tier: 5, min: 17, max: 18 }, // Premium
-            2: { tier: 4, min: 14, max: 17 }, // High Grade
-            8: { tier: 3, min: 10, max: 16 }, // FAQ
-            9: { tier: 2, min: 10, max: 16 }, // Standard
-            3: { tier: 1, min: 8,  max: 14 }, // Commercial
-            4: { tier: 0, min: 0,  max: 7  }  // Poor C
+            1: { tier: 5, min: S.beef_band_premium_min,    max: S.beef_band_premium_max },    // Premium
+            2: { tier: 4, min: S.beef_band_highgrade_min,  max: S.beef_band_highgrade_max },  // High Grade
+            8: { tier: 3, min: S.beef_band_faq_min,        max: S.beef_band_faq_max },        // FAQ
+            9: { tier: 2, min: S.beef_band_standard_min,   max: S.beef_band_standard_max },   // Standard
+            3: { tier: 1, min: S.beef_band_commercial_min, max: S.beef_band_commercial_max }, // Commercial
+            4: { tier: 0, min: S.beef_band_poorc_min,      max: S.beef_band_poorc_max }       // Poor C
         };
         var WEIGHT_BANDS = [
-            { min: 200, tier: 5 }, // Premium: 200-300kg
-            { min: 170, tier: 4 }, // High Grade: 170-199.9kg
-            { min: 150, tier: 3 }, // FAQ: 150-169.9kg
-            { min: 120, tier: 2 }, // Standard: 120-149.9kg
-            { min: 0,   tier: 1 }  // Commercial: below 120kg
+            { min: S.beef_premium_min_weight,   tier: 5 }, // Premium
+            { min: S.beef_highgrade_min_weight, tier: 4 }, // High Grade
+            { min: S.beef_faq_min_weight,       tier: 3 }, // FAQ
+            { min: S.beef_standard_min_weight,  tier: 2 }, // Standard
+            { min: 0,                           tier: 1 }  // Commercial
         ];
-        var MAX_WEIGHT = 300; // Premium's band has an upper bound; above it, falls off the defined bands.
+        var MAX_WEIGHT = S.beef_max_weight; // above it, falls off the defined bands.
         var POINTS = {
             dentition:  { 1: 1, 2: 2, 3: 3, 4: 3, 5: 3 },
             fat_cover:  { 4: 4, 1: 3, 2: 2, 3: 1, 0: 0 },
@@ -670,8 +674,7 @@
     // Mirrors app/Models/LambGradingService.php — lamb (BG1900) only. Keep in
     // sync with it; the server is authoritative on save.
     var LambGrading = (function () {
-        // Weights, points and bands from QA > Settings (GradingSetting).
-        var S = @json(\App\Models\GradingSetting::all());
+        var S = GRADING_SETTINGS;
         // Verdict 2 bands, best first — Class 2 wins any overlap with Class R.
         var GRADE_BANDS = [
             { grade: 5, min: S.lamb_band_c1_min, max: S.lamb_band_c1_max }, // Class 1
