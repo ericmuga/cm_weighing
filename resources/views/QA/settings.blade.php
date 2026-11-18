@@ -4,7 +4,14 @@
 <style>
     .gs-group { border-left: 4px solid #17a2b8; }
     .gs-group .card-header { background: #f8f9fa; }
-    .gs-input { max-width: 9rem; }
+    .gs-input { width: 8rem; }
+    .gs-rules { border-left: 4px solid #dc3545; }
+    .gs-rules .card-header { background: #f8f9fa; }
+    .gs-rule-result { font-weight: 600; font-size: .9rem; margin-bottom: .15rem; }
+    .gs-rule-result::before { content: "\2192"; color: #dc3545; margin-right: .35rem; }
+    .gs-table td, .gs-table th { padding-left: .75rem; padding-right: .75rem; }
+    .gs-table thead th { border-top: 0; font-size: .75rem; text-transform: uppercase; letter-spacing: .03em; }
+    .gs-table .gs-input { width: 7rem; }
     .gs-default { font-size: .75rem; }
     .gs-changed { background: #fff8e1; }
 </style>
@@ -34,8 +41,29 @@
         @if($page === 'beef')
             <br><i class="fas fa-tag text-info mr-1"></i>
             Weigh-in codes keep their names (PG+200, HG+170, FAQ+150, STD+120, COMM) even if the kg values change.
-            Point values per attribute and the hard rules (Condemned, Poor C, Commercial) are fixed in the scorecard.
         @endif
+    </div>
+
+    {{-- Hard rules override the score; listed so editors know what the numbers below can't change. --}}
+    <div class="card gs-rules mb-3">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+            <strong><i class="fas fa-gavel mr-1"></i> Hard rules</strong>
+            <span class="text-muted small">Applied before the score, worst first · fixed in the scorecard, not editable here</span>
+        </div>
+        <div class="card-body py-2">
+            <div class="row">
+                @foreach($hardRules as $rule)
+                    <div class="col-md-6 col-lg mb-2">
+                        <div class="gs-rule-result">{{ $rule['result'] }}</div>
+                        <ul class="small text-muted pl-3 mb-0">
+                            @foreach($rule['when'] as $condition)
+                                <li>{{ $condition }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endforeach
+            </div>
+        </div>
     </div>
 
     @if($errors->any())
@@ -46,30 +74,54 @@
 
     <form method="POST" action="{{ route('qa_settings_update', $page) }}" id="gs-form">
         @csrf
+        @php
+            // Fill the row whatever the number of groups (beef 2 -> halves, lamb 3 -> thirds).
+            $colClass = 'col-lg-' . intdiv(12, max(1, min(3, count($groups))));
+        @endphp
         <div class="row">
             @foreach($groups as $group => $fields)
-                <div class="col-lg-4 mb-3">
+                @php
+                    // Score-band groups are lowest/highest pairs: show them as one row per grade.
+                    $isBands = collect(array_keys($fields))->every(fn ($k) => str_ends_with($k, '_min') || str_ends_with($k, '_max'));
+                    $bandRows = $isBands
+                        ? collect($fields)->groupBy(fn ($f, $k) => substr($k, 0, -4), true)
+                        : collect();
+                @endphp
+                <div class="{{ $colClass }} col-md-6 mb-3">
                     <div class="card gs-group h-100 mb-0">
                         <div class="card-header py-2"><strong>{{ $group }}</strong></div>
-                        <div class="card-body py-2">
-                            @foreach($fields as $key => $f)
-                                <div class="form-group mb-2">
-                                    <label for="{{ $key }}" class="small mb-1">{{ $f['label'] }}</label>
-                                    <div class="input-group input-group-sm gs-input">
-                                        <input type="number" step="{{ $f['unit'] === 'pts' ? '1' : '0.1' }}" min="0"
-                                            class="form-control gs-field @error($key) is-invalid @enderror"
-                                            id="{{ $key }}" name="{{ $key }}"
-                                            value="{{ old($key, rtrim(rtrim(number_format($f['value'], 2, '.', ''), '0'), '.')) }}"
-                                            data-original="{{ $f['value'] }}" required>
-                                        <div class="input-group-append"><span class="input-group-text">{{ $f['unit'] }}</span></div>
+                        @if($isBands)
+                            <div class="card-body p-0">
+                                <table class="table table-sm gs-table mb-0">
+                                    <thead>
+                                        <tr><th>Grade</th><th>Lowest</th><th>Highest</th><th class="text-muted font-weight-normal">Default</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($bandRows as $base => $pair)
+                                            @php $min = $pair[$base . '_min']; $max = $pair[$base . '_max']; @endphp
+                                            <tr>
+                                                <td class="align-middle font-weight-bold">{{ \Illuminate\Support\Str::before($min['label'], ' —') }}</td>
+                                                <td>@include('QA.partials.setting-input', ['key' => $base . '_min', 'f' => $min])</td>
+                                                <td>@include('QA.partials.setting-input', ['key' => $base . '_max', 'f' => $max])</td>
+                                                <td class="align-middle text-muted gs-default text-nowrap">{{ $min['default'] }} – {{ $max['default'] }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="card-body py-1">
+                                @foreach($fields as $key => $f)
+                                    <div class="d-flex align-items-center justify-content-between py-2 {{ !$loop->last ? 'border-bottom' : '' }}">
+                                        <div class="pr-3">
+                                            <label for="{{ $key }}" class="small font-weight-bold mb-0 d-block">{{ $f['label'] }}</label>
+                                            <span class="text-muted gs-default">Default: {{ $f['default'] }} {{ $f['unit'] }}</span>
+                                        </div>
+                                        <div class="flex-shrink-0">@include('QA.partials.setting-input', ['key' => $key, 'f' => $f])</div>
                                     </div>
-                                    @error($key)
-                                        <div class="text-danger small">{{ $message }}</div>
-                                    @enderror
-                                    <span class="text-muted gs-default">Default: {{ $f['default'] }} {{ $f['unit'] }}</span>
-                                </div>
-                            @endforeach
-                        </div>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endforeach

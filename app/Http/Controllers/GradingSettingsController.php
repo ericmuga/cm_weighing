@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CarcassGradingService;
 use App\Models\GradingSetting;
+use App\Models\LambGradingService;
 use App\Models\Helpers;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
@@ -34,13 +36,16 @@ class GradingSettingsController extends Controller
             $groups[$group][$key] = compact('default', 'label', 'unit') + ['value' => $values[$key]];
         }
 
+        // Read-only: the hard rules come from the scorecard code, not settings.
+        $hardRules = $page === 'beef' ? CarcassGradingService::hardRules() : LambGradingService::hardRules();
+
         $changes = DB::table('grading_setting_changes')
             ->whereIn('key', $keys)
             ->orderByDesc('created_at')
             ->limit(20)
             ->get();
 
-        return view('QA.settings', compact('title', 'helpers', 'groups', 'changes', 'page'));
+        return view('QA.settings', compact('title', 'helpers', 'groups', 'changes', 'page', 'hardRules'));
     }
 
     public function update(Request $request, string $page)
