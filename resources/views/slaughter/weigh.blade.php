@@ -1070,10 +1070,14 @@
     }
 
     // Weight bands from QA > Settings (beef and lamb pages).
-    var GRADING_WEIGHTS = @json(\Illuminate\Support\Arr::only(\App\Models\GradingSetting::all(), [
-        'beef_max_weight', 'beef_premium_min_weight', 'beef_highgrade_min_weight', 'beef_faq_min_weight', 'beef_standard_min_weight',
-        'lamb_min_weight', 'lamb_class1_min_weight', 'lamb_max_weight',
-    ]));
+    {{-- Built as a variable first: Blade's json directive only reads a single-line argument. --}}
+    @php
+        $gradingWeights = \Illuminate\Support\Arr::only(\App\Models\GradingSetting::all(), [
+            'beef_max_weight', 'beef_premium_min_weight', 'beef_highgrade_min_weight', 'beef_faq_min_weight', 'beef_standard_min_weight',
+            'lamb_min_weight', 'lamb_class1_min_weight', 'lamb_max_weight',
+        ]);
+    @endphp
+    var GRADING_WEIGHTS = @json($gradingWeights);
 
     // Beef weight classes, same for every beef item (defaults: PG 200-300,
     // HG 170, FAQ 150, STD 120, COMM below). Poor C has no weight band — it

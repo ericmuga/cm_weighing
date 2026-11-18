@@ -131,6 +131,27 @@ class LambGradingService
         return self::LABELS[$classification] ?? '--';
     }
 
+    /**
+     * Plain-language hard rules for the settings page, worst first. Keep in
+     * step with resolveOverride().
+     *
+     * @return array<int, array{result: string, when: string[]}>
+     */
+    public static function hardRules(): array
+    {
+        $s = GradingSetting::all();
+        $kg = fn (float $v) => rtrim(rtrim(number_format($v, 1, '.', ''), '0'), '.') . 'kg';
+
+        return [
+            ['result' => 'Condemned', 'when' => ['Bruising is Condemned']],
+            ['result' => 'Class R', 'when' => [
+                'Bruising is Severe or Detained', 'Fat colour is Deep yellow', 'Muscle is Poorly conformed',
+                'Weight is below ' . $kg($s['lamb_min_weight']),
+            ]],
+            ['result' => 'Class 2', 'when' => ['Weight is above ' . $kg($s['lamb_max_weight'])]],
+        ];
+    }
+
     /** Worst first, so the most severe rule wins when several apply. */
     private static function resolveOverride(array $attributes, ?float $weight): ?int
     {

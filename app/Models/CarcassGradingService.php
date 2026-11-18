@@ -268,6 +268,36 @@ class CarcassGradingService
     }
 
     /**
+     * Plain-language hard rules for the settings page, worst first. Keep in
+     * step with resolveOverride() and the weight handling in compute().
+     *
+     * @return array<int, array{result: string, when: string[]}>
+     */
+    public static function hardRules(): array
+    {
+        $s = GradingSetting::all();
+
+        return [
+            ['result' => 'Condemned', 'when' => ['Bruising is Condemned']],
+            ['result' => 'Poor C', 'when' => ['Bruising is Detained or Severe', 'Muscle is Poorly conformed']],
+            ['result' => 'Commercial', 'when' => [
+                'Fat cover is None or Inadequate', 'Fat colour is Deep yellow', 'Bruising is Mild',
+            ]],
+            ['result' => 'Weight caps the grade', 'when' => [
+                'A grade is never higher than the carcass weight band allows — weight can pull a grade down, never up',
+            ]],
+            ['result' => 'Flagged for QA review', 'when' => [
+                'Weight is above ' . self::kg($s['beef_max_weight']),
+            ]],
+        ];
+    }
+
+    private static function kg(float $value): string
+    {
+        return rtrim(rtrim(number_format($value, 1, '.', ''), '0'), '.') . 'kg';
+    }
+
+    /**
      * Hard overrides, per "Grading template formulation (2).xlsx"'s
      * additional rules — unconditional, don't need weight, and checked
      * worst-first so the most severe one wins when several are true at once:
