@@ -27,6 +27,13 @@
     .qa-metric-weighbar { display: flex; height: 3px; margin-top: .35rem; background: #eef0f2; }
     .qa-metric-weighbar .progress-bar { background: #17a2b8; }
     .qa-metrics-date input[type="date"] { width: auto; }
+    /* Rows where QA saved some parameters but the scorecard still needs the rest */
+    table.table tbody tr.qa-row-waiting,
+    table.table-striped tbody tr.qa-row-waiting:nth-of-type(odd) { background-color: #fff4e5; }
+    table.table tbody tr.qa-row-waiting > td:first-child { box-shadow: inset 4px 0 0 #fd7e14; }
+    .badge-waiting { background: #fd7e14; color: #fff; }
+    .qa-legend-swatch { display: inline-block; width: .9rem; height: .9rem; vertical-align: -2px;
+        background: #fff4e5; box-shadow: inset 4px 0 0 #fd7e14; border: 1px solid #f3d3a8; margin-right: .3rem; }
 </style>
 <div class="container-fluid">
     <div class="card">
@@ -156,6 +163,10 @@
                 <h1 class="card-title mb-2 float-none">Grading Work Sheet V2 | <span id="subtext-h1-title"><small> showing
                             <strong>{{ !$singleDay ? "Yesterday's & Today's" : ($metricsDate->isToday() ? "Today's" : $helpers->dateToHumanFormat($metricsDate)) }}</strong>
                             {{ $status ? $status : '' }} entries</small></span></h1>
+                <div class="small text-muted mb-2">
+                    <span class="mr-3"><span class="qa-legend-swatch"></span>Waiting for parameters — QA saved some, the system needs the rest to grade</span>
+                    <span><span class="badge badge-dark mr-1">heavy</span>Beef over {{ rtrim(rtrim(number_format($beefHeavyKg, 1, '.', ''), '0'), '.') }}kg — graded as the top weight band, please check</span>
+                </div>
                 <div class="table-responsive">
                     <table id="example1" class="table table-bordered table-striped " width="100%">
                         <thead>
@@ -197,7 +208,8 @@
                                 {{-- data-today = "counts toward the metrics bar's day" (today, or the selected date) --}}
                                 <tr data-today="{{ \Carbon\Carbon::parse($data->slaughter_date)->isSameDay($metricsDate) ? 1 : 0 }}"
                                     data-graded="{{ $data->graded_by !== null ? 1 : 0 }}"
-                                    data-downgraded="{{ $data->is_downgraded == 1 ? 1 : 0 }}">
+                                    data-downgraded="{{ $data->is_downgraded == 1 ? 1 : 0 }}"
+                                    class="{{ $data->waiting_for ? 'qa-row-waiting' : '' }}">
                                     <td>{{ $data->id }}</td>
                                     <td>{{ $data->agg_no }}</td>
                                     <td>{{ $data->receipt_no }}</td>
@@ -265,7 +277,11 @@
                                     @endif
 
                                     <td class="auto-suggestion-cell" data-id="{{ $data->id }}">
-                                        @if($data->auto_classification ?? null)
+                                        @if($data->waiting_for)
+                                            <span class="badge badge-waiting" title="Still needed: {{ implode(', ', $data->waiting_for) }}">
+                                                waiting for {{ count($data->waiting_for) }} parameter{{ count($data->waiting_for) > 1 ? 's' : '' }}</span>
+                                            <div class="small text-muted">{{ implode(', ', $data->waiting_for) }}</div>
+                                        @elseif($data->auto_classification ?? null)
                                             @if(($data->auto_classification) === 'Condemned')
                                                 <span class="text-danger font-weight-bold">{{ $data->auto_classification }}</span>
                                             @else
@@ -275,6 +291,9 @@
                                                 <span class="badge badge-info" title="Provisional &mdash; settlement weight isn't recorded yet; weight can only lower this grade, never raise it">awaiting weight</span>
                                             @elseif($data->is_indeterminate ?? false)
                                                 <span class="badge badge-warning" title="Could not be auto-graded with confidence &mdash; please review">flagged</span>
+                                            @endif
+                                            @if($data->item_code === 'BG1021' && $data->settlement_weight > $beefHeavyKg)
+                                                <span class="badge badge-dark" title="Over the heavy limit &mdash; graded as the top weight band; QA can override">heavy</span>
                                             @endif
                                         @else
                                             <span class="text-muted">--</span>
@@ -528,7 +547,7 @@
             { min: S.beef_standard_min_weight,  tier: 2 }, // Standard
             { min: 0,                           tier: 1 }  // Commercial
         ];
-        var MAX_WEIGHT = S.beef_max_weight; // above it, falls off the defined bands.
+        var MAX_WEIGHT = S.beef_max_weight; // above it: graded as the top band, marked heavy.
         var POINTS = {
             dentition:  { 1: 1, 2: 2, 3: 3, 4: 3, 5: 3 },
             fat_cover:  { 4: 4, 1: 3, 2: 2, 3: 1, 0: 0 },
@@ -556,8 +575,8 @@
             return { verdict1: missing.length ? null : total, missing: missing };
         }
 
+        // Above MAX_WEIGHT still counts as the top band (graded, marked heavy).
         function weightTier(weight) {
-            if (weight > MAX_WEIGHT) return null; // falls off the defined weight bands
             for (var i = 0; i < WEIGHT_BANDS.length; i++) {
                 if (weight >= WEIGHT_BANDS[i].min) return WEIGHT_BANDS[i].tier;
             }
@@ -630,17 +649,11 @@
             }
 
             // Weight is now mandatory to finalize a normal-path grade —
-            // without it (or if it's out of the defined bands), offer the
-            // best-case candidate as a provisional suggestion only.
+            // without it, offer the best-case candidate as a provisional
+            // suggestion only.
             if (!hasWeight) {
                 result.classification = candidates[0];
                 result.awaiting_weight = true;
-                return result;
-            }
-
-            if (wTier === null) {
-                result.classification = candidates[0];
-                result.is_indeterminate = true;
                 return result;
             }
 
@@ -870,6 +883,11 @@
             } else {
                 $('#autoGradeHint').removeClass('text-warning').addClass('text-muted');
             }
+            if (currentItemCode === 'BG1021' && currentSettlementWeight > GRADING_SETTINGS.beef_max_weight) {
+                hint += '. Heavy carcass (over ' + GRADING_SETTINGS.beef_max_weight +
+                    'kg) — graded as the top weight band; please check before saving.';
+                $('#autoGradeHint').removeClass('text-muted').addClass('text-warning');
+            }
             $('#autoGradeHint').text(hint);
         }
 
@@ -997,9 +1015,24 @@
                             .html('<i class="fas fa-check-circle"></i> graded <i class="fas fa-arrow-right"></i>');
                         $gradingTd.next('td').text(savedClassText);
 
+                        // Keep the saved values on the row so reopening it shows them
+                        $gradingTd.data({
+                            classification: $('#fat_group').val(), dentition: $('#dentition').val(),
+                            fat_cover: $('#fat_cover').val(), fat_color: $('#fat_color').val(),
+                            meat_color: $('#meat_color').val(), bruising: $('#bruising').val(),
+                            muscle: $('#muscle').val(), narration: $('#narration').val()
+                        });
+
                         // Update the Auto Suggestion cell from what the server just computed
                         var $autoTd = $('td.auto-suggestion-cell[data-id="' + savedRowId + '"]');
-                        if (response.auto_classification === null || response.auto_classification === undefined) {
+                        var waiting = response.waiting_for || [];
+                        $gradingTd.closest('tr').toggleClass('qa-row-waiting', waiting.length > 0);
+                        if (waiting.length) {
+                            $autoTd.html($('<span class="badge badge-waiting">')
+                                    .attr('title', 'Still needed: ' + waiting.join(', '))
+                                    .text('waiting for ' + waiting.length + ' parameter' + (waiting.length > 1 ? 's' : '')))
+                                .append($('<div class="small text-muted">').text(waiting.join(', ')));
+                        } else if (response.auto_classification === null || response.auto_classification === undefined) {
                             $autoTd.html('<span class="text-muted">--</span>');
                         } else {
                             var autoHtml = response.auto_classification_label === 'Condemned'
@@ -1009,6 +1042,9 @@
                                 autoHtml += ' <span class="badge badge-info" title="Provisional &mdash; settlement weight isn\'t recorded yet; weight can only lower this grade, never raise it">awaiting weight</span>';
                             } else if (response.is_indeterminate) {
                                 autoHtml += ' <span class="badge badge-warning" title="Could not be auto-graded with confidence &mdash; please review">flagged</span>';
+                            }
+                            if (currentItemCode === 'BG1021' && currentSettlementWeight > GRADING_SETTINGS.beef_max_weight) {
+                                autoHtml += ' <span class="badge badge-dark" title="Over the heavy limit &mdash; graded as the top weight band; QA can override">heavy</span>';
                             }
                             $autoTd.html(autoHtml);
                         }

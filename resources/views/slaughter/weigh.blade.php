@@ -272,7 +272,7 @@
                                 <th>Total Tareweight</th>
                                 <th>Total Net</th>
                                 <th>Settlement</th>
-                                <th>Class Code</th>
+                                <th>Weight Class Code</th>
                                 <th>Slaughter Date</th>
                             </tr>
                         </thead>
@@ -1087,9 +1087,8 @@
         var W = GRADING_WEIGHTS;
         s_weight = parseFloat(s_weight);
 
-        if (s_weight > W.beef_max_weight) {
-            return '**'; // above the top band — needs checking
-        } else if (s_weight >= W.beef_premium_min_weight) {
+        // Over beef_max_weight still gets the top code; QA sees it marked heavy.
+        if (s_weight >= W.beef_premium_min_weight) {
             return 'PG+200';
         } else if (s_weight >= W.beef_highgrade_min_weight) {
             return 'HG+170';

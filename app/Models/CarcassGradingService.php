@@ -26,10 +26,9 @@ namespace App\Models;
  *     graded (parameters + a manual classification) before weight is known —
  *     QAController::recomputeAutoGrading() re-runs compute() once weight
  *     arrives, to finalize it.
- *   - A carcass whose weight doesn't fall in any defined band (heavier than
- *     Premium's 300kg ceiling), or whose verdict1 still can't be resolved to
- *     a single grade even with weight applied, is flagged (is_indeterminate)
- *     for QA to review rather than guessed at.
+ *   - A carcass heavier than the Premium ceiling (beef_max_weight, 300kg by
+ *     default) counts as the top weight band, so it is still graded from its
+ *     parameters; the grading page marks it "heavy" and QA can override.
  *   - A handful of attribute values are hard overrides that bypass verdict1/
  *     verdict2 scoring entirely (see resolveOverride()): bruising = Condemned
  *     (-> Condemned); bruising = Detained/Severe or muscle = Poorly conformed
@@ -99,8 +98,8 @@ class CarcassGradingService
     /**
      * Carcass weight (kg, inclusive lower bound) => tier, checked highest
      * first. Defaults: Premium 200-300, High Grade 170-199.9, FAQ 150-169.9,
-     * Standard 120-149.9, Commercial below 120. Above beef_max_weight the
-     * carcass falls off the defined bands entirely.
+     * Standard 120-149.9, Commercial below 120. Above beef_max_weight still
+     * counts as Premium's band (see weightTier()).
      */
     private static function weightBands(): array
     {
@@ -210,20 +209,12 @@ class CarcassGradingService
             return $result;
         }
 
-        // Weight is now mandatory to finalize a normal-path grade. Without it
-        // (or if it falls outside every defined band, e.g. > 300kg), offer
-        // the best-case candidate as a provisional suggestion only — weight
-        // can still only ever pull it down from here, never raise it.
+        // Weight is now mandatory to finalize a normal-path grade. Without it,
+        // offer the best-case candidate as a provisional suggestion only —
+        // weight can still only ever pull it down from here, never raise it.
         if (!$hasWeight) {
             $result['classification'] = $candidates[0];
             $result['awaiting_weight'] = true;
-
-            return $result;
-        }
-
-        if ($weightTier === null) {
-            $result['classification'] = $candidates[0];
-            $result['is_indeterminate'] = true;
 
             return $result;
         }
@@ -286,8 +277,9 @@ class CarcassGradingService
             ['result' => 'Weight caps the grade', 'when' => [
                 'A grade is never higher than the carcass weight band allows — weight can pull a grade down, never up',
             ]],
-            ['result' => 'Flagged for QA review', 'when' => [
-                'Weight is above ' . self::kg($s['beef_max_weight']),
+            ['result' => 'Graded as top weight band', 'when' => [
+                'Weight is above ' . self::kg($s['beef_max_weight'])
+                    . ' — still graded from the parameters (weigh-in code PG+200), marked "heavy" on the grading page; QA can override',
             ]],
         ];
     }
@@ -362,14 +354,13 @@ class CarcassGradingService
         return [$missing ? null : $total, $missing];
     }
 
-    private static function weightTier(float $weight): ?int
+    /**
+     * Above beef_max_weight the carcass counts as the top (Premium) weight
+     * band, so it is still graded from its parameters rather than held for
+     * review; the grading page marks it as heavy and QA can override.
+     */
+    private static function weightTier(float $weight): int
     {
-        if ($weight > GradingSetting::get('beef_max_weight')) {
-            // Heavier than Premium's band allows — falls off the defined
-            // weight bands entirely, flag for QA review rather than guess.
-            return null;
-        }
-
         foreach (self::weightBands() as $band) {
             if ($weight >= $band['min']) {
                 return $band['tier'];

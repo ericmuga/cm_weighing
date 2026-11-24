@@ -37,7 +37,8 @@
                                 <th>Total Tareweight(kgs)</th>
                                 <th>Total net(kgs)</th>
                                 <th>Settlement Weight</th>
-                                <th>Classification</th>
+                                <th>Weight Class Code</th>
+                                <th>System Classification</th>
                                 <th>Slaughter Date</th>
                             </tr>
                         </thead>
@@ -56,7 +57,8 @@
                                 <th>Total Tareweight(kgs)</th>
                                 <th>Total net(kgs)</th>
                                 <th>Settlement Weight</th>
-                                <th>Classification</th>
+                                <th>Weight Class Code</th>
+                                <th>System Classification</th>
                                 <th>Slaughter Date</th>
                             </tr>
                         </tfoot>
@@ -81,6 +83,7 @@
                                 <td>{{ number_format($data->total_net, 2) }}</td>
                                 <td>{{ number_format($data->settlement_weight, 2) }}</td>
                                 <td>{{ $data->classification_code }}</td>
+                                <td>{{ $data->system_classification ?? '--' }}</td>
                                 <td>{{ $helpers->shortDateTime($data->created_at)}}</td>
                             </tr>
                             @endforeach

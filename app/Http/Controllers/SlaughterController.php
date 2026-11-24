@@ -719,7 +719,8 @@ class SlaughterController extends Controller
             $slaughter_data = DB::table('slaughter_data')
                 ->where('slaughter_data.deleted', '!=', 1)
                 ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
-                ->select('slaughter_data.*', 'carcass_types.description AS item_name')
+                ->leftJoin('qa_grading as qg', fn ($join) => $this->joinQaGrading($join))
+                ->select('slaughter_data.*', 'carcass_types.description AS item_name', 'qg.auto_classification AS system_classification')
                 ->orderBy('slaughter_data.created_at', 'DESC')
                 ->take(5000)
                 ->get();
@@ -727,7 +728,8 @@ class SlaughterController extends Controller
             $slaughter_data = DB::table('slaughter_data')
                 ->where('slaughter_data.deleted', '!=', 1)
                 ->leftJoin('carcass_types', 'slaughter_data.item_code', '=', 'carcass_types.code')
-                ->select('slaughter_data.*', 'carcass_types.description AS item_name')
+                ->leftJoin('qa_grading as qg', fn ($join) => $this->joinQaGrading($join))
+                ->select('slaughter_data.*', 'carcass_types.description AS item_name', 'qg.auto_classification AS system_classification')
                 ->orderBy('slaughter_data.id', 'ASC')
                 ->whereDate('slaughter_data.created_at', today())
                 ->get();
@@ -765,27 +767,50 @@ class SlaughterController extends Controller
         return view('slaughter.offals-report', compact('title', 'helpers', 'offals_data', 'filter'));
     }
 
+    /**
+     * Join a slaughter_data query to its carcass's qa_grading row — same
+     * carcass number, receipt and slaughter day.
+     */
+    private function joinQaGrading($join): void
+    {
+        $join->on('qg.agg_no', '=', 'slaughter_data.agg_no')
+            ->on('qg.receipt_no', '=', 'slaughter_data.receipt_no')
+            ->on('qg.slaughter_date', '=', DB::raw('CAST(slaughter_data.created_at AS DATE)'));
+    }
+
     public function slaughterSummaryReport(Request $request, Helpers $helpers)
     {
 
         $from = date($request->from_date);
         $to = date($request->to_date);
 
+        // One count column per system (auto) grade — the same labels the
+        // grading scorecards store in qa_grading.auto_classification.
+        $gradeCounts = [];
+        foreach (SlaughterSummaryExport::SYSTEM_GRADES as $alias => $label) {
+            $gradeCounts[] = DB::raw("SUM(CASE WHEN qg.auto_classification = '{$label}' THEN 1 ELSE 0 END) as {$alias}");
+        }
+
         $data = DB::table('slaughter_data')
-            ->whereDate('created_at', '>=', $from)
-            ->whereDate('created_at', '<=', $to)
-            ->select(
-                'receipt_no',
-                'vendor_no',
-                'vendor_name',
-                'item_code',
+            // Each weighed carcass has at most one grading row, so the join
+            // doesn't change the counts or weight totals.
+            ->leftJoin('qa_grading as qg', fn ($join) => $this->joinQaGrading($join))
+            ->whereDate('slaughter_data.created_at', '>=', $from)
+            ->whereDate('slaughter_data.created_at', '<=', $to)
+            ->select(array_merge([
+                'slaughter_data.receipt_no',
+                'slaughter_data.vendor_no',
+                'slaughter_data.vendor_name',
+                'slaughter_data.item_code',
                 DB::raw('MIN(CAST(slaughter_data.created_at AS DATE)) as first_date'),
                 DB::raw('MAX(CAST(slaughter_data.created_at AS DATE)) as last_date'),
                 DB::raw('COUNT(slaughter_data.id) as qty'),
                 DB::raw('SUM(slaughter_data.total_net) as total_net'),
-                DB::raw('ROUND(SUM(slaughter_data.total_net * 0.975), 2) as total_settlement')
-            )
-            ->groupBy('receipt_no', 'vendor_no', 'vendor_name', 'item_code')
+                DB::raw('ROUND(SUM(slaughter_data.total_net * 0.975), 2) as total_settlement'),
+            ], $gradeCounts, [
+                DB::raw('SUM(CASE WHEN qg.auto_classification IS NULL THEN 1 ELSE 0 END) as not_graded'),
+            ]))
+            ->groupBy('slaughter_data.receipt_no', 'slaughter_data.vendor_no', 'slaughter_data.vendor_name', 'slaughter_data.item_code')
             ->get();
 
         $exports = Session::put('session_export_data', $data);

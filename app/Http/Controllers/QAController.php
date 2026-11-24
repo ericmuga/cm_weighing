@@ -131,7 +131,13 @@ class QAController extends Controller
             ->when($status === 'pending', fn ($q) => $q->whereNull('a.graded_by'))
             ->orderBy('a.slaughter_date', 'desc')
             ->orderBy('a.created_at', 'asc')
-            ->get();
+            ->get()
+            ->each(function ($row) {
+                $row->waiting_for = $this->waitingParameters($row->item_code, [
+                    'dentition' => $row->dentition, 'fat_cover' => $row->fat_cover, 'fat_color' => $row->fat_color,
+                    'meat_color' => $row->meat_color, 'bruising' => $row->bruising, 'muscle' => $row->muscle_conformation,
+                ], $row->graded_by !== null);
+            });
 
         // Metrics bar is one day's numbers (the selected day, else today),
         // regardless of the status filter.
@@ -170,7 +176,9 @@ class QAController extends Controller
             ->select('sd.receipt_no', 'sd.agg_no', 'sd.item_code', 'sd.vendor_no', 'sd.vendor_name', 'sd.settlement_weight', 'sd.created_at')
             ->get();
 
-        return view('QA.grading-v2', compact('title', 'helpers', 'grading_data', 'unmatched_weighins', 'metrics', 'status', 'singleDay', 'metricsDate'));
+        $beefHeavyKg = GradingSetting::get('beef_max_weight');
+
+        return view('QA.grading-v2', compact('title', 'helpers', 'grading_data', 'unmatched_weighins', 'metrics', 'status', 'singleDay', 'metricsDate', 'beefHeavyKg'));
     }
 
     public function updateGrading(Request $request, Helpers $helpers)
@@ -356,6 +364,41 @@ class QAController extends Controller
         return self::LAMB_CODE_BY_RANK[$qaRank === null ? $weightRank : min($qaRank, $weightRank)];
     }
 
+    private const PARAMETER_LABELS = [
+        'dentition'  => 'Dentition',
+        'fat_cover'  => 'Fat cover',
+        'fat_color'  => 'Fat colour',
+        'meat_color' => 'Meat colour',
+        'bruising'   => 'Bruising',
+        'muscle'     => 'Muscle',
+    ];
+
+    /**
+     * Parameters QA still has to fill in before the scorecard can give a
+     * final grade — only once QA has started (saved the carcass or set at
+     * least one parameter), and not when a hard rule already decided it.
+     * Empty when nothing is waiting or the item has no scorecard (goat).
+     *
+     * @return string[] labels, e.g. ['Fat colour', 'Muscle']
+     */
+    private function waitingParameters(?string $itemCode, array $attributes, bool $saved): array
+    {
+        $scorecard = $this->scorecardFor($itemCode);
+        if (!$scorecard) {
+            return [];
+        }
+
+        $result = $scorecard::compute($attributes, null);
+        $started = $saved || count($result['missing']) < count($scorecard::POINTS);
+        $decidedByRule = $result['classification'] !== null && $result['verdict1'] === null;
+
+        if (!$started || !$result['missing'] || $decidedByRule) {
+            return [];
+        }
+
+        return array_map(fn ($field) => self::PARAMETER_LABELS[$field] ?? $field, $result['missing']);
+    }
+
     /** CarcassGradingService (beef) or LambGradingService, or null when neither scorecard applies. */
     private function scorecardFor(?string $itemCode): ?string
     {
@@ -372,7 +415,7 @@ class QAController extends Controller
         $s = GradingSetting::all();
 
         return match (true) {
-            $weight > $s['beef_max_weight']            => null,
+            // Over the ceiling still counts as the top band (graded, marked heavy).
             $weight >= $s['beef_premium_min_weight']   => 5,
             $weight >= $s['beef_highgrade_min_weight'] => 4,
             $weight >= $s['beef_faq_min_weight']       => 3,
@@ -601,9 +644,11 @@ class QAController extends Controller
             $aggNo = null;
 
             $scorecard = null;
+            $itemCode = null;
 
-            DB::transaction(function () use ($request, $helpers, &$autoGrading, &$classificationCode, &$receiptNo, &$aggNo, &$scorecard) {
+            DB::transaction(function () use ($request, $helpers, &$autoGrading, &$classificationCode, &$receiptNo, &$aggNo, &$scorecard, &$itemCode) {
                 $existing = DB::table('qa_grading')->where('id', $request->item_id)->first();
+                $itemCode = $existing->item_code ?? null;
                 $receiptNo = $existing->receipt_no ?? null;
                 $aggNo = $existing->agg_no ?? null;
 
@@ -688,6 +733,10 @@ class QAController extends Controller
                     'awaiting_weight'  => $autoGrading['awaiting_weight'],
                     'verdict1'         => $autoGrading['verdict1'],
                     'verdict2'         => $autoGrading['verdict2'],
+                    'waiting_for'      => $this->waitingParameters($itemCode, [
+                        'dentition' => $request->dentition, 'fat_cover' => $request->fat_cover, 'fat_color' => $request->fat_color,
+                        'meat_color' => $request->meat_color, 'bruising' => $request->bruising, 'muscle' => $request->muscle,
+                    ], true),
                 ]);
             }
 

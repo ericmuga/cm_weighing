@@ -33,7 +33,7 @@ class GradingSetting
     public const DEFINITIONS = [
         // Beef weight bands (kg) — lower bound of each grade's weight band
         'beef_premium_min_weight'   => [200, 'Premium starts at', 'kg', 'Beef weight bands'],
-        'beef_max_weight'           => [300, 'Premium ends at — above this needs QA review', 'kg', 'Beef weight bands'],
+        'beef_max_weight'           => [300, 'Heavy carcass above — still graded as Premium band, marked for QA to check', 'kg', 'Beef weight bands'],
         'beef_highgrade_min_weight' => [170, 'High Grade starts at', 'kg', 'Beef weight bands'],
         'beef_faq_min_weight'       => [150, 'FAQ starts at', 'kg', 'Beef weight bands'],
         'beef_standard_min_weight'  => [120, 'Standard starts at — below this is Commercial', 'kg', 'Beef weight bands'],
@@ -191,7 +191,7 @@ class GradingSetting
             $prevKey = $key;
         }
         if ($v['beef_max_weight'] < $v['beef_premium_min_weight']) {
-            $errors['beef_max_weight'] = 'Premium must end at or above where it starts.';
+            $errors['beef_max_weight'] = 'The heavy limit must be at or above where Premium starts.';
         }
         foreach (['premium' => 'Premium', 'highgrade' => 'High Grade', 'faq' => 'FAQ',
                   'standard' => 'Standard', 'commercial' => 'Commercial', 'poorc' => 'Poor C'] as $band => $name) {
