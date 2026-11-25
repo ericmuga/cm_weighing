@@ -211,7 +211,7 @@ class QAController extends Controller
     {
         $qa_graded = DB::table('qa_grading')
             ->whereDate('slaughter_date', today())
-            ->select('receipt_no', 'agg_no', 'item_code', 'classification')
+            ->select('receipt_no', 'agg_no', 'item_code', 'qa_classification')
             ->get();
 
         if ($qa_graded->isEmpty()) {
@@ -219,7 +219,7 @@ class QAController extends Controller
 
             $qa_graded = DB::table('qa_grading')
                 ->whereDate('slaughter_date', today())
-                ->select('receipt_no', 'agg_no', 'item_code', 'classification')
+                ->select('receipt_no', 'agg_no', 'item_code', 'qa_classification')
                 ->get();
         }
 
@@ -239,11 +239,11 @@ class QAController extends Controller
                         ->on('b.agg_no', '=', 'a.agg_no');
                 })
                 ->leftJoin('receipts', 'a.receipt_no', '=', 'receipts.receipt_no')
-                ->select('a.settlement_weight', 'a.receipt_no', 'a.agg_no', 'a.item_code', 'a.classification_code as weigh_classification_code', 'b.classification', 'receipts.description as receipt_description')
+                ->select('a.settlement_weight', 'a.receipt_no', 'a.agg_no', 'a.item_code', 'a.classification_code as weigh_classification_code', 'b.qa_classification', 'receipts.description as receipt_description')
                 ->get();
 
             foreach ($slaughter_data as $d) {
-                $classification = $d->classification ?? $d->receipt_description;
+                $classification = $d->qa_classification ?? $d->receipt_description;
 
                 $class_type = $this->getClassificationCode($classification, $d->settlement_weight, $d->item_code);
 
@@ -510,9 +510,9 @@ class QAController extends Controller
             ->where('receipt_no', $receipt_no)
             ->where('agg_no', $agg_no)
             ->orderByDesc('slaughter_date')
-            ->first(['id', 'classification', 'slaughter_date']);
+            ->first(['id', 'qa_classification', 'slaughter_date']);
 
-        if (!$grading || $grading->classification === null) {
+        if (!$grading || $grading->qa_classification === null) {
             return null; // QA hasn't graded this carcass yet
         }
 
@@ -526,7 +526,7 @@ class QAController extends Controller
             return null; // not weighed yet
         }
 
-        $isDowngraded = $this->computeIsDowngraded((int) $grading->classification, $weighClassificationCode);
+        $isDowngraded = $this->computeIsDowngraded((int) $grading->qa_classification, $weighClassificationCode);
         if ($isDowngraded !== null) {
             DB::table('qa_grading')->where('id', $grading->id)->update(['is_downgraded' => $isDowngraded]);
         }
@@ -579,8 +579,8 @@ class QAController extends Controller
             'muscle' => $grading->muscle_conformation,
         ], $settlementWeight !== null ? (float) $settlementWeight : null);
 
-        $classificationCode = $grading->classification !== null
-            ? $this->getClassificationCode($grading->classification, $settlementWeight, $grading->item_code)
+        $classificationCode = $grading->qa_classification !== null
+            ? $this->getClassificationCode($grading->qa_classification, $settlementWeight, $grading->item_code)
             : $grading->classification_code;
 
         DB::table('qa_grading')->where('id', $grading->id)->update([
@@ -592,8 +592,8 @@ class QAController extends Controller
             'is_indeterminate' => $autoGrading['is_indeterminate'],
             'awaiting_weight' => $autoGrading['awaiting_weight'],
             'classification_code' => $classificationCode,
-            'classification_source' => ($grading->classification !== null && $autoGrading['classification'] !== null)
-                ? (((int) $grading->classification === (int) $autoGrading['classification']) ? 'auto' : 'manual')
+            'classification_source' => ($grading->qa_classification !== null && $autoGrading['classification'] !== null)
+                ? (((int) $grading->qa_classification === (int) $autoGrading['classification']) ? 'auto' : 'manual')
                 : null,
         ]);
     }
@@ -613,7 +613,7 @@ class QAController extends Controller
             $row = DB::table('qa_grading')
                 ->where('receipt_no', $receipt_no)
                 ->where('agg_no', $agg_no)
-                ->value('classification');
+                ->value('qa_classification');
 
             if ($row) {
                 $isDowngraded = $this->computeIsDowngraded((int) $row, $weighClassificationCode);
@@ -688,7 +688,7 @@ class QAController extends Controller
                 DB::table('qa_grading')
                     ->where('id', $request->item_id)
                     ->update([
-                        'classification' => $request->fat_group, //qa grade
+                        'qa_classification' => $request->fat_group, //qa grade
                         'classification_code' => $classificationCode, //computed classification code
                         'narration' => $request->narration,
                         'dentition' => $request->dentition,
@@ -784,7 +784,7 @@ class QAController extends Controller
             ->orderBy('a.receipt_no')->orderBy('a.agg_no')
             ->select('r.vendor_no', 'r.vendor_name', 'a.receipt_no', 'a.agg_no',
                      'sd.settlement_weight', 'a.dentition', 'a.fat_cover', 'a.fat_color',
-                     'a.meat_color', 'a.bruising', 'a.muscle_conformation', 'a.classification',
+                     'a.meat_color', 'a.bruising', 'a.muscle_conformation', 'a.qa_classification',
                      'sd.classification_code as weigh_classification_code', 'a.auto_classification', 'a.verdict1', 'a.verdict2',
                      'a.narration')
             ->get()
@@ -800,7 +800,7 @@ class QAController extends Controller
                 $meatColorMap[$row->meat_color]        ?? '--',
                 $bruisingMap[$row->bruising]           ?? '--',
                 $muscleMap[$row->muscle_conformation]  ?? '--',
-                $classMap[$row->classification]        ?? '--',
+                $classMap[$row->qa_classification]        ?? '--',
                 // Weigh-in code (slaughter_data), same source as grading-v2's
                 // "Weight Classification" column — not qa_grading's QA-derived
                 // code, which is '--'/'**' until regenerated after weigh-in.
@@ -885,16 +885,16 @@ class QAController extends Controller
                 'r.vendor_no', 'r.vendor_name', 'a.receipt_no',
                 'r.received_qty',                               // source-of-truth from receipts
                 DB::raw('MAX(sd.cdw) AS total_cdw'),            // unique per receipt after pre-agg
-                DB::raw('SUM(CASE WHEN a.classification = 1 THEN 1 ELSE 0 END) as premium'),
-                DB::raw('SUM(CASE WHEN a.classification = 2 THEN 1 ELSE 0 END) as high_grade'),
-                DB::raw('SUM(CASE WHEN a.classification = 8 THEN 1 ELSE 0 END) as faq'),
-                DB::raw('SUM(CASE WHEN a.classification = 9 THEN 1 ELSE 0 END) as standard'),
-                DB::raw('SUM(CASE WHEN a.classification = 3 THEN 1 ELSE 0 END) as commercial'),
-                DB::raw('SUM(CASE WHEN a.classification = 4 THEN 1 ELSE 0 END) as poor_c'),
-                DB::raw('SUM(CASE WHEN a.classification = 10 THEN 1 ELSE 0 END) as condemned'),
-                DB::raw('SUM(CASE WHEN a.classification = 5 THEN 1 ELSE 0 END) as first_grade'),
-                DB::raw('SUM(CASE WHEN a.classification = 6 THEN 1 ELSE 0 END) as second_grade'),
-                DB::raw('SUM(CASE WHEN a.classification = 7 THEN 1 ELSE 0 END) as class_r'),
+                DB::raw('SUM(CASE WHEN a.qa_classification = 1 THEN 1 ELSE 0 END) as premium'),
+                DB::raw('SUM(CASE WHEN a.qa_classification = 2 THEN 1 ELSE 0 END) as high_grade'),
+                DB::raw('SUM(CASE WHEN a.qa_classification = 8 THEN 1 ELSE 0 END) as faq'),
+                DB::raw('SUM(CASE WHEN a.qa_classification = 9 THEN 1 ELSE 0 END) as standard'),
+                DB::raw('SUM(CASE WHEN a.qa_classification = 3 THEN 1 ELSE 0 END) as commercial'),
+                DB::raw('SUM(CASE WHEN a.qa_classification = 4 THEN 1 ELSE 0 END) as poor_c'),
+                DB::raw('SUM(CASE WHEN a.qa_classification = 10 THEN 1 ELSE 0 END) as condemned'),
+                DB::raw('SUM(CASE WHEN a.qa_classification = 5 THEN 1 ELSE 0 END) as first_grade'),
+                DB::raw('SUM(CASE WHEN a.qa_classification = 6 THEN 1 ELSE 0 END) as second_grade'),
+                DB::raw('SUM(CASE WHEN a.qa_classification = 7 THEN 1 ELSE 0 END) as class_r'),
                 DB::raw('SUM(CASE WHEN a.is_downgraded = 1 THEN 1 ELSE 0 END) as downgraded_count')
             )
             ->get()

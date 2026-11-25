@@ -228,7 +228,7 @@
         .' data-settlement_weight="'.$data->settlement_weight.'"'
         .' data-item_name="'.$data->description.'"'
         .' data-vendor="'.$data->vendor_no.'"'
-        .' data-classification="'.($data->classification ?? '').'"'
+        .' data-classification="'.($data->qa_classification ?? '').'"'
         .' data-dentition="'.($data->dentition ?? '').'"'
         .' data-fat_cover="'.($data->fat_cover ?? '').'"'
         .' data-fat_color="'.($data->fat_color ?? '').'"'
@@ -238,11 +238,11 @@
         .' data-narration="'.e($data->narration ?? '').'"';
 @endphp
 
-                                    @if($data->classification == null && !$data->settlement_weight)
+                                    @if($data->qa_classification == null && !$data->settlement_weight)
                                         <td {!! $tdAttrs !!}><a href="#" class="text-warning">
                                             <i class="fas fa-exclamation-circle"></i> QA &amp; Wght pending <i class="fas fa-arrow-right"></i></a>
                                         </td>
-                                    @elseif($data->classification == null)
+                                    @elseif($data->qa_classification == null)
                                         <td {!! $tdAttrs !!}><a href="#" class="text-info">
                                             <i class="fas fa-clipboard-check"></i> QA pending <i class="fas fa-arrow-right"></i></a>
                                         </td>
@@ -252,25 +252,25 @@
                                         </td>
                                     @endif
 
-                                    @if($data->classification == 1)
+                                    @if($data->qa_classification == 1)
                                         <td>Premium</td>
-                                    @elseif($data->classification == 2)
+                                    @elseif($data->qa_classification == 2)
                                         <td>High Grade</td>
-                                    @elseif($data->classification == 3)
+                                    @elseif($data->qa_classification == 3)
                                         <td>Commercial</td>
-                                    @elseif($data->classification == 4)
+                                    @elseif($data->qa_classification == 4)
                                         <td>Poor C</td>
-                                    @elseif($data->classification == 5)
+                                    @elseif($data->qa_classification == 5)
                                         <td>1st grade</td>
-                                    @elseif($data->classification == 6)
+                                    @elseif($data->qa_classification == 6)
                                         <td>2nd grade</td>
-                                    @elseif($data->classification == 7)
+                                    @elseif($data->qa_classification == 7)
                                         <td>Class R</td>
-                                    @elseif($data->classification == 8)
+                                    @elseif($data->qa_classification == 8)
                                         <td>FAQ</td>
-                                    @elseif($data->classification == 9)
+                                    @elseif($data->qa_classification == 9)
                                         <td>Standard</td>
-                                    @elseif($data->classification == 10)
+                                    @elseif($data->qa_classification == 10)
                                         <td class="text-danger font-weight-bold">Condemned</td>
                                     @else
                                         <td>---</td>
