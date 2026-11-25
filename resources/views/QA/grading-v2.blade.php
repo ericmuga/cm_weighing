@@ -720,7 +720,8 @@
             if (bruising === 5) return 10; // Condemned
             if (bruising === 3 || bruising === 4 || intOrNull(attrs.fat_color) === 2
                 || intOrNull(attrs.muscle) === 3 || (weight !== null && weight < MIN_WEIGHT)) return 7; // Class R
-            if (weight !== null && weight > MAX_WEIGHT) return 6; // Class 2
+            if (intOrNull(attrs.bruising) === 1 || intOrNull(attrs.muscle) === 2
+                || (weight !== null && weight > MAX_WEIGHT)) return 6; // Class 2 (mild bruising, fair muscle, overweight)
             return null;
         }
 
@@ -773,8 +774,8 @@
 
         return {
             compute: compute, LABELS: LABELS,
-            OVERRIDE_HINT: 'forced by a hard rule (Severe/Detained bruising, deep yellow fat, poor muscle, or weight under '
-                + MIN_WEIGHT + 'kg / over ' + MAX_WEIGHT + 'kg)'
+            OVERRIDE_HINT: 'forced by a hard rule (Class R: Severe/Detained bruising, deep yellow fat, poor muscle or under '
+                + MIN_WEIGHT + 'kg; Class 2: Mild bruising, fair muscle or over ' + MAX_WEIGHT + 'kg)'
         };
     })();
 

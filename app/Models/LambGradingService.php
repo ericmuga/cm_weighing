@@ -17,7 +17,8 @@ namespace App\Models;
  *     overlap resolves to Class 2.
  *   - Hard rules, worst first: Condemned bruising -> Condemned; Severe or
  *     Detained bruising, Deep yellow fat, Poorly conformed muscle, or under
- *     the minimum weight -> Class R; over the maximum weight -> Class 2.
+ *     the minimum weight -> Class R; Mild bruising, Fairly conformed muscle
+ *     or over the maximum weight -> Class 2.
  *   - All weights, points and bands are editable in QA > Settings
  *     (GradingSetting); the numbers above are the defaults.
  *
@@ -41,9 +42,11 @@ class LambGradingService
 
     // Option values from grading-v2.blade.php that trigger a hard rule.
     private const FAT_COLOR_DEEP_YELLOW = 2;
+    private const BRUISING_MILD         = 1;
     private const BRUISING_SEVERE       = 3;
     private const BRUISING_DETAINED     = 4;
     private const BRUISING_CONDEMNED    = 5;
+    private const MUSCLE_FAIR           = 2;
     private const MUSCLE_POOR           = 3;
 
     /**
@@ -148,7 +151,10 @@ class LambGradingService
                 'Bruising is Severe or Detained', 'Fat colour is Deep yellow', 'Muscle is Poorly conformed',
                 'Weight is below ' . $kg($s['lamb_min_weight']),
             ]],
-            ['result' => 'Class 2', 'when' => ['Weight is above ' . $kg($s['lamb_max_weight'])]],
+            ['result' => 'Class 2', 'when' => [
+                'Bruising is Mild', 'Muscle is Fairly conformed',
+                'Weight is above ' . $kg($s['lamb_max_weight']),
+            ]],
         ];
     }
 
@@ -171,7 +177,9 @@ class LambGradingService
             return self::CLASS_R;
         }
 
-        if ($weight !== null && $weight > GradingSetting::get('lamb_max_weight')) {
+        if ($bruising === self::BRUISING_MILD
+            || $muscle === self::MUSCLE_FAIR
+            || ($weight !== null && $weight > GradingSetting::get('lamb_max_weight'))) {
             return self::CLASS_2;
         }
 
