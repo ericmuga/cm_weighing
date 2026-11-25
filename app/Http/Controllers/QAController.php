@@ -851,7 +851,14 @@ class QAController extends Controller
         // when joined against qa_grading's many rows.
         $rows = DB::table('qa_grading as a')
             ->join(
-                DB::raw('(SELECT receipt_no, slaughter_date, vendor_no, vendor_name, received_qty FROM receipts) as r'),
+                // receipts holds one row per receipt line; roll the lines up to
+                // one row per receipt and day first, so carcasses on a
+                // multi-line receipt are counted once and received_qty is the
+                // receipt's total.
+                DB::raw('(SELECT receipt_no, slaughter_date, MAX(vendor_no) AS vendor_no, MAX(vendor_name) AS vendor_name,
+                                 SUM(received_qty) AS received_qty
+                          FROM receipts
+                          GROUP BY receipt_no, slaughter_date) as r'),
                 function ($join) {
                     $join->on('a.receipt_no', '=', 'r.receipt_no')
                          ->on('a.slaughter_date', '=', 'r.slaughter_date');
